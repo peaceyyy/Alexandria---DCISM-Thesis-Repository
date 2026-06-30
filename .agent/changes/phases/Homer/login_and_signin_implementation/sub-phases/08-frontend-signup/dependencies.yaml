@@ -1,0 +1,54 @@
+phase: 08-frontend-signup
+created: 2026-06-30
+schema: athena-default
+feature: alexandria-auth-frontend
+
+dependencies:
+  read:
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/04-design-signup-extension/sign-up-acceptance.md
+      reason: Implement the approved contract-complete sign-up design.
+      priority: critical
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/06-frontend-shared-shell/plan.md
+      reason: Reuse shared components without duplicating shell logic.
+      priority: critical
+    - path: Alexandria/features/auth/lib/auth-gateway.ts
+      reason: Submit through the mock gateway boundary.
+      priority: critical
+    - path: Alexandria/features/auth/lib/auth-validation.ts
+      reason: Reuse tested registration validation.
+      priority: high
+    - path: docs/backend_functions.md
+      reason: Reconfirm RegisterPayload field names.
+      priority: high
+  modify: []
+  create:
+    - path: Alexandria/app/(auth)/sign-up/page.tsx
+      reason: Add the sign-up route.
+      exclusive_lock: true
+    - path: Alexandria/features/auth/components/sign-up-form.tsx
+      reason: Implement contract-complete mock registration.
+      exclusive_lock: true
+    - path: Alexandria/features/auth/components/sign-up-form.test.tsx
+      reason: Verify payload normalization, validation, and redirect behavior.
+      exclusive_lock: true
+    - path: Alexandria/e2e/sign-up.spec.ts
+      reason: Verify sign-up browser behavior.
+      exclusive_lock: true
+
+relationships:
+  requires_phases:
+    - 04-design-signup-extension
+    - 05-frontend-foundation
+    - 06-frontend-shared-shell
+  provides_for_phases:
+    - 09-design-frontend-visual-qa
+  blocks_if_incomplete:
+    - 09-design-frontend-visual-qa
+
+context_estimate:
+  read_tokens: 6500
+  total_budget: 9500
+  warning_threshold: 8500
+  status: ok
+  recommendation: Read only the auth contract section of backend_functions.md; do not load unrelated services.
+

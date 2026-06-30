@@ -1,0 +1,67 @@
+phase: 09-design-frontend-visual-qa
+created: 2026-06-30
+schema: athena-default
+feature: alexandria-auth-frontend
+
+dependencies:
+  read:
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/03-design-login-states/login-acceptance.md
+      reason: Use the approved login state criteria.
+      priority: critical
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/04-design-signup-extension/sign-up-acceptance.md
+      reason: Use the approved sign-up state criteria.
+      priority: critical
+    - path: docs/design-references/auth/login-1440x1024.png
+      reason: Compare the implemented desktop login.
+      priority: critical
+    - path: docs/design-references/auth/sign-up-1440x1024.png
+      reason: Compare the implemented desktop sign-up.
+      priority: critical
+    - path: docs/DESIGN.md
+      reason: Apply production accessibility overrides during visual review.
+      priority: high
+  modify:
+    - path: Alexandria/features/auth/components/auth-shell.tsx
+      reason: Correct shared visual defects identified by designer review.
+      exclusive_lock: true
+      changes: Only approved visual corrections; preserve component API.
+    - path: Alexandria/features/auth/components/auth-shell.module.css
+      reason: Correct orbit geometry and responsive framing.
+      exclusive_lock: true
+      changes: Only screenshot-driven corrections.
+    - path: Alexandria/features/auth/components/login-form.tsx
+      reason: Correct login layout defects without changing gateway behavior.
+      exclusive_lock: true
+      changes: Visual and accessibility corrections only.
+    - path: Alexandria/features/auth/components/sign-up-form.tsx
+      reason: Correct sign-up layout defects without changing payload behavior.
+      exclusive_lock: true
+      changes: Visual and accessibility corrections only.
+  create:
+    - path: Alexandria/e2e/auth.visual.spec.ts
+      reason: Lock approved desktop and mobile screenshots.
+      exclusive_lock: true
+    - path: Alexandria/e2e/auth.visual.spec.ts-snapshots
+      reason: Store approved Playwright visual baselines.
+      exclusive_lock: true
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/09-design-frontend-visual-qa/visual-qa-report.md
+      reason: Record findings, corrections, viewport checks, and designer sign-off.
+      exclusive_lock: true
+
+relationships:
+  requires_phases:
+    - 07-frontend-login
+    - 08-frontend-signup
+  provides_for_phases:
+    - 10-backend-auth-linking
+    - 11-integration-qa-handoff
+  blocks_if_incomplete:
+    - 10-backend-auth-linking
+
+context_estimate:
+  read_tokens: 7000
+  total_budget: 11000
+  warning_threshold: 9500
+  status: ok
+  recommendation: Review screenshots and acceptance docs first; open source files only after identifying a concrete discrepancy.
+

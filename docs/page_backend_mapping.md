@@ -10,8 +10,8 @@ This document maps the 15 screens discovered in the Figma design to the specific
 | Page | Primary Backend Functions | Auth Required |
 | :--- | :--- | :--- |
 | **Landing Page** | *(None / Static routing)* | No |
-| **Log In Page** | `login()` | No |
-| **Sign In Page** | `registerMember()`, `isAllowedEmailDomain()` | No |
+| **Login Page** | `login()` | No |
+| **Sign-Up Page** | `registerMember()`, `isAllowedEmailDomain()` | No |
 
 ### 2. Research Inspection & Submission
 | Page | Primary Backend Functions | Auth Required |
@@ -50,7 +50,7 @@ Based on the mapping above and the Backend Readiness Plan, we should prioritize 
 **Backend readiness:** The `auth-service` and `thesis-service` are the most critical early services.
 * **Pages to Build:** 
   1. `Landing Page` (Static Shell)
-  2. `Log In Page` & `Sign In Page` (Unlocks the rest of the app)
+  2. `Login Page` & `Sign-Up Page` (Login authenticates an existing account; sign-up registers a new account)
   3. `Main Page (Catalog)` (Proves public data fetching and filtering)
   4. `Profile Page` (Proves session management and logout)
 

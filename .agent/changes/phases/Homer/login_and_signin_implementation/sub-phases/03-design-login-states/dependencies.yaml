@@ -1,0 +1,42 @@
+phase: 03-design-login-states
+created: 2026-06-30
+schema: athena-default
+feature: alexandria-auth-frontend
+
+dependencies:
+  read:
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/02-design-visual-foundation/visual-foundation.md
+      reason: Reuse the approved shell and control system.
+      priority: critical
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/01-scope-contract-freeze/contract-freeze.md
+      reason: Respect locked login behavior and deferred password recovery.
+      priority: critical
+    - path: docs/DESIGN.md
+      reason: Check accessibility and production-size guidance.
+      priority: high
+  modify: []
+  create:
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/03-design-login-states/login-acceptance.md
+      reason: Define every login visual and interaction state.
+      exclusive_lock: true
+    - path: docs/design-references/auth/login-1440x1024.png
+      reason: Store the approved desktop login reference.
+      exclusive_lock: true
+
+relationships:
+  requires_phases:
+    - 02-design-visual-foundation
+  provides_for_phases:
+    - 04-design-signup-extension
+    - 07-frontend-login
+  blocks_if_incomplete:
+    - 04-design-signup-extension
+    - 07-frontend-login
+
+context_estimate:
+  read_tokens: 4500
+  total_budget: 7500
+  warning_threshold: 6500
+  status: ok
+  recommendation: Work only on login states; sign-up changes belong to sub-phase 04.
+

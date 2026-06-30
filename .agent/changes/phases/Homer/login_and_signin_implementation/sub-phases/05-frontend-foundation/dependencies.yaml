@@ -1,0 +1,87 @@
+phase: 05-frontend-foundation
+created: 2026-06-30
+schema: athena-default
+feature: alexandria-auth-frontend
+
+dependencies:
+  read:
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/01-scope-contract-freeze/contract-freeze.md
+      reason: Implement only the frozen contracts and routes.
+      priority: critical
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/2026-06-30-auth-frontend-implementation.md
+      reason: Use Tasks 1 through 3 for exact tooling, contract, validation, and token instructions.
+      priority: critical
+    - path: Alexandria/AGENTS.md
+      reason: Follow the local Next.js documentation requirement.
+      priority: critical
+    - path: .agent/protocols/references/code-documentation/nextjs-16-frontend.md
+      reason: Use the repository's Next.js 16 implementation conventions.
+      priority: high
+    - path: .agent/protocols/references/code-documentation/tailwind-css-4-design-tokens.md
+      reason: Keep Tailwind 4 token usage consistent.
+      priority: high
+  modify:
+    - path: Alexandria/package.json
+      reason: Add focused test and icon dependencies plus scripts.
+      exclusive_lock: true
+      changes: Add Vitest, Testing Library, Playwright, and Lucide scripts/dependencies.
+    - path: Alexandria/package-lock.json
+      reason: Lock the added dependencies.
+      exclusive_lock: true
+      changes: Regenerate through npm.cmd install only.
+    - path: Alexandria/app/layout.tsx
+      reason: Configure Inter, Khula, and Alexandria metadata.
+      exclusive_lock: true
+      changes: Replace starter fonts and metadata.
+    - path: Alexandria/app/globals.css
+      reason: Define global Alexandria design tokens and baseline styles.
+      exclusive_lock: true
+      changes: Replace starter color and font tokens.
+  create:
+    - path: Alexandria/.gitignore
+      reason: Ignore Next.js and test output.
+      exclusive_lock: true
+    - path: Alexandria/vitest.config.mts
+      reason: Configure jsdom unit tests.
+      exclusive_lock: true
+    - path: Alexandria/vitest.setup.ts
+      reason: Load DOM matchers.
+      exclusive_lock: true
+    - path: Alexandria/playwright.config.ts
+      reason: Configure desktop and mobile browser projects.
+      exclusive_lock: true
+    - path: Alexandria/features/auth/lib/auth-contract.ts
+      reason: Define frontend-safe auth DTOs matching backend contracts.
+      exclusive_lock: true
+    - path: Alexandria/features/auth/lib/auth-validation.ts
+      reason: Provide pure login and registration validation.
+      exclusive_lock: true
+    - path: Alexandria/features/auth/lib/auth-validation.test.ts
+      reason: Verify USC-domain and required-field behavior.
+      exclusive_lock: true
+    - path: Alexandria/features/auth/lib/auth-gateway.ts
+      reason: Define the frontend integration boundary.
+      exclusive_lock: true
+    - path: Alexandria/features/auth/lib/mock-auth-gateway.ts
+      reason: Support complete frontend behavior without backend availability.
+      exclusive_lock: true
+
+relationships:
+  requires_phases:
+    - 01-scope-contract-freeze
+  provides_for_phases:
+    - 06-frontend-shared-shell
+    - 07-frontend-login
+    - 08-frontend-signup
+  blocks_if_incomplete:
+    - 06-frontend-shared-shell
+    - 07-frontend-login
+    - 08-frontend-signup
+
+context_estimate:
+  read_tokens: 11500
+  total_budget: 15000
+  warning_threshold: 13000
+  status: ok
+  recommendation: Read only Tasks 1 through 3 of the source plan; do not load page-specific implementation tasks.
+

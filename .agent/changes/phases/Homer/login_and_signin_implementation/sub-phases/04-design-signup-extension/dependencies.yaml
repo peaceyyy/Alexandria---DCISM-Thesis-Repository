@@ -1,0 +1,44 @@
+phase: 04-design-signup-extension
+created: 2026-06-30
+schema: athena-default
+feature: alexandria-auth-frontend
+
+dependencies:
+  read:
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/03-design-login-states/login-acceptance.md
+      reason: Reuse accepted state behavior and interaction language.
+      priority: critical
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/02-design-visual-foundation/visual-foundation.md
+      reason: Reuse approved shell and field anatomy.
+      priority: critical
+    - path: docs/backend_functions.md
+      reason: Confirm all RegisterPayload fields are represented.
+      priority: critical
+    - path: docs/api-contracts.md
+      reason: Confirm USC-domain and affiliation constraints.
+      priority: high
+  modify: []
+  create:
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/04-design-signup-extension/sign-up-acceptance.md
+      reason: Define contract-complete sign-up layout and all states.
+      exclusive_lock: true
+    - path: docs/design-references/auth/sign-up-1440x1024.png
+      reason: Store the approved sign-up reference with USC ID and affiliation.
+      exclusive_lock: true
+
+relationships:
+  requires_phases:
+    - 03-design-login-states
+  provides_for_phases:
+    - 08-frontend-signup
+    - 09-design-frontend-visual-qa
+  blocks_if_incomplete:
+    - 08-frontend-signup
+
+context_estimate:
+  read_tokens: 6000
+  total_budget: 8500
+  warning_threshold: 7500
+  status: ok
+  recommendation: Read only the auth sections of backend_functions.md and api-contracts.md.
+

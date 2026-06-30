@@ -1,0 +1,54 @@
+phase: 07-frontend-login
+created: 2026-06-30
+schema: athena-default
+feature: alexandria-auth-frontend
+
+dependencies:
+  read:
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/03-design-login-states/login-acceptance.md
+      reason: Implement the approved login state set.
+      priority: critical
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/06-frontend-shared-shell/plan.md
+      reason: Reuse shared components without duplicating shell logic.
+      priority: critical
+    - path: Alexandria/features/auth/lib/auth-gateway.ts
+      reason: Submit through the mock gateway boundary.
+      priority: critical
+    - path: Alexandria/features/auth/lib/auth-validation.ts
+      reason: Reuse tested login validation.
+      priority: high
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/2026-06-30-auth-frontend-implementation.md
+      reason: Use Task 5 and Task 7 login portions for exact behavior.
+      priority: high
+  modify: []
+  create:
+    - path: Alexandria/app/(auth)/login/page.tsx
+      reason: Add the login route and registration-success query handling.
+      exclusive_lock: true
+    - path: Alexandria/features/auth/components/login-form.tsx
+      reason: Implement login states and mock submission flow.
+      exclusive_lock: true
+    - path: Alexandria/features/auth/components/login-form.test.tsx
+      reason: Verify validation, service errors, recovery notice, and role routing.
+      exclusive_lock: true
+    - path: Alexandria/e2e/login.spec.ts
+      reason: Verify login navigation and mock browser behavior.
+      exclusive_lock: true
+
+relationships:
+  requires_phases:
+    - 03-design-login-states
+    - 05-frontend-foundation
+    - 06-frontend-shared-shell
+  provides_for_phases:
+    - 09-design-frontend-visual-qa
+  blocks_if_incomplete:
+    - 09-design-frontend-visual-qa
+
+context_estimate:
+  read_tokens: 7000
+  total_budget: 10000
+  warning_threshold: 9000
+  status: ok
+  recommendation: Do not load or modify sign-up files.
+

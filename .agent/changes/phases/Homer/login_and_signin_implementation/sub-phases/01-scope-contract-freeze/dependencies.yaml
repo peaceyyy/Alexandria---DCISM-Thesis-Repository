@@ -1,0 +1,41 @@
+phase: 01-scope-contract-freeze
+created: 2026-06-30
+schema: athena-default
+feature: alexandria-auth-frontend
+
+dependencies:
+  read:
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/2026-06-30-auth-frontend-implementation.md
+      reason: Primary implementation-plan source.
+      priority: critical
+    - path: docs/backend_functions.md
+      reason: Lock login(), registerMember(), CurrentUser, and RegisterPayload.
+      priority: critical
+    - path: docs/api-contracts.md
+      reason: Confirm unauthenticated endpoint behavior and registration restrictions.
+      priority: high
+    - path: docs/DESIGN.md
+      reason: Confirm visual source-of-truth and accessibility overrides.
+      priority: high
+  modify: []
+  create:
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/01-scope-contract-freeze/contract-freeze.md
+      reason: Record locked scope, assumptions, routes, payload fields, and agent ownership.
+      exclusive_lock: true
+
+relationships:
+  requires_phases: []
+  provides_for_phases:
+    - 02-design-visual-foundation
+    - 05-frontend-foundation
+  blocks_if_incomplete:
+    - 02-design-visual-foundation
+    - 05-frontend-foundation
+
+context_estimate:
+  read_tokens: 12000
+  total_budget: 15000
+  warning_threshold: 13000
+  status: ok
+  recommendation: Read the source plan's Sources Of Truth, Locked Decisions, and Responsibility sections first; inspect task details only when resolving a contract ambiguity.
+

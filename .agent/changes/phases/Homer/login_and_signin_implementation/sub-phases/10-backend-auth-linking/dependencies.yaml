@@ -1,0 +1,59 @@
+phase: 10-backend-auth-linking
+created: 2026-06-30
+schema: athena-default
+feature: alexandria-auth-frontend
+
+dependencies:
+  read:
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/09-design-frontend-visual-qa/visual-qa-report.md
+      reason: Confirm the frontend and visual contracts are frozen.
+      priority: critical
+    - path: .agent/changes/phases/Homer/backend-readiness/sub-phases/03-service-types-result/plan.md
+      reason: Use the shared ServiceResult and DTO implementation.
+      priority: critical
+    - path: .agent/changes/phases/Homer/backend-readiness/sub-phases/04-auth-role-guards/plan.md
+      reason: Use the accepted auth and role-guard boundaries.
+      priority: critical
+    - path: docs/backend_functions.md
+      reason: Implement the exact login() and registerMember() signatures.
+      priority: critical
+    - path: Alexandria/features/auth/lib/auth-gateway.ts
+      reason: Preserve the frontend gateway contract.
+      priority: high
+    - path: Alexandria/features/auth/lib/auth-contract.ts
+      reason: Confirm structural compatibility with backend DTOs.
+      priority: high
+  modify:
+    - path: Alexandria/features/auth/lib/auth-gateway.ts
+      reason: Switch the binding from mockAuthGateway to serviceAuthGateway.
+      exclusive_lock: true
+      changes: Change only the gateway binding.
+    - path: Alexandria/lib/services/auth-service.ts
+      reason: Complete or verify login() and registerMember() behavior.
+      exclusive_lock: true
+      changes: Implement the backend-owned auth functions without UI imports.
+  create:
+    - path: Alexandria/features/auth/lib/service-auth-gateway.ts
+      reason: Adapt backend auth functions to the frozen frontend interface.
+      exclusive_lock: true
+    - path: Alexandria/features/auth/lib/service-auth-gateway.test.ts
+      reason: Verify unchanged forwarding of credentials and RegisterPayload.
+      exclusive_lock: true
+
+relationships:
+  requires_phases:
+    - 09-design-frontend-visual-qa
+    - backend-readiness/03-service-types-result
+    - backend-readiness/04-auth-role-guards
+  provides_for_phases:
+    - 11-integration-qa-handoff
+  blocks_if_incomplete:
+    - 11-integration-qa-handoff
+
+context_estimate:
+  read_tokens: 9000
+  total_budget: 12500
+  warning_threshold: 11000
+  status: ok
+  recommendation: Do not load Figma or edit form components; integration is restricted to the service and adapter boundary.
+

@@ -1,0 +1,42 @@
+phase: 11-integration-qa-handoff
+created: 2026-06-30
+schema: athena-default
+feature: alexandria-auth-frontend
+
+dependencies:
+  read:
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/09-design-frontend-visual-qa/visual-qa-report.md
+      reason: Confirm designer sign-off and frozen baselines.
+      priority: critical
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/10-backend-auth-linking/plan.md
+      reason: Verify the completed integration boundary against its exit criteria.
+      priority: critical
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/breakdown.yaml
+      reason: Audit every phase exit criterion and dependency.
+      priority: critical
+    - path: docs/backend_functions.md
+      reason: Verify final function and error contracts.
+      priority: high
+    - path: docs/DESIGN.md
+      reason: Verify final visual and accessibility constraints.
+      priority: high
+  modify: []
+  create:
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/11-integration-qa-handoff/handoff-report.md
+      reason: Record commands, results, live-auth evidence, residual risks, and all specialist sign-offs.
+      exclusive_lock: true
+
+relationships:
+  requires_phases:
+    - 09-design-frontend-visual-qa
+    - 10-backend-auth-linking
+  provides_for_phases: []
+  blocks_if_incomplete: []
+
+context_estimate:
+  read_tokens: 6500
+  total_budget: 10000
+  warning_threshold: 8500
+  status: ok
+  recommendation: Report failures back to their owning sub-phase; do not make unreviewed implementation changes in the handoff phase.
+

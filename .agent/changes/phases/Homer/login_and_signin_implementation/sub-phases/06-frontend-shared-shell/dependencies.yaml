@@ -1,0 +1,64 @@
+phase: 06-frontend-shared-shell
+created: 2026-06-30
+schema: athena-default
+feature: alexandria-auth-frontend
+
+dependencies:
+  read:
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/02-design-visual-foundation/visual-foundation.md
+      reason: Implement the approved shared shell exactly.
+      priority: critical
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/sub-phases/05-frontend-foundation/plan.md
+      reason: Understand the established tokens and test foundation.
+      priority: critical
+    - path: .agent/changes/phases/Homer/login_and_signin_implementation/2026-06-30-auth-frontend-implementation.md
+      reason: Use Task 4 for exact shared-component guidance.
+      priority: high
+    - path: Alexandria/app/globals.css
+      reason: Reuse existing design tokens.
+      priority: high
+  modify: []
+  create:
+    - path: Alexandria/app/(auth)/layout.tsx
+      reason: Establish the auth route group.
+      exclusive_lock: true
+    - path: Alexandria/features/auth/components/auth-shell.tsx
+      reason: Implement the shared auth composition.
+      exclusive_lock: true
+    - path: Alexandria/features/auth/components/auth-shell.module.css
+      reason: Isolate orbit geometry and responsive shell rules.
+      exclusive_lock: true
+    - path: Alexandria/features/auth/components/auth-tabs.tsx
+      reason: Implement semantic login/sign-up navigation.
+      exclusive_lock: true
+    - path: Alexandria/features/auth/components/auth-field.tsx
+      reason: Implement the shared accessible field shell.
+      exclusive_lock: true
+    - path: Alexandria/features/auth/components/password-field.tsx
+      reason: Implement accessible password visibility behavior.
+      exclusive_lock: true
+    - path: Alexandria/features/auth/components/theme-toggle.tsx
+      reason: Implement the shared theme control.
+      exclusive_lock: true
+    - path: Alexandria/features/auth/components/auth-shell.test.tsx
+      reason: Verify shared landmarks, links, and accessible controls.
+      exclusive_lock: true
+
+relationships:
+  requires_phases:
+    - 02-design-visual-foundation
+    - 05-frontend-foundation
+  provides_for_phases:
+    - 07-frontend-login
+    - 08-frontend-signup
+  blocks_if_incomplete:
+    - 07-frontend-login
+    - 08-frontend-signup
+
+context_estimate:
+  read_tokens: 7500
+  total_budget: 11000
+  warning_threshold: 9500
+  status: ok
+  recommendation: Do not inspect login or sign-up form tasks; this sub-phase owns shared components only.
+

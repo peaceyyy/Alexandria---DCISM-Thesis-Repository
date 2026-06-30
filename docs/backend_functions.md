@@ -297,7 +297,7 @@ export async function getFilterOptions(): Promise<ServiceResult<FilterOptions>>;
 
 ## 4. `auth-service.ts` — Authentication & Session
 
-> **Used by:** Register page, Login page, all protected layouts (session check).
+> **Used by:** Sign-up page (registration), Login page (existing-account authentication), and all protected layouts (session check).
 
 ```ts
 import type { CurrentUser, RegisterPayload, ServiceResult } from "./types";
@@ -305,7 +305,7 @@ import type { CurrentUser, RegisterPayload, ServiceResult } from "./types";
  * POST /auth/register
  * Creates a Supabase Auth user and inserts the public.users profile row.
  * Validates that email domain is "usc.edu.ph" and affiliation is valid.
- * Used by: Register page.
+ * Used by: Sign-up page.
  */
 export async function registerMember(
   payload: RegisterPayload,
@@ -607,7 +607,7 @@ export async function requireOwnership(
 > | **Search Results** | `getTheses({ q, year, department, research_area })` |
 > | **Thesis Detail** | `getThesisById(id)`, `getAuthenticatedFileUrl(id)` |
 > | **Login** | `login()` |
-> | **Register** | `registerMember()` |
+> | **Sign-up (Registration)** | `registerMember()` |
 > | **Submit Thesis** | `submitThesis()`, `registerThesisFile()` |
 > | **My Submission (member edit)** | `updateOwnSubmission()`, `registerThesisFile()` |
 > | **Admin Review Queue** | `getAdminTheses()`, `acceptThesis()`, `flagThesis()`, `trashThesis()` |

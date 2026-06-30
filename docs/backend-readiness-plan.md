@@ -34,6 +34,7 @@ These decisions came from project-lead clarification on 2026-06-26.
 
 | Decision | Locked Behavior |
 | --- | --- |
+| Auth terminology | **Sign-up** creates/registers a new account through `registerMember()`. **Login** authenticates an existing account through `login()`. Do not use “sign-in” to refer to registration. |
 | Member submissions | Any authenticated `member` can submit a thesis. New submissions enter `for_review`. |
 | Review authority | Only `admin` and `moderator` can approve/accept, flag, or trash submissions. |
 | Moderator naming | `moderator` is the implementation replacement for the older `contributor` role. |

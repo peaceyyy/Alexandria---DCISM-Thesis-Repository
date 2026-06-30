@@ -1,0 +1,241 @@
+phase: login-and-signin-implementation
+created: 2026-06-30
+schema: athena-default
+feature: alexandria-auth-frontend
+owner: Homer
+status: planning_only
+
+summary:
+  workstream: auth-frontend-design-to-integration
+  goal: Deliver the Alexandria login and sign-up experience through separately reviewable design, frontend, backend-linking, and QA sub-phases.
+  implementation_rule: A sub-agent may start only when every item in its requires_phases list is complete.
+  source_plan: .agent/changes/phases/Homer/login_and_signin_implementation/2026-06-30-auth-frontend-implementation.md
+  source_of_truth:
+    - docs/DESIGN.md
+    - docs/backend_functions.md
+    - docs/api-contracts.md
+    - docs/page_backend_mapping.md
+    - Alexandria/AGENTS.md
+  locked_scope:
+    - Login route at /login
+    - Sign-up route at /sign-up
+    - Mock-backed frontend before backend integration
+    - Registration fields required by RegisterPayload
+    - Desktop and mobile visual verification
+    - Backend linkage only through AuthGateway
+
+dependency_policy:
+  start_rule: All requires_phases entries must be complete.
+  handoff_rule: Each sub-phase must produce its listed outputs before dependents start.
+  file_rule: Files marked exclusive_lock belong only to that sub-phase while it is active.
+  design_rule: Designer sub-phases execute sequentially; no agent may redesign both screens in one pass.
+  integration_rule: Backend integration cannot start until designer visual approval and frontend mock-mode QA are complete.
+
+external_dependencies:
+  backend_contracts:
+    - backend-readiness/03-service-types-result
+    - backend-readiness/04-auth-role-guards
+  user_inputs:
+    - Approved login desktop screenshot
+    - Approved sign-up desktop screenshot
+  figma:
+    file_key: 1qmHdfnQiOqPB6CCO6OacI
+    login_node: "86:85"
+    sign_up_node: "95:270"
+
+sub_phases:
+  - id: "01-scope-contract-freeze"
+    title: "Scope and Auth Contract Freeze"
+    owner: Homer
+    persona: all-around-architect_Kairou
+    status: not_started
+    objective: Lock routes, payload fields, role redirects, source precedence, and specialist ownership before visual or code work begins.
+    output:
+      - sub-phases/01-scope-contract-freeze/contract-freeze.md
+    blocks:
+      - "02-design-visual-foundation"
+      - "05-frontend-foundation"
+
+  - id: "02-design-visual-foundation"
+    title: "Auth Visual Foundation"
+    owner: Designer agent
+    persona: frontend-specialist_Sparks
+    status: not_started
+    objective: Isolate the shared visual shell, token usage, logo asset, orbit geometry, typography, and responsive framing.
+    output:
+      - sub-phases/02-design-visual-foundation/visual-foundation.md
+      - Alexandria/public/brand/alexandria-mark.svg
+    blocks:
+      - "03-design-login-states"
+      - "06-frontend-shared-shell"
+
+  - id: "03-design-login-states"
+    title: "Login Screen States"
+    owner: Designer agent
+    persona: frontend-specialist_Sparks
+    status: not_started
+    objective: Specify the login default, focus, validation, loading, service-error, recovery-notice, success-notice, light, and mobile states.
+    output:
+      - sub-phases/03-design-login-states/login-acceptance.md
+      - docs/design-references/auth/login-1440x1024.png
+    blocks:
+      - "04-design-signup-extension"
+      - "07-frontend-login"
+
+  - id: "04-design-signup-extension"
+    title: "Contract-Complete Sign-Up Design"
+    owner: Designer agent
+    persona: frontend-specialist_Sparks
+    status: not_started
+    objective: Extend the sign-up design with USC ID and affiliation while preserving the approved Alexandria composition and responsive behavior.
+    output:
+      - sub-phases/04-design-signup-extension/sign-up-acceptance.md
+      - docs/design-references/auth/sign-up-1440x1024.png
+    blocks:
+      - "08-frontend-signup"
+
+  - id: "05-frontend-foundation"
+    title: "Frontend Contracts and Test Foundation"
+    owner: Frontend agent
+    persona: frontend-specialist_Sparks
+    status: not_started
+    objective: Add test tooling, global tokens, fonts, auth contracts, validation, and the mock gateway boundary without building either full screen.
+    output:
+      - Frontend test harness
+      - Auth contract and validation modules
+      - Mock AuthGateway
+    blocks:
+      - "06-frontend-shared-shell"
+      - "07-frontend-login"
+      - "08-frontend-signup"
+
+  - id: "06-frontend-shared-shell"
+    title: "Shared Auth Shell Implementation"
+    owner: Frontend agent
+    persona: frontend-specialist_Sparks
+    status: not_started
+    objective: Implement only the shared shell, theme control, tabs, fields, password control, logo, and responsive orbit treatment.
+    output:
+      - Shared auth components
+      - Shared shell component tests
+    blocks:
+      - "07-frontend-login"
+      - "08-frontend-signup"
+
+  - id: "07-frontend-login"
+    title: "Mock-Backed Login Slice"
+    owner: Frontend agent
+    persona: frontend-specialist_Sparks
+    status: not_started
+    objective: Implement and test the login route using the approved login states and mock AuthGateway.
+    output:
+      - /login route
+      - Login form unit tests
+      - Login browser workflow
+    blocks:
+      - "09-design-frontend-visual-qa"
+
+  - id: "08-frontend-signup"
+    title: "Mock-Backed Sign-Up Slice"
+    owner: Frontend agent
+    persona: frontend-specialist_Sparks
+    status: not_started
+    objective: Implement and test the contract-complete sign-up route using the approved sign-up extension and mock AuthGateway.
+    output:
+      - /sign-up route
+      - Sign-up form unit tests
+      - Sign-up browser workflow
+    blocks:
+      - "09-design-frontend-visual-qa"
+
+  - id: "09-design-frontend-visual-qa"
+    title: "Designer and Frontend Visual QA"
+    owner: Designer agent
+    shared_with: [Frontend agent]
+    persona: frontend-specialist_Sparks
+    status: not_started
+    objective: Compare implementation screenshots with approved references, resolve visual defects, and lock desktop/mobile baselines.
+    output:
+      - Approved Playwright snapshots
+      - sub-phases/09-design-frontend-visual-qa/visual-qa-report.md
+    blocks:
+      - "10-backend-auth-linking"
+
+  - id: "10-backend-auth-linking"
+    title: "Backend Auth Service Linking"
+    owner: Backend agent
+    persona: backend-specialist
+    status: not_started
+    objective: Replace the mock binding with a service adapter around login() and registerMember() without changing form components.
+    output:
+      - Service AuthGateway adapter
+      - Adapter contract tests
+      - Real auth smoke-test evidence
+    blocks:
+      - "11-integration-qa-handoff"
+
+  - id: "11-integration-qa-handoff"
+    title: "Integration QA and Handoff"
+    owner: Homer
+    shared_with: [Designer agent, Frontend agent, Backend agent]
+    persona: qa-automation-engineer
+    status: not_started
+    objective: Run final unit, browser, visual, lint, build, and live-auth checks and record specialist sign-offs.
+    output:
+      - sub-phases/11-integration-qa-handoff/handoff-report.md
+    blocks: []
+
+waves:
+  - id: wave-1-contract
+    sub_phases:
+      - "01-scope-contract-freeze"
+  - id: wave-2-foundations
+    parallel_allowed: true
+    sub_phases:
+      - "02-design-visual-foundation"
+      - "05-frontend-foundation"
+  - id: wave-3-designer-login
+    sub_phases:
+      - "03-design-login-states"
+  - id: wave-4-designer-signup-and-shell
+    parallel_allowed: true
+    sub_phases:
+      - "04-design-signup-extension"
+      - "06-frontend-shared-shell"
+  - id: wave-5-page-slices
+    parallel_allowed: true
+    sub_phases:
+      - "07-frontend-login"
+      - "08-frontend-signup"
+  - id: wave-6-visual-qa
+    sub_phases:
+      - "09-design-frontend-visual-qa"
+  - id: wave-7-backend-link
+    sub_phases:
+      - "10-backend-auth-linking"
+  - id: wave-8-final-handoff
+    sub_phases:
+      - "11-integration-qa-handoff"
+
+execution_order:
+  - "01-scope-contract-freeze"
+  - "02-design-visual-foundation"
+  - "03-design-login-states"
+  - "04-design-signup-extension"
+  - "05-frontend-foundation"
+  - "06-frontend-shared-shell"
+  - "07-frontend-login"
+  - "08-frontend-signup"
+  - "09-design-frontend-visual-qa"
+  - "10-backend-auth-linking"
+  - "11-integration-qa-handoff"
+
+phase_exit_criteria:
+  - Designer approved login and sign-up at desktop and mobile sizes.
+  - Registration includes every RegisterPayload field.
+  - Login and sign-up work against the mock AuthGateway before backend linking.
+  - Form components do not import Supabase or backend implementation details.
+  - Backend linkage changes only the gateway adapter and backend-owned service modules.
+  - Unit tests, browser tests, visual tests, lint, and production build pass.
+  - Final handoff records designer, frontend, and backend sign-off.
+
