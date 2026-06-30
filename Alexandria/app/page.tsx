@@ -70,7 +70,7 @@ export default function Landing() {
               Log In
             </Link>
             <Link
-              href="/signup"
+              href="/sign-up"
               className="inline-flex h-11 items-center justify-center rounded-full border border-[#368bfe] bg-transparent px-8 text-base font-semibold text-white transition-colors hover:bg-white/5"
             >
               Sign Up

@@ -25,7 +25,7 @@ Alexandria/lib/
     ├── auth-service.ts        ← registration, login, session, current user
     ├── submission-service.ts  ← member thesis submission & member-owned updates
     ├── admin-thesis-service.ts← admin/moderator review actions
-    ├── file-service.ts        ← authenticated PDF proxy / file registration
+    ├── file-service.ts        ← public PDF proxy / file registration
     └── user-service.ts        ← admin user management
 ```
 
@@ -500,18 +500,18 @@ export function validateThesisForAcceptance(thesis: {
 
 ---
 
-## 7. `file-service.ts` — Authenticated PDF Access
+## 7. `file-service.ts` — Public PDF Access
 
 > **Used by:** Thesis Detail page (PDF viewer / download button).
-> **Auth required:** Yes for access. Public payload only exposes `download_path`.
+> **Auth required:** No for access (per Decision 041). Public payload only exposes `download_path`.
 
 ```ts
 import type { ServiceResult } from "./types";
 /**
  * GET /theses/:id/file
- * Returns the authenticated URL or stream path for the thesis PDF.
- * Verifies the Supabase session before granting access.
- * Checks the thesis is accepted unless the user is admin or moderator.
+ * Returns the public URL or stream path for the thesis PDF.
+ * No longer requires a Supabase session (per Decision 041).
+ * Checks the thesis is accepted.
  * Never exposes the raw thesis_files.file_url to the caller.
  *
  * Implementation options (to be decided):
@@ -521,7 +521,7 @@ import type { ServiceResult } from "./types";
  *
  * Used by: Thesis Detail page PDF viewer / download button.
  */
-export async function getAuthenticatedFileUrl(
+export async function getPublicFileUrl(
   thesisId: number,
 ): Promise<ServiceResult<{ url: string }>>;
 ```
@@ -605,7 +605,7 @@ export async function requireOwnership(
 > |------|--------------------------|
 > | **Home / Browse** | `getTheses()`, `getFilterOptions()` |
 > | **Search Results** | `getTheses({ q, year, department, research_area })` |
-> | **Thesis Detail** | `getThesisById(id)`, `getAuthenticatedFileUrl(id)` |
+> | **Thesis Detail** | `getThesisById(id)`, `getPublicFileUrl(id)` |
 > | **Login** | `login()` |
 > | **Sign-up (Registration)** | `registerMember()` |
 > | **Submit Thesis** | `submitThesis()`, `registerThesisFile()` |
@@ -627,7 +627,7 @@ export async function requireOwnership(
 | `VALIDATION_FAILED`    | Thesis missing required fields before acceptance            |
 | `INVALID_EMAIL_DOMAIN` | Registration email is not `@usc.edu.ph`                     |
 | `INVALID_ROLE`         | Role value outside `admin`, `moderator`, `member`           |
-| `FILE_ACCESS_DENIED`   | Unauthenticated request to PDF endpoint                     |
+| `FILE_ACCESS_DENIED`   | Request to unaccepted/unavailable PDF endpoint              |
 | `FILE_UNAVAILABLE`     | No primary file recorded for the thesis                     |
 | `SUPABASE_ERROR`       | Raw Supabase/PostgREST error passthrough                    |
 

@@ -11,24 +11,26 @@ const khula = Khula({
   variable: "--font-khula",
   subsets: ["latin"],
   weight: ["400", "600", "700", "800"],
-})
+});
 
 export const metadata: Metadata = {
-  title: "Alexandria",
-  description: "Thesis, Research, and Capstone Hub by DCISM Students, for DCISM Students",
+  title: {
+    default: "Alexandria",
+    template: "%s | Alexandria",
+  },
+  description: "DCISM thesis, research, and capstone repository.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${khula.variable} h-full`}
+      className={`${inter.variable} ${khula.variable}`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full bg-[#14181c] text-white antialiased">{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

@@ -23,7 +23,7 @@ The latest implementation direction has shifted from the earlier planning docs i
 | System roles | `admin`, `moderator`, `member` | Replace older Admin/Contributor/Student visitor language in implementation |
 | USC identity | `student`, `alumni`, `professor` in `users.affiliation` | Do not use affiliation for permission checks |
 | Thesis lifecycle | `for_review`, `flagged`, `accepted`, `trashed` | Public repository queries must filter to approved/accepted records only and hide trashed records |
-| PDF storage | `thesis_files.file_url` points to school-server PDF URLs | Implement authenticated proxy access; never expose raw URL publicly |
+| PDF storage | `thesis_files.file_url` points to school-server PDF URLs | Implement proxy access to stream PDF; never expose raw URL publicly. (Auth no longer required per Decision 041) |
 | Recommendations/lessons | Text fields on `theses` | Validate as required non-empty fields before acceptance |
 | Related theses | Frontend-computed from tag overlap | Backend/service layer should provide enough accepted thesis/tag data |
 | Audit trail | `thesis_audits.change_description` | Accept, flag, and trash actions should write readable descriptions |
@@ -179,7 +179,7 @@ Required before acceptance:
 
 Output should be field-specific so Ethan can display publish-readiness errors cleanly.
 
-### 6. Protected PDF Proxy
+### 6. Public PDF Proxy
 
 The SQL now stores raw school-server file URLs. This needs early backend treatment because it is a security boundary.
 
@@ -187,7 +187,7 @@ Recommended behavior:
 
 - Public thesis detail can say whether a file exists.
 - The raw `file_url` is never returned in public payloads.
-- `GET /theses/:id/file` or an equivalent route verifies the Supabase session.
+- `GET /theses/:id/file` or an equivalent route streams the PDF without requiring a session (per Decision 041).
 - The route checks the thesis is `accepted` unless the user is `admin` or `moderator`.
 - The route streams or redirects to the file without exposing the raw URL in public API responses.
 
@@ -297,7 +297,7 @@ WHERE is_primary = true;
 - Add email-domain validation.
 - Add thesis acceptance validation.
 - Draft PDF proxy route behavior.
-- Create a backend QA checklist for auth, accepted-only public visibility, and PDF access.
+- Create a backend QA checklist for auth, accepted-only public visibility, and public PDF proxy access.
 
 ## Questions To Lock With The Team
 

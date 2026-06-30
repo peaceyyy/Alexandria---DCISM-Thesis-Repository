@@ -1,0 +1,93 @@
+.shell {
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  width: min(854px, calc(100% - 48px));
+  padding: 47px 0 64px 69px;
+}
+
+.orbits {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.orbit {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.orbitOuter {
+  top: -39.5%;
+  left: 59.4%;
+  width: 69.45vw;
+  aspect-ratio: 1000 / 1809;
+  background: #368bf3;
+}
+
+.orbitMiddle {
+  top: -21.8%;
+  left: 66.4%;
+  width: 55.56vw;
+  aspect-ratio: 800 / 1447.2;
+  background: #0571f5;
+}
+
+.orbitInner {
+  top: -4.1%;
+  left: 73.3%;
+  width: 41.67vw;
+  aspect-ratio: 600 / 1085.4;
+  background: #1752f0;
+}
+
+.formSlot {
+  width: 420px;
+  max-width: 100%;
+  margin-top: 32px;
+}
+
+@media (max-width: 760px) {
+  .shell {
+    overflow-y: auto;
+  }
+
+  .content {
+    width: 100%;
+    padding: 24px 20px 48px;
+  }
+
+  .orbits {
+    opacity: 0.2;
+  }
+
+  .orbitOuter {
+    top: -6%;
+    left: 58%;
+    width: 150vw;
+  }
+
+  .orbitMiddle {
+    top: 8%;
+    left: 70%;
+    width: 120vw;
+  }
+
+  .orbitInner {
+    top: 20%;
+    left: 82%;
+    width: 90vw;
+  }
+
+  .formSlot {
+    width: 100%;
+    margin-top: 24px;
+  }
+}

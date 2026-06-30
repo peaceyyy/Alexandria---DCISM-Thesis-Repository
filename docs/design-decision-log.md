@@ -592,3 +592,20 @@ Consequences:
 - File registration/replacement services must prevent multiple primary files for the same thesis.
 - The database should enforce this with a partial unique index on `thesis_files (thesis_id) WHERE is_primary = true` during the database prerequisite phase.
 - Frontend contracts should use `file_access` and never need to choose between multiple primary files.
+
+## 2026-06-30
+
+### Decision 041: Allow guest access to all thesis content (including PDFs)
+
+Status: Accepted
+
+Context: The team discussed access controls and determined that requiring users to log in just to view thesis proposals or submissions creates unnecessary friction. 
+
+Decision: Do not require login to view thesis submissions (including PDF files). The landing page should redirect immediately to the main repository where users can browse as guests. Authentication is only required when a user wants to contribute a paper.
+
+Consequences:
+
+- The landing page "log in and sign up" options are removed in favor of a direct view page redirect to the home page.
+- PDF preview and download are no longer restricted to authenticated users.
+- Decision 004, 010, and 012 are superseded regarding PDF authentication.
+- API contracts must be updated so `requires_auth: false` for file access.

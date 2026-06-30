@@ -123,7 +123,7 @@ Returns paginated thesis cards for repository browsing and keyword search.
 
 Returns the full detail payload for a single accepted thesis.
 
-- **Auth Required:** No. Metadata is public; PDF file access requires auth through `download_path`.
+- **Auth Required:** No. Both metadata and PDF file access are public.
 
 - **Response:**
   ```json
@@ -149,7 +149,7 @@ Returns the full detail payload for a single accepted thesis.
       "lessons_learned": "Start database design early. Do not underestimate PDF storage configuration.",
       "file_access": {
         "has_primary_file": true,
-        "requires_auth": true,
+        "requires_auth": false,
         "download_path": "/theses/1/file"
       },
       "related_theses": [
@@ -169,7 +169,7 @@ Returns the full detail payload for a single accepted thesis.
   }
   ```
 
-> **Note on PDF access:** The `file_url` stored in the database is never returned directly. The backend proxies requests via `GET /theses/:id/file`, verifying the JWT before streaming the PDF from the school server.
+> **Note on PDF access:** The `file_url` stored in the database is never returned directly. The backend proxies requests via `GET /theses/:id/file` to stream the PDF from the school server. Authentication is no longer required for this proxy endpoint.
 
 > **Note on `related_theses`:** Populated by the frontend by matching overlapping tags from the current thesis against other accepted records. The backend returns the raw thesis data needed for this computation.
 

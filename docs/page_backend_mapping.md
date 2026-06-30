@@ -7,11 +7,11 @@ This document maps the 15 screens discovered in the Figma design to the specific
 ## Page to Backend Mapping
 
 ### 1. Authentication & Entry
-| Page | Primary Backend Functions | Auth Required |
-| :--- | :--- | :--- |
-| **Landing Page** | *(None / Static routing)* | No |
-| **Login Page** | `login()` | No |
-| **Sign-Up Page** | `registerMember()`, `isAllowedEmailDomain()` | No |
+| Page | Route | Primary Backend Functions | Auth Required |
+| :--- | :--- | :--- | :--- |
+| **Landing Page** | `/` | *(None / Static routing)* | No |
+| **Login Page** | `/login` | `login()` | No |
+| **Sign-Up Page** | `/sign-up` | `registerMember()`, `isAllowedEmailDomain()` | No |
 
 ### 2. Research Inspection & Submission
 | Page | Primary Backend Functions | Auth Required |

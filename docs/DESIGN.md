@@ -170,7 +170,7 @@ Effects are minimal:
 - Large `ALEXANDRIA` wordmark in Khula with blue gradient.
 - Tagline below in large Inter Black with white-to-gray gradient.
 - Pronunciation helper uses yellow `#FFD900`.
-- Primary CTA uses bright blue `#368BFE` and should be visually direct.
+- Primary CTA uses bright blue `#368BFE` and should be visually direct. It acts as a direct redirect to the main repository (view page) without requiring login or signup (per Decision 041).
 - Keep the layered wave image as supporting background texture, not a competing hero element.
 
 ### Header

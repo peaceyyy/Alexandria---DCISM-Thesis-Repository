@@ -1,0 +1,20 @@
+node_modules/
+.next/
+out/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+.env*
+!.env.example
+
+# e2e
+playwright.config.ts
+playwright/
+playwright-report/
+test-results/
+
+# vitest
+vitest.config.mts
+vitest.setup.ts
+coverage/
