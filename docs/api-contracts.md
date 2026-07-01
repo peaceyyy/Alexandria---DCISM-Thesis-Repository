@@ -88,14 +88,14 @@ Returns paginated thesis cards for repository browsing and keyword search.
 - **Auth Required:** No
 - **Query Parameters:**
 
-  | Param              | Type   | Description                                   |
-  | ------------------ | ------ | --------------------------------------------- |
-  | `q`                | string | Search query (title, authors, tags, abstract) |
-  | `year`             | int    | Filter by thesis year                         |
-  | `department`       | string | Filter by department name (e.g. `DCISM`)      |
-  | `research_area`    | string | Filter by research area                       |
-  | `page`             | int    | Default `1`                                   |
-  | `limit`            | int    | Default `20`                                  |
+  | Param           | Type   | Description                                   |
+  | --------------- | ------ | --------------------------------------------- |
+  | `q`             | string | Search query (title, authors, tags, abstract) |
+  | `year`          | int    | Filter by thesis year                         |
+  | `department`    | string | Filter by department name (e.g. `DCISM`)      |
+  | `research_area` | string | Filter by research area                       |
+  | `page`          | int    | Default `1`                                   |
+  | `limit`         | int    | Default `20`                                  |
 
 - **Response:**
   ```json
@@ -105,7 +105,13 @@ Returns paginated thesis cards for repository browsing and keyword search.
         "id": 1,
         "title": "Thesis Title",
         "authors": [
-          { "id": 1, "user_id": "uuid-or-null", "display_name": "Author One", "contribution_role": "author", "sort_order": 1 }
+          {
+            "id": 1,
+            "user_id": "uuid-or-null",
+            "display_name": "Author One",
+            "contribution_role": "author",
+            "sort_order": 1
+          }
         ],
         "year": 2026,
         "abstract_preview": "First 200 characters of abstract...",
@@ -134,8 +140,20 @@ Returns the full detail payload for a single accepted thesis.
       "abstract": "Full abstract text...",
       "year": 2026,
       "authors": [
-        { "id": 1, "user_id": "uuid-or-null", "display_name": "Author One", "contribution_role": "author", "sort_order": 1 },
-        { "id": 2, "user_id": "uuid-or-null", "display_name": "Dr. Smith", "contribution_role": "adviser", "sort_order": 1 }
+        {
+          "id": 1,
+          "user_id": "uuid-or-null",
+          "display_name": "Author One",
+          "contribution_role": "author",
+          "sort_order": 1
+        },
+        {
+          "id": 2,
+          "user_id": "uuid-or-null",
+          "display_name": "Dr. Smith",
+          "contribution_role": "adviser",
+          "sort_order": 1
+        }
       ],
       "department": "DCISM",
       "research_area": "Web Development",
@@ -155,7 +173,13 @@ Returns the full detail payload for a single accepted thesis.
           "id": 2,
           "title": "Related Thesis Title",
           "authors": [
-            { "id": 3, "user_id": null, "display_name": "Author A", "contribution_role": "author", "sort_order": 1 }
+            {
+              "id": 3,
+              "user_id": null,
+              "display_name": "Author A",
+              "contribution_role": "author",
+              "sort_order": 1
+            }
           ],
           "year": 2025,
           "abstract_preview": "Short related thesis abstract preview...",
@@ -182,7 +206,11 @@ Returns controlled vocabulary values for filter dropdowns.
   ```json
   {
     "data": {
-      "research_areas": ["Machine Learning", "Web Development", "Information Systems"],
+      "research_areas": [
+        "Machine Learning",
+        "Web Development",
+        "Information Systems"
+      ],
       "departments": ["DCISM", "CAS", "TC"],
       "years": [2026, 2025, 2024]
     }
@@ -202,7 +230,13 @@ Self-registration for members. Restricted to `usc.edu.ph` email addresses. Creat
 - **Auth Required:** No
 - **Request Body:**
   ```json
-  { "email": "user@usc.edu.ph", "password": "...", "profile_name": "Jane Doe", "usc_id": 12345678, "affiliation": "student" }
+  {
+    "email": "user@usc.edu.ph",
+    "password": "...",
+    "profile_name": "Jane Doe",
+    "usc_id": 12345678,
+    "affiliation": "student"
+  }
   ```
 - **Response:** `201 Created`
 - **Errors:** `400 Bad Request` if email domain is not `usc.edu.ph` or `affiliation` is not one of `student`, `alumni`, `professor`.
@@ -248,9 +282,24 @@ Creates a new thesis record with `review_status = 'for_review'`.
     "department": "DCISM",
     "research_area": "Machine Learning",
     "authors": [
-      { "user_id": "uuid-or-null", "display_name": "Author One", "contribution_role": "author", "sort_order": 1 },
-      { "user_id": null, "display_name": "Author Two", "contribution_role": "author", "sort_order": 2 },
-      { "user_id": "uuid-or-null", "display_name": "Dr. Adviser", "contribution_role": "adviser", "sort_order": 1 }
+      {
+        "user_id": "uuid-or-null",
+        "display_name": "Author One",
+        "contribution_role": "author",
+        "sort_order": 1
+      },
+      {
+        "user_id": null,
+        "display_name": "Author Two",
+        "contribution_role": "author",
+        "sort_order": 2
+      },
+      {
+        "user_id": "uuid-or-null",
+        "display_name": "Dr. Adviser",
+        "contribution_role": "adviser",
+        "sort_order": 1
+      }
     ],
     "tags": ["#react", "#machine-learning"],
     "publication_date": "2025-05-14",
@@ -262,6 +311,7 @@ Creates a new thesis record with `review_status = 'for_review'`.
   ```
 
 > **Author/adviser storage:** Both `authors` and `advisers` are stored in `thesis_authors`. Use `contribution_role = 'author'` or `contribution_role = 'adviser'` to separate them.
+
 - **Response:** `201 Created` - returns the newly created thesis `id`.
 
 ---
@@ -449,7 +499,7 @@ export type ThesisPerson = {
 export type ThesisCard = {
   id: number;
   title: string;
-  authors: ThesisPerson[];
+  authors: ThesisAuthor[];
   year: number;
   abstract_preview: string;
   tags: string[];
@@ -458,7 +508,7 @@ export type ThesisCard = {
 
 export type ThesisDetail = ThesisCard & {
   abstract: string;
-  advisers: ThesisPerson[];
+  authors: ThesisAuthor[];
   department: string;
   publication_date: string | null;
   publication_link: string | null;

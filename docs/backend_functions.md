@@ -111,7 +111,7 @@ export type DbThesisAudit = {
   created_at: string;
 };
 // ─── UI / Service DTOs (frontend-safe shapes) ────────────────────────────────
-export type ThesisPerson = {
+export type ThesisAuthor = {
   id: number;
   user_id: string | null;
   display_name: string;
@@ -122,7 +122,7 @@ export type ThesisPerson = {
 export type ThesisCard = {
   id: number;
   title: string;
-  authors: ThesisPerson[];
+  authors: ThesisAuthor[];
   year: number;
   abstract_preview: string; // first ~200 chars of abstract
   tags: string[];
@@ -131,7 +131,7 @@ export type ThesisCard = {
 /** Used on the Thesis Detail page. Extends ThesisCard. */
 export type ThesisDetail = ThesisCard & {
   abstract: string;
-  advisers: ThesisPerson[];
+  authors: ThesisAuthor[];
   department: string;
   publication_date: string | null;
   publication_link: string | null;
@@ -183,7 +183,7 @@ export type RegisterPayload = {
   usc_id: number;
   affiliation: Affiliation;
 };
-export type ThesisPersonInput = {
+export type ThesisAuthor = {
   user_id: string | null;
   display_name: string;
   sort_order: number;
@@ -194,8 +194,7 @@ export type SubmitThesisPayload = {
   year: number;
   department: string;
   research_area: string;
-  authors: ThesisPersonInput[];
-  advisers: ThesisPersonInput[];
+  authors: ThesisAuthor[];
   tags: string[];
   publication_date?: string;
   publication_link?: string;
@@ -276,7 +275,7 @@ export async function getTheses(
 /**
  * GET /theses/:id
  * Returns the full detail payload for a single accepted thesis.
- * Includes authors, advisers, tags, file_access, and related_theses.
+ * Includes authors, tags, file_access, and related_theses.
  * Used by: Thesis Detail page.
  */
 export async function getThesisById(
@@ -376,7 +375,7 @@ export async function getOwnSubmissions(): Promise<ServiceResult<ThesisCard[]>>;
  * POST /upload/theses
  * Creates a new thesis record with review_status = 'for_review'.
  * Stores submitted_by_user_id from the current session.
- * Inserts authors and advisers into thesis_authors.
+ * Inserts authors and/or advisers into thesis_authors.
  * Used by: Submit Thesis page.
  */
 export async function submitThesis(
@@ -490,7 +489,6 @@ export function validateThesisForAcceptance(thesis: {
   recommendations: string | null;
   lessons_learned: string | null;
   authors: { contribution_role: string }[];
-  advisers: { contribution_role: string }[];
   tags: string[];
   has_primary_file: boolean;
 }): { valid: boolean; missing_fields: string[] };

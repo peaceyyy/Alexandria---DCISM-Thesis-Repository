@@ -18,7 +18,7 @@ Create the shared TypeScript types that frontend pages and backend services both
 - `UserRole`
 - `Affiliation`
 - `ContributionRole`
-- `ThesisPerson`
+- `ThesisAuthor`
 - `ThesisCard`
 - `ThesisDetail`
 - `FilterOptions`
@@ -42,4 +42,3 @@ Create the shared TypeScript types that frontend pages and backend services both
 - Frontend can import DTOs without depending on Supabase row shape.
 - All services can return `ServiceResult<T>`.
 - Validation errors can be displayed field-by-field.
-

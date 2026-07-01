@@ -72,7 +72,7 @@ export type DbThesisAudit = {
   created_at: string;
 };
 // ─── UI / Service DTOs (frontend-safe shapes) ────────────────────────────────
-export type ThesisPerson = {
+export type ThesisAuthor = {
   id: number;
   user_id: string | null;
   display_name: string;
@@ -83,7 +83,7 @@ export type ThesisPerson = {
 export type ThesisCard = {
   id: number;
   title: string;
-  authors: ThesisPerson[];
+  authors: ThesisAuthor[];
   year: number;
   abstract_preview: string; // first ~200 chars of abstract
   tags: string[];
@@ -92,7 +92,7 @@ export type ThesisCard = {
 /** Used on the Thesis Detail page. Extends ThesisCard. */
 export type ThesisDetail = ThesisCard & {
   abstract: string;
-  authors: ThesisPerson[];
+  authors: ThesisAuthor[];
   department: string;
   publication_date: string | null;
   publication_link: string | null;
@@ -144,7 +144,7 @@ export type RegisterPayload = {
   usc_id?: number;
   affiliation: Affiliation;
 };
-export type ThesisPersonInput = {
+export type ThesisAuthorInput = {
   user_id: string | null;
   display_name: string;
   contribution_role: ContributionRole;
@@ -156,7 +156,7 @@ export type SubmitThesisPayload = {
   year: number;
   department: string;
   research_area: string;
-  authors: ThesisPersonInput[];
+  authors: ThesisAuthorInput[];
   tags: string[];
   publication_date?: string;
   publication_link?: string;
