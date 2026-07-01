@@ -1,8 +1,10 @@
-import { AuthInterceptModal } from "@/features/auth/components/auth-intercept-modal";
+import { AuthInterceptModal } from "@/components/auth/auth-intercept-modal";
+import { RoleIndicator } from "@/components/auth/role-indicator";
+import { getCurrentUser } from "@/lib/services/auth-service";
 
-export default function ThesesPage() {
-  // For the mock, we assume the user is a guest by default
-  const isGuest = true;
+export default async function ThesesPage() {
+  const userResult = await getCurrentUser();
+  const isGuest = !userResult.data;
 
   return (
     <div className="min-h-screen bg-[#14181c] text-white">
@@ -16,11 +18,9 @@ export default function ThesesPage() {
 
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-4">
+            <RoleIndicator role={userResult.data?.role ?? null} />
             {isGuest ? (
               <>
-                <span className="text-sm font-medium text-[#969696] italic">
-                  Browsing as Guest
-                </span>
                 <AuthInterceptModal />
               </>
             ) : (

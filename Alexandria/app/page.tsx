@@ -2,7 +2,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-export default function Landing() {
+import { RoleIndicator } from "@/components/auth/role-indicator";
+import { getCurrentUser } from "@/lib/services/auth-service";
+
+export default async function Landing() {
+  const userResult = await getCurrentUser();
+  const currentRole = userResult.data?.role ?? null;
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#14181c] text-white">
       <header className="relative z-10 flex items-center justify-between px-6 pt-8 sm:px-10">
@@ -19,6 +25,7 @@ export default function Landing() {
         </div>
 
         <div className="flex items-center gap-3">
+          <RoleIndicator role={currentRole} />
           <button
             type="button"
             className="flex h-10 w-14 items-center justify-between rounded-full border border-white/30 px-2 text-white/80"
