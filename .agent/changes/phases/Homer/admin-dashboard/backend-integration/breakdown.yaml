@@ -267,7 +267,7 @@ sub_phases:
     owner: Frontend integration foundation agent
     persona: nextjs-server-client-boundary-engineer
     status: not_started
-    objective: Prepare serializable client views, controlled table pagination if required, and reusable loading/error/empty feedback without changing the design language.
+    objective: Prepare serializable client views, controlled server pagination for user lists, and reusable loading/error/empty feedback without changing the design language.
     requires_phases: ["03-shared-service-contracts"]
     reads:
       - .agent/changes/phases/Homer/admin-dashboard/backend-integration/contract-freeze.md
@@ -364,45 +364,63 @@ sub_phases:
       - "10-human-review-handoff"
 
   - id: "09-account-status-enforcement"
-    title: User-Side Account Deactivation Enforcement
+    title: Supabase SSR Session and Active-Principal Enforcement
     owner: Auth integration agent
     persona: authentication-and-session-engineer
     status: not_started
-    objective: Deny deactivated accounts in login, current-user resolution, and protected service guards while giving the user an explicit, stable notice.
+    objective: Establish the Next.js 16 Supabase refresh boundary, one request-scoped active principal, and user-visible deactivation behavior before dashboard services rely on authentication.
+    requires_phases:
+      - "02-supabase-policy-readiness"
+      - "03-shared-service-contracts"
     reads:
       - .agent/changes/phases/Homer/admin-dashboard/backend-integration/contract-freeze.md
+      - .agent/changes/phases/Homer/admin-dashboard/backend-integration/current-codebase-audit.md
       - .agent/changes/phases/Homer/admin-dashboard/backend-integration/db-readiness-report.md
       - Alexandria/lib/services/types.ts
       - Alexandria/lib/services/auth-service.ts
       - Alexandria/lib/services/_guards.ts
       - Alexandria/lib/services/submission-service.ts
+      - Alexandria/lib/upload/storage-helper.ts
+      - Alexandria/lib/supabase/server.ts
       - Alexandria/lib/auth/actions.ts
+      - Alexandria/lib/auth/auth-routing.ts
       - Alexandria/components/auth/login-form.tsx
     exclusive_writes:
+      - Alexandria/proxy.ts
+      - Alexandria/lib/supabase/proxy.ts
+      - Alexandria/lib/supabase/server.ts
       - Alexandria/lib/services/auth-service.ts
       - Alexandria/lib/services/_guards.ts
-      - Alexandria/lib/services/submission-service.ts
       - Alexandria/lib/auth/actions.ts
+      - Alexandria/lib/auth/auth-routing.ts
+      - Alexandria/lib/auth/auth-routing.test.ts
       - Alexandria/app/(auth)/login/page.tsx
       - Alexandria/components/auth/login-form.tsx
       - Alexandria/app/admin/layout.tsx
       - Alexandria/app/profile/page.tsx
     test_writes:
-      - Alexandria/lib/services/__tests__/account-status.test.ts
-      - Alexandria/components/auth/__tests__/deactivated-login.test.tsx
+      - Alexandria/lib/services/auth-service.test.ts
+      - Alexandria/components/auth/login-form.test.tsx
     required_behavior:
+      - Next.js 16 proxy.ts refreshes Supabase SSR auth cookies with getAll/setAll and a static-asset-safe matcher.
+      - proxy.ts performs session refresh only; database role and active-account authorization remain in services and policies.
+      - getCurrentUser resolves explicit profile columns once per request and removes debug logging.
       - login returns ACCOUNT_DEACTIVATED after credentials succeed for a deactivated profile and signs out that new session.
       - getCurrentUser and requireSession reject a deactivated profile even when an older Auth session remains valid.
-      - Existing protected services that bypass requireSession are migrated to the active-session guard.
+      - Existing submission-service functions remain unchanged and continue to inherit enforcement through requireSession.
       - Protected routes send deactivated sessions to /login with a stable reason code.
       - The login page explains that the account is deactivated and must be reactivated by an administrator.
-      - Anonymous public browsing remains available after sign-out.
+      - Anonymous public browsing remains available at /home after sign-out.
+      - Moderator post-auth routing resolves directly to /admin/dashboard.
     exit_criteria:
+      - Expired SSR sessions can be refreshed through the proxy response cookie path.
+      - Layout and service calls reuse the same request principal without dropping service-level authorization.
       - Deactivation is reflected to both new login attempts and already-authenticated users.
       - Deactivation does not delete the Auth identity or user profile.
       - Written tests cover active, deactivated, reactivated, and stale-session paths.
     blocks:
-      - "10-human-review-handoff"
+      - "04-dashboard-read-service"
+      - "05-user-service"
 
   - id: "10-human-review-handoff"
     title: Human Review Gate
@@ -411,6 +429,10 @@ sub_phases:
     persona: integration-review-lead
     status: not_started
     objective: Inspect merged changes statically and present every changed file, risk, and unexecuted test for human evaluation.
+    requires_phases:
+      - "07-dashboard-binding"
+      - "08-user-management-binding"
+      - "09-account-status-enforcement"
     allowed_writes:
       - .agent/changes/phases/Homer/admin-dashboard/backend-integration/handoff-report.md
     forbidden:
@@ -434,6 +456,7 @@ sub_phases:
     owner: Verification agent
     persona: qa-and-security-verification-engineer
     status: locked
+    requires_phases: ["10-human-review-handoff"]
     unlock_condition: Human review approved; run verification.
     objective: Run only the verification explicitly approved by the human and report exact commands and outcomes.
     verification_order:
@@ -442,7 +465,9 @@ sub_phases:
       - lint
       - type-check if a project command exists or is separately approved
       - production build
-      - live Supabase read, role mutation, and deactivate/reactivate smoke check if credentials and target accounts are approved
+      - live Supabase dashboard read, role mutation, and deactivate/reactivate smoke check if credentials and target accounts are approved
+      - confirm a deactivated JWT is denied by PostgREST, Storage policies, and submit_thesis_transaction
+      - confirm proxy.ts refreshes an expiring session without weakening route/service authorization
     e2e_rule: Do not run Playwright, browser automation, or a development server without separate explicit E2E approval.
     exit_criteria:
       - Approved checks pass or failures are reported without unapproved fixes.
@@ -456,33 +481,38 @@ waves:
   - id: wave-1-readiness
     parallel_allowed: true
     sub_phases: ["02-supabase-policy-readiness", "03-shared-service-contracts"]
-  - id: wave-2-backend-services
+  - id: wave-2-auth-and-ui-foundation
     parallel_allowed: true
-    sub_phases: ["04-dashboard-read-service", "05-user-service", "06-admin-data-boundary"]
-  - id: wave-3-page-binding
+    sub_phases: ["06-admin-data-boundary", "09-account-status-enforcement"]
+  - id: wave-3-backend-services
     parallel_allowed: true
-    sub_phases: ["07-dashboard-binding", "08-user-management-binding", "09-account-status-enforcement"]
-  - id: wave-4-human-review
+    sub_phases: ["04-dashboard-read-service", "05-user-service"]
+  - id: wave-4-page-binding
+    parallel_allowed: true
+    sub_phases: ["07-dashboard-binding", "08-user-management-binding"]
+  - id: wave-5-human-review
     parallel_allowed: false
     sub_phases: ["10-human-review-handoff"]
-  - id: wave-5-verification
+  - id: wave-6-verification
     parallel_allowed: false
     sub_phases: ["11-verification"]
 
 critical_path:
-  - "01-contract-freeze"
-  - "02-supabase-policy-readiness"
-  - "05-user-service"
-  - "08-user-management-binding"
-  - "09-account-status-enforcement"
-  - "10-human-review-handoff"
-  - "11-verification"
+  - wave-0-contract-freeze
+  - wave-1-readiness
+  - wave-2-auth-and-ui-foundation
+  - wave-3-backend-services
+  - wave-4-page-binding
+  - wave-5-human-review
+  - wave-6-verification
 
 phase_exit_criteria:
   - Admin dashboard, members, and moderators pages have no runtime mock-data dependency.
   - All protected reads and mutations enforce the approved role server-side.
   - Approved role and account-status changes persist in Supabase and re-render on every affected route.
-  - Deactivated users are signed out, receive a clear notice, and cannot call authenticated services until reactivated.
+  - Deactivated users are signed out, receive a clear notice, and are denied by services, RLS, Storage policies, and privileged RPCs until reactivated.
+  - Next.js proxy.ts refreshes Supabase sessions while role/account authorization remains server-side.
+  - The /home route and transactional submitThesis(FormData) flow remain intact.
   - Hard account deletion is not silently implemented.
   - No service-role secret or raw privileged field reaches a client component.
   - Human review, verification, live mutation, and E2E approvals remain separate gates.

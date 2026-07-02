@@ -80,6 +80,8 @@ CREATE TABLE public.theses (
   publication_date date,
   conference       text,
   submitted_by_user_id uuid,
+  study_type       text NOT NULL DEFAULT 'thesis'::text
+                     CHECK (study_type = ANY (ARRAY['thesis'::text, 'capstone'::text])),
   review_status    text NOT NULL DEFAULT 'for_review'::text
                      CHECK (review_status = ANY (ARRAY['for_review'::text, 'flagged'::text, 'accepted'::text, 'trashed'::text])),
   recommendations  text,
