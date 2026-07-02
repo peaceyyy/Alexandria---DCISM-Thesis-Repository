@@ -20,6 +20,12 @@ This document defines the **contracts** those service functions must fulfill.
 
 > **Implementation note:** The endpoint names below describe service intent and future backend route shape. For the MVP, frontend pages should call service functions, not fetch these route strings directly unless a route is explicitly implemented.
 
+Current UI routes and future HTTP routes use separate namespaces:
+
+- `/home` — public repository UI.
+- `/upload` — authenticated submission UI.
+- `/api/theses` — future thesis HTTP resource routes.
+
 ### Contract Terms
 
 - **DTO** means "data transfer object." In Alexandria, a DTO is the frontend-safe shape returned by a service function. It hides raw Supabase row details, joins, and sensitive fields.
@@ -96,6 +102,17 @@ Offset-based using `page` and `limit`.
 
 Default sort for public repository browsing: **newest thesis year first** (`year DESC`).
 
+### 2.5 Thesis and Publication Dates
+
+- `publication_date` is required and records the actual publication or
+  conference date. It cannot be later than today.
+- The upload form does not collect a separate year.
+- The server derives `year` from `publication_date` and stores it separately for
+  efficient filtering and sorting.
+- The database RPC requires `year` to exactly match the calendar year in
+  `publication_date`.
+- Calendar-date validation uses the `Asia/Manila` date boundary.
+
 ---
 
 ## 3. Public / Discovery Endpoints
@@ -104,7 +121,7 @@ These are accessible without authentication. Full accepted thesis metadata is pu
 
 ---
 
-### `GET /theses` — List Theses (Browse & Search)
+### `GET /api/theses` — List Theses (Browse & Search)
 
 Returns paginated thesis cards for repository browsing and keyword search.
 
@@ -148,7 +165,7 @@ Returns paginated thesis cards for repository browsing and keyword search.
 
 ---
 
-### `GET /theses/:id` — Thesis Detail
+### `GET /api/theses/:id` — Thesis Detail
 
 Returns the full detail payload for a single accepted thesis.
 
@@ -181,15 +198,15 @@ Returns the full detail payload for a single accepted thesis.
       "department": "DCISM",
       "research_area": "Web Development",
       "tags": ["#react", "#ai", "#progressive-web-apps"],
-      "publication_date": "2025-05-14",
+      "publication_date": "2026-05-14",
       "publication_link": "https://...",
-      "conference": "ACM Web Conference 2025",
+      "conference": "ACM Web Conference 2026",
       "recommendations": "Explore mobile adaptation. Extend the recommendation engine with AI.",
       "lessons_learned": "Start database design early. Do not underestimate PDF storage configuration.",
       "file_access": {
         "has_primary_file": true,
         "requires_auth": false,
-        "download_path": "/theses/1/file"
+        "download_path": "/api/theses/1/file"
       },
       "related_theses": [
         {
@@ -214,13 +231,16 @@ Returns the full detail payload for a single accepted thesis.
   }
   ```
 
-> **Note on PDF access:** The `file_url` stored in the database is never returned directly. The backend proxies requests via `GET /theses/:id/file` to stream the PDF from the school server. Authentication is no longer required for this proxy endpoint.
+> **Note on PDF access:** The Supabase Storage `file_url` stored in the database
+> is never returned directly. The future route
+> `GET /api/theses/:id/file` streams or redirects to the accepted thesis PDF.
+> Authentication is not required for this route.
 
 > **Note on `related_theses`:** Populated by the frontend by matching overlapping tags from the current thesis against other accepted records. The backend returns the raw thesis data needed for this computation.
 
 ---
 
-### `GET /filters` — Filter Options
+### `GET /api/filters` — Filter Options
 
 Returns controlled vocabulary values for filter dropdowns.
 
@@ -246,7 +266,7 @@ Returns controlled vocabulary values for filter dropdowns.
 
 ## 4. Auth Endpoints
 
-### `POST /auth/register`
+### `POST /api/auth/register` (Future HTTP Equivalent)
 
 Self-registration for members. Restricted to `usc.edu.ph` email addresses. Creates a Supabase Auth user; the `on_auth_user_created` trigger automatically inserts the `users` row.
 
@@ -265,7 +285,7 @@ Self-registration for members. Restricted to `usc.edu.ph` email addresses. Creat
 - **Response:** `201 Created`
 - **Errors:** `400 Bad Request` if email domain is not `usc.edu.ph` or `affiliation` is not one of `student`, `alumni`, `professor`.
 
-### `POST /auth/login`
+### `POST /api/auth/login` (Future HTTP Equivalent)
 
 Returns a session for the user.
 
@@ -281,7 +301,7 @@ These require an authenticated session. Role checks are enforced by RLS and serv
 
 ---
 
-### `GET /admin/theses` — Review Thesis List
+### `GET /api/admin/theses` — Review Thesis List
 
 Returns thesis records for the review/admin dashboard.
 
@@ -291,18 +311,35 @@ Returns thesis records for the review/admin dashboard.
 
 ---
 
-### `POST /upload/theses` — Submit Thesis Record
+### `submitThesis(FormData)` — Submit Thesis Record
 
 Creates a new thesis record with `review_status = 'for_review'`.
 
+This is currently a Next.js server action, not an HTTP Route Handler. If an HTTP
+API is introduced later, its equivalent route is `POST /api/theses`.
+
 - **Auth Required:** Yes (Role: `member`, `admin`, or `moderator`)
-- **Ownership:** The service stores the submitting user's id in `theses.submitted_by_user_id`.
-- **Request Body:**
+- **Ownership:** The database RPC derives the submitting user's id from the
+  authenticated Supabase session (`auth.uid()`) and stores it in
+  `theses.submitted_by_user_id`. Client payloads cannot choose or override this
+  value.
+- **Current MVP handoff:** The upload page sends one `FormData` packet to the
+  `submitThesis()` server action. The packet contains the thesis metadata as
+  serialized JSON under `payload` and the uploaded document under `file`. The
+  server authenticates first, uploads the file, and then calls the transactional
+  database RPC. If the RPC fails, the server removes the uploaded storage
+  object.
+- **Derived field:** `year` is not entered by the user. The server derives it
+  from the required `publication_date` before calling the database RPC.
+- **File requirements:** The packet must contain one PDF no larger than 10 MiB.
+  The browser and server validate the `.pdf` extension, MIME metadata, size, and
+  `%PDF-` signature. Storage receives the normalized MIME type
+  `application/pdf`.
+- **Serialized `payload` JSON inside the `FormData` packet:**
   ```json
   {
     "title": "Thesis Title",
     "abstract": "...",
-    "year": 2026,
     "department": "DCISM",
     "research_area": "Machine Learning",
     "authors": [
@@ -326,9 +363,9 @@ Creates a new thesis record with `review_status = 'for_review'`.
       }
     ],
     "tags": ["#react", "#machine-learning"],
-    "publication_date": "2025-05-14",
+    "publication_date": "2026-05-14",
     "publication_link": "https://...",
-    "conference": "ACM Web Conference 2025",
+    "conference": "ACM Web Conference 2026",
     "recommendations": "Explore mobile adaptation. Extend the recommendation engine with AI.",
     "lessons_learned": "Start database design early. Do not underestimate PDF storage configuration."
   }
@@ -336,11 +373,12 @@ Creates a new thesis record with `review_status = 'for_review'`.
 
 > **Author/adviser storage:** Both `authors` and `advisers` are stored in `thesis_authors`. Use `contribution_role = 'author'` or `contribution_role = 'adviser'` to separate them.
 
-- **Response:** `201 Created` - returns the newly created thesis `id`.
+- **Current response:** `ServiceResult<{ id: number }>` from the server action.
+- **Future HTTP response:** `201 Created` with the newly created thesis `id`.
 
 ---
 
-### `PATCH /upload/theses/:id` — Update Thesis
+### `PATCH /api/theses/:id` — Update Thesis (Future HTTP Equivalent)
 
 Updates any field of a `for_review` or `flagged` thesis. Accepts partial payloads.
 
@@ -351,16 +389,17 @@ Updates any field of a `for_review` or `flagged` thesis. Accepts partial payload
 
 ---
 
-### `POST /upload/theses/:id/files` — Register File URL
+### `POST /api/theses/:id/files` — Register File URL (Future HTTP Equivalent)
 
-Called after the PDF has been placed on the school server. Stores the URL pointer in `thesis_files`.
+Called when attaching a file to an existing thesis after initial submission.
+Stores the Supabase Storage URL pointer in `thesis_files`.
 
 - **Auth Required:** Yes. `member` may register a file for their own submission. `admin` and `moderator` may register a file for reviewable submissions.
 - **Primary File Rule:** A thesis has exactly one current primary file for PDF preview/download. If `is_primary` is `true`, the service must ensure no other file for that thesis remains primary.
 - **Request Body:**
   ```json
   {
-    "file_url": "https://dcism.usc.edu.ph/repository/thesis_final.pdf",
+    "file_url": "https://<project>.supabase.co/storage/v1/object/public/thesis_files_bucket/...",
     "file_type": "application/pdf",
     "is_primary": true
   }
@@ -369,7 +408,7 @@ Called after the PDF has been placed on the school server. Stores the URL pointe
 
 ---
 
-### `POST /upload/theses/:id/files/replace` — Replace Primary PDF
+### `POST /api/theses/:id/files/replace` — Replace Primary PDF (Future HTTP Equivalent)
 
 Adds a new file URL row and marks it as primary. The old row is retained for history.
 
@@ -379,7 +418,7 @@ Adds a new file URL row and marks it as primary. The old row is retained for his
 
 ---
 
-### `POST /moderator/theses/:id/accept` — Accept Thesis
+### `POST /api/moderator/theses/:id/accept` — Accept Thesis
 
 Validates that all required fields and at least one PDF are present, then sets `review_status = 'accepted'`. Logs action to `thesis_audits`.
 
@@ -406,7 +445,7 @@ Validates that all required fields and at least one PDF are present, then sets `
 
 ---
 
-### `POST /moderator/theses/:id/flag` — Flag Thesis
+### `POST /api/moderator/theses/:id/flag` — Flag Thesis
 
 Sets `review_status = 'flagged'`. Optionally records a reason in `thesis_audits`.
 
@@ -416,7 +455,7 @@ Sets `review_status = 'flagged'`. Optionally records a reason in `thesis_audits`
 
 ---
 
-### `POST /admin/theses/:id/trash` — Trash Thesis
+### `POST /api/admin/theses/:id/trash` — Trash Thesis
 
 Moves a thesis to trashed state. Hidden from all public browsing, search, and active review lists unless explicitly included.
 
@@ -435,7 +474,7 @@ If a future recovery or audit workflow needs soft delete, add `deleted_at` to th
 
 ---
 
-### `GET /admin/users` — User List
+### `GET /api/admin/users` — User List
 
 Returns a paginated list of all users with their role and affiliation. Used by the admin users management view.
 
@@ -461,7 +500,7 @@ Returns a paginated list of all users with their role and affiliation. Used by t
 
 ---
 
-### `PATCH /admin/users/:id/role` — Update User Role
+### `PATCH /api/admin/users/:id/role` — Update User Role
 
 Updates a user's system role in `users.role`. Used by the admin role access management view.
 
@@ -592,7 +631,7 @@ export type ValidationErrorList = {
 - `submitted_by_user_id` is treated as a locked DB field because the team confirmed it exists in live Supabase on 2026-06-27.
 - `submitted_by_user_id` is nullable for legacy/imported/admin-uploaded theses, but required for member self-submissions.
 - A thesis has exactly one primary PDF file for preview/download.
-- `GET /theses/:id/file` may stream or redirect after auth. The frontend contract is only `file_access.download_path`.
+- `GET /api/theses/:id/file` may stream or redirect publicly. The frontend contract is only `file_access.download_path`.
 - All public thesis reads filter to `review_status = 'accepted'`.
 - Normal admin/review lists exclude `trashed` unless explicitly filtered.
 - Frontend status labels display `accepted` as `Approved`.

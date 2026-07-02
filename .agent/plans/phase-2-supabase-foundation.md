@@ -52,17 +52,19 @@ As the implementation team, we want a reliable Supabase foundation, so that all 
 
 ### Task 3: Configure PDF Storage
 
-**Action**: Create a private/authenticated `thesis-pdfs` bucket and agree on object key naming.
+**Action**: Configure the public `thesis_files_bucket` for PDF-only uploads up
+to 10 MiB and use owner/UUID-based object keys.
 **Files**: Supabase Storage configuration plus documentation.
-**Why**: PDFs must not be anonymously readable.
-**Verification**: Anonymous access to a PDF object fails; authenticated access path is available for server-side signed URL generation or authenticated reads.
+**Why**: Accepted thesis PDFs are public, while upload permissions remain authenticated.
+**Verification**: Authenticated submissions can upload valid PDFs; invalid MIME types and oversized files are rejected; public reads work for stored accepted-thesis objects.
 
 ### Task 4: Draft RLS Policies
 
-**Action**: Enable RLS and add policies for public published metadata reads, authenticated PDF-related metadata, Admin/Contributor edits, and profile role reads.
+**Action**: Enable RLS and add policies for public accepted metadata reads,
+authenticated submission writes, admin/moderator edits, and profile role reads.
 **Files**: Supabase policies.
 **Why**: Backend checks need database-level defense.
-**Verification**: Anonymous users cannot read draft/archived records or storage objects.
+**Verification**: Anonymous users cannot read non-accepted thesis metadata or write storage objects.
 
 ### Task 5: Add Query Indexes
 

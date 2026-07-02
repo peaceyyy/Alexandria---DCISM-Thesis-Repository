@@ -17,7 +17,7 @@ The frontend foundation for the Admin Dashboard and shared layout components has
 **Routing & Auth Guards:**
 - Admins: Redirected to `/admin/dashboard`
 - Moderators: Redirected to `/admin/dashboard` (with restricted sidebar navigation)
-- Members: Redirected to `/theses` (public view)
+- Members: Redirected to `/home` (public repository view)
 - Layout guards established in `app/admin/members/layout.tsx` and `app/admin/moderators/layout.tsx` strictly block Moderator access.
 
 ## Validation

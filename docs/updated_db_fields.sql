@@ -59,6 +59,12 @@ CREATE TRIGGER on_auth_user_created
 -- Distinct values power the filter dropdown via SELECT DISTINCT research_area.
 -- recommendations and lessons_learned are free-form text fields (no structured sub-tables).
 -- Uploaders paste or type these sections directly from their thesis document.
+-- publication_date is required by the submission contract and cannot exceed
+-- the current Asia/Manila calendar date.
+-- year is derived from publication_date by the submission service and stored
+-- separately for filtering/sorting. The submission RPC requires both years to match.
+-- The live column remains nullable until existing rows are audited and a migration
+-- can safely add NOT NULL plus a matching-year constraint.
 -- submitted_by_user_id is nullable so legacy/imported/admin-uploaded theses do not need a fake owner.
 -- Member self-submissions must set submitted_by_user_id so ownership checks can be enforced.
 CREATE TABLE public.theses (
@@ -70,7 +76,7 @@ CREATE TABLE public.theses (
   department       text NOT NULL,
   year             integer NOT NULL,
   research_area    text,
-  publication_link text,nt
+  publication_link text,
   publication_date date,
   conference       text,
   submitted_by_user_id uuid,
@@ -82,12 +88,13 @@ CREATE TABLE public.theses (
   CONSTRAINT theses_submitted_by_user_id_fkey FOREIGN KEY (submitted_by_user_id) REFERENCES public.users(id)
 );
 
--- thesis_files: stores a URL pointer to the PDF.
--- PDFs are hosted on the department school server (physical hardware).
--- file_url stores the full accessible URL (e.g. https://dcism.usc.edu.ph/repository/thesis.pdf).
--- Backend proxies authenticated file requests; file_url is never exposed to unauthenticated clients.
+-- thesis_files: stores a URL pointer to the PDF in Supabase Storage.
+-- file_url stores the Supabase public object URL but remains an internal DB field.
+-- Frontend DTOs expose file_access.download_path instead of the raw storage URL.
 -- is_primary marks the main/current PDF for display; old files are retained for history.
 -- Project rule: each thesis should have exactly one primary file for preview/download.
+-- Initial submissions accept PDF only with a maximum object size of 10 MiB.
+-- Supabase Storage must enforce application/pdf and the 10485760-byte limit.
 CREATE TABLE public.thesis_files (
   id        bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   thesis_id bigint NOT NULL,

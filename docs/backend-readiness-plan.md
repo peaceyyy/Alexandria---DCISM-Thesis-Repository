@@ -24,7 +24,7 @@ The latest implementation direction has shifted from the earlier planning docs i
 | System roles | `admin`, `moderator`, `member` | Replace older Admin/Contributor/Student visitor language in implementation |
 | USC identity | `student`, `alumni`, `professor` in `users.affiliation` | Do not use affiliation for permission checks |
 | Thesis lifecycle | `for_review`, `flagged`, `accepted`, `trashed` | Public repository queries must filter to approved/accepted records only and hide trashed records |
-| PDF storage | `thesis_files.file_url` points to school-server PDF URLs | Implement proxy access to stream PDF; never expose raw URL publicly. (Auth no longer required per Decision 041) |
+| PDF storage | Initial submissions upload to the public `thesis_files_bucket` in Supabase Storage; `thesis_files.file_url` stores the object URL | Keep raw storage URLs out of DTOs and expose `file_access.download_path`. Auth is not required for accepted PDF access per Decision 041 |
 | Recommendations/lessons | Text fields on `theses` | Validate as required non-empty fields before acceptance |
 | Related theses | Frontend-computed from tag overlap | Backend/service layer should provide enough accepted thesis/tag data |
 | Audit trail | `thesis_audits.change_description` | Accept, flag, and trash actions should write readable descriptions |
@@ -45,10 +45,13 @@ These decisions came from project-lead clarification on 2026-06-26.
 | Authors/advisers | Authors and advisers live in `thesis_authors` with required `display_name`, optional `user_id`, and `contribution_role` of `author` or `adviser`. |
 | Member editing | Members can edit their own submission only after it has been `flagged`. |
 | Member file attachment | Members can attach/register the thesis PDF or file URL for their own submission. |
+| Initial submission packet | The upload page sends metadata and the file together to the authenticated `submitThesis()` server action. Storage happens only after authentication; an RPC failure triggers removal of the newly uploaded storage object. |
+| Initial thesis file | PDF only, maximum 10 MiB. Browser and server validate extension, MIME metadata, size, and PDF signature. The Supabase bucket should enforce the same size and MIME restrictions. |
+| Thesis dates | The upload form requires `publication_date` and does not collect `year`. The server derives and stores `year` from the publication date for filtering/sorting. The RPC requires both years to match, and the publication date cannot exceed today. Date boundaries use `Asia/Manila`. |
 | Trash authority | Both `admin` and `moderator` can trash invalid submissions. |
 | Trash recovery | Trashed records are not recoverable through the admin UI for MVP. |
 | Approved label | Keep the current DB value `accepted` unless the team chooses a migration; the UI can label it as `Approved`. |
-| Submission ownership | Use `theses.submitted_by_user_id uuid REFERENCES public.users(id)` for member edit/file permissions. Nullable is allowed for legacy/imported/admin-uploaded theses; member self-submissions must set it. Confirmed added in live Supabase on 2026-06-27. |
+| Submission ownership | Use `theses.submitted_by_user_id uuid REFERENCES public.users(id)` for member edit/file permissions. Nullable is allowed for legacy/imported/admin-uploaded theses; member self-submissions must set it. The submission RPC derives the member id from `auth.uid()` and does not accept an ownership override from the client. Confirmed added in live Supabase on 2026-06-27. |
 | Primary thesis PDF | Exactly one `thesis_files` row per thesis should be primary for PDF preview/download. |
 
 ## Backend Work Homer Can Start Now
@@ -197,21 +200,23 @@ Output should be field-specific so Ethan can display publish-readiness errors cl
 
 ### 6. Public PDF Proxy
 
-The SQL now stores raw school-server file URLs. This needs early backend treatment because it is a security boundary.
+The submission flow stores Supabase Storage object URLs. Keep that provider-specific
+detail behind the frontend-safe file-access contract.
 
 Recommended behavior:
 
 - Public thesis detail can say whether a file exists.
 - The raw `file_url` is never returned in public payloads.
-- `GET /theses/:id/file` or an equivalent route streams the PDF without requiring a session (per Decision 041).
+- `GET /api/theses/:id/file` or an equivalent route streams or redirects to the PDF without requiring a session (per Decision 041).
 - The route checks the thesis is `accepted` unless the user is `admin` or `moderator`.
-- The route streams or redirects to the file without exposing the raw URL in public API responses.
+- The route streams or redirects to the Supabase object without placing the raw
+  storage URL in thesis DTOs.
 
 Open implementation choice:
 
 - Stream the file through Next.js for stronger URL hiding.
-- Return a short-lived signed/proxy URL if the school server supports it.
-- Redirect only if the school server URL is already access-controlled.
+- Stream through Next.js if hiding the storage provider remains important.
+- Redirect to the public Supabase object when the simpler MVP behavior is preferred.
 
 ### 7. Query Helpers
 

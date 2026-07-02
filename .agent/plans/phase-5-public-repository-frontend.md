@@ -9,7 +9,7 @@
 **Estimated Time**: 4-6 hours
 **Prerequisites**: Phase 1, Phase 4 contract draft
 **Primary Systems Affected**: Frontend, Public UX, Auth-aware UI states
-**Dependencies**: API mock payloads or live `GET /api/theses`, detail, and PDF-url contracts
+**Dependencies**: API mock payloads or live `GET /api/theses`, detail, and public file contracts
 
 ## Feature Description
 

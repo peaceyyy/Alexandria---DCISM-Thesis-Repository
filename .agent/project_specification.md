@@ -32,7 +32,9 @@ As of 2026-06-26, the API contracts and Supabase SQL snapshot contain newer impl
 - `member` replaces the narrower Student visitor role in implementation-facing work.
 - Use `accepted` internally if preserving the current SQL is preferred, but the UI may label that state as Approved.
 - Add a `trashed` workflow state or soft-delete path for invalid, duplicate, spam, or intentionally removed submissions. Do not overload `flagged` for this.
-- PDF files are represented by `thesis_files.file_url` pointing to a department/school server URL. The raw URL must not be exposed directly; authenticated file access should be proxied.
+- PDF files are uploaded to the public Supabase Storage
+  `thesis_files_bucket`. `thesis_files.file_url` remains internal to the
+  data/service layer; thesis DTOs expose `file_access.download_path`.
 - `recommendations` and `lessons_learned` currently live as text fields on `theses`, not separate ordered tables.
 - Authors and advisers live in `thesis_authors`, with required display names, optional `user_id`, and `contribution_role` values `author` or `adviser`.
 - Related theses are currently planned as frontend-computed results from overlapping tags.
@@ -41,7 +43,7 @@ Legacy sections below may still use earlier terms such as Contributor, Student v
 
 ## 1. Project Summary
 
-Alexandria is a web-based thesis repository for the Department of Computer Information Science and Mathematics (DCISM). It helps students discover previous thesis work, inspect thesis metadata, learn from recommendations and lessons learned, and access thesis PDFs after authentication.
+Alexandria is a web-based thesis repository for the Department of Computer Information Science and Mathematics (DCISM). It helps students discover previous thesis work, inspect thesis metadata, learn from recommendations and lessons learned, and publicly access accepted thesis PDFs.
 
 The MVP is not a generic file dump. Its differentiator is structured thesis discovery plus knowledge transfer:
 
@@ -75,9 +77,9 @@ The MVP is successful when:
 | --- | --- |
 | Database | Supabase/PostgreSQL |
 | Authentication | Supabase Auth |
-| Storage | Supabase Storage private/authenticated bucket for PDFs |
-| PDF access | Authenticated preview and download only |
-| Public access | Full published metadata is public; PDFs are protected |
+| Storage | Public Supabase Storage `thesis_files_bucket`; PDF only, maximum 10 MiB |
+| PDF access | Public preview and download for accepted theses |
+| Public access | Full accepted metadata and PDFs are public |
 | Account creation | Student visitors may self-register with `usc.edu.ph` email addresses |
 | Admin/Contributor accounts | Controlled by admins |
 | Roles | `admin`, `contributor`, `student_visitor` |
@@ -212,8 +214,8 @@ A thesis cannot move to `published` unless it has:
 
 | Actor | Capabilities |
 | --- | --- |
-| Anonymous user | Browse/search/filter/sort published metadata; view published detail metadata; cannot access PDFs |
-| Student visitor | Anonymous capabilities plus preview/download published PDFs |
+| Anonymous user | Browse/search/filter/sort accepted metadata; view accepted details and PDFs |
+| Student visitor | Anonymous capabilities plus authenticated contribution features available to members |
 | Contributor | Create/edit draft thesis content; upload/replace PDFs if allowed; cannot manage roles; publishing permissions may be admin-defined |
 | Admin | Manage roles, publish/archive records, maintain controlled vocabularies, manage all thesis records and files |
 
@@ -223,14 +225,13 @@ Student visitor self-registration must require an email address under the `usc.e
 
 ## 11. Storage and PDF Rules
 
-- Store PDFs in a private/authenticated Supabase Storage bucket, recommended bucket name: `thesis-pdfs`.
+- Store PDFs in the public `thesis_files_bucket`; accept PDF only up to 10 MiB.
 - Store file metadata in `thesis_files`.
-- Anonymous users must not preview/download PDFs.
-- Authenticated Student visitors can preview/download current primary PDFs for published theses.
+- Anonymous users may preview/download current primary PDFs for accepted theses.
 - Admins/Contributors can upload/replace PDFs according to role rules.
 - Replacing a PDF should keep old file metadata and mark the newest valid file as primary.
 - Student-facing PDF version history is out of scope.
-- If Supabase Storage becomes impractical, external PDF/repository links are a fallback, but the same access-control intent should be preserved where possible.
+- If Supabase Storage becomes impractical, external PDF/repository links are a fallback.
 
 ## 12. Search, Filtering, Sorting, and Related Theses
 
@@ -316,14 +317,15 @@ Response data:
 - Related thesis cards
 - PDF access state for current user
 
-#### `POST /api/theses/:id/pdf-url`
+#### `GET /api/theses/:id/file`
 
-Purpose: Return an authenticated preview/download URL for the current primary PDF.
+Purpose: Stream or redirect to the current primary PDF without exposing
+`thesis_files.file_url` in thesis DTOs.
 
 Auth:
 
-- Requires authenticated Student visitor, Contributor, or Admin.
-- Thesis must be published unless role is Admin/Contributor.
+- Public for accepted theses.
+- Admin/moderator preview of non-accepted theses requires role enforcement.
 
 ### 13.2 Auth/Profile Contracts
 

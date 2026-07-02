@@ -59,13 +59,13 @@ These decisions are accepted for the MVP and should guide database, backend, and
 | Authentication              | Supabase Auth                                              | Admin, Contributor, and Student visitor identity uses hosted authentication                      |
 | PDF storage                 | Supabase Storage                                           | Uploaded thesis PDFs are stored in object storage; metadata is stored in the database            |
 | PDF fallback                | External PDF/repository links only if storage is blocked   | Links remain available as a fallback, not the primary MVP storage path                           |
-| PDF access                  | Authenticated preview and download                         | Anonymous users may discover metadata, but PDF preview/download requires login                   |
+| PDF access                  | Public preview and download for accepted theses            | Guests may browse metadata and open accepted thesis PDFs; authentication is required to contribute |
 | Admin workflow              | Draft then publish                                         | Admin-created records start as draft and must be manually published                              |
 | Metadata entry              | PDF upload plus manual metadata entry                      | Admins upload the PDF and manually enter required metadata before publishing                     |
 | Author and adviser handling | Unified in `Thesis_Authors`                                | Authors and advisers are both profile links on a thesis; advisers are identifiable by `profiles.category = 'teacher'` |
 | Recommendations and lessons | Multiple ordered entries                                   | Each recommendation or lesson is stored/displayed as an ordered item                             |
 | Related theses              | Computed on the frontend via shared keywords               | No `thesis_related` table; the frontend derives related theses from overlapping keywords at render time |
-| Account creation            | Anyone with a `usc.edu.ph` email may create an account     | Students can self-register for authenticated PDF access                                          |
+| Account creation            | Anyone with a `usc.edu.ph` email may create an account     | Members can self-register to contribute thesis submissions                                       |
 | Metadata visibility         | Full accepted metadata is public                           | Anonymous users can inspect thesis details, but cannot access PDFs                               |
 | Delete behavior             | Archive/unpublish in UI, with internal soft delete support | Normal admin UI should avoid hard deletion                                                       |
 | User roles                  | `admin`, `student`, `moderator`                            | Admins manage users and system access; moderators review and approve uploads; students browse and access PDFs |
@@ -167,7 +167,9 @@ Full published thesis metadata shall remain visible to anonymous users. PDF acce
 
 The system shall store thesis PDFs in Supabase Storage or equivalent object storage.
 
-PDF preview and download shall require authentication. The system shall use private or authenticated storage access, such as signed URLs or authenticated storage reads, depending on backend implementation.
+Accepted-thesis PDF preview and download are public. The current implementation
+uses a public Supabase Storage bucket while keeping raw provider URLs out of
+thesis DTOs.
 
 If object storage becomes impractical during MVP development, the fallback is to store external PDF or repository links while preserving the same access-control intent where possible.
 
@@ -281,7 +283,7 @@ Archive/unpublish actions, publish actions, PDF replacement, and major metadata 
 - Archive/unpublish workflow with internal soft delete support
 - Search and filtering
 - Sorting, defaulting to newest thesis year first
-- Authenticated PDF preview and download
+- Public PDF preview and download for accepted theses
 - PDF replacement with old file metadata retained
 - Recommendations and lessons learned as ordered entries
 - Required distinction between future-study recommendations and practical lessons learned

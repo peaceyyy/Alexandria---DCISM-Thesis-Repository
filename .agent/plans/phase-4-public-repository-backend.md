@@ -57,12 +57,12 @@ As a student, I want to search and inspect theses, so that I can quickly decide 
 **Why**: Required MVP discovery feature.
 **Verification**: Detail payload includes reasonable related thesis cards for seeded data.
 
-### Task 4: Implement PDF URL Contract
+### Task 4: Implement Public PDF File Contract
 
-**Action**: Build `POST /api/theses/:id/pdf-url` to return a signed/authenticated preview/download URL when allowed.
+**Action**: Build `GET /api/theses/:id/file` to stream or redirect to the current primary PDF for an accepted thesis.
 **Files**: Recommended route handler plus storage helper.
-**Why**: Keeps PDF access protected behind auth.
-**Verification**: Anonymous requests fail; authenticated Student visitor requests for published theses succeed.
+**Why**: Keeps storage-provider URLs out of thesis DTOs while accepted PDFs remain public.
+**Verification**: Anonymous requests for accepted theses succeed; non-accepted thesis files remain unavailable through the public route.
 
 ### Task 5: Add Structured Errors
 

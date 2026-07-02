@@ -46,12 +46,12 @@ Consequences:
 
 - The database should store file metadata in `thesis_files`.
 - The actual PDF should not be stored directly inside the main thesis table.
-- The storage bucket should be private or authenticated for the MVP.
+- The storage bucket access mode follows the latest PDF-access decision.
 - External PDF/repository links remain a fallback only if object storage becomes impractical.
 
 ### Decision 004: Require authentication for PDF preview and download
 
-Status: Accepted
+Status: Superseded by Decision 041
 
 Context: The repository should expose thesis metadata for discovery while controlling access to thesis documents.
 
@@ -364,7 +364,7 @@ Consequences:
 
 ### Decision 025: Proxy school-server PDF URLs instead of exposing raw file URLs
 
-Status: Accepted
+Status: Superseded by Decision 045
 
 Context: The live schema stores `thesis_files.file_url`, pointing to PDFs hosted on department/school server infrastructure.
 
@@ -620,24 +620,91 @@ Decision:
 1. Implement role-based post-auth redirects:
    - Admins redirect to `/admin/dashboard`
    - Moderators redirect to `/admin/dashboard` (until a moderator-specific dashboard is made)
-   - Members redirect to `/theses` (the public view)
+   - Members redirect to `/home` (the public repository view)
 2. Use strict layout guards (Server Components) on `/admin/members` and `/admin/moderators` to ensure ONLY Admins can access them. Moderators attempting to access these routes are redirected to `/admin/dashboard`.
 3. Filter the `AdminSidebar` navigation links based on role so Moderators only see "Dashboard" and "Browse Repository".
 
 Consequences:
 - Moderators are securely confined to their thesis-review duties and cannot manage users.
 - Role capability checks are enforced both in the UI rendering and server-side layouts.
-- Replaces the generic post-auth `/theses` redirect stub.
+- Replaces the generic post-auth repository redirect stub.
 
 ### Decision 042: Standardize Header Architecture
 
 Status: Accepted
 
-Context: The header layout and design were previously fragmented across pages (e.g. `/`, `/theses`, `/profile`), resulting in inconsistent padding, search bar styles, and redundant code. The design also called for a flush-left, GitHub-style search bar.
+Context: The header layout and design were previously fragmented across pages (e.g. `/`, `/home`, `/profile`), resulting in inconsistent padding, search bar styles, and redundant code. The design also called for a flush-left, GitHub-style search bar.
 
-Decision: Use a standardized header component system: `MinimalHeader` for non-app landing pages (e.g. `/`, `/login`), and `AppHeader` for all core application pages (e.g. `/theses`, `/profile`, `/admin/*`).
+Decision: Use a standardized header component system: `MinimalHeader` for non-app landing pages (e.g. `/`, `/login`), and `AppHeader` for all core application pages (e.g. `/home`, `/profile`, `/admin/*`).
 
 Consequences:
 - Inline `<header>` elements must not be used on individual pages.
 - `AppHeader` takes a `role` prop to conditionally render role-specific navigation indicators (e.g., "Dashboard ->").
 - The global GitHub-style flush-left search bar design is defined centrally in `AppHeader`. Any layout tweaks or visual enhancements automatically apply globally across the repository interface.
+
+## 2026-07-01
+
+### Decision 043: Move from feature-based to traditional architectural hierarchy
+
+Status: Accepted
+
+Context: The previous folder structure grouped code by features, which was creating circular dependencies and making it harder to find shared generic components and services.
+
+Decision: Move away from a feature-based folder structure to a traditional architectural hierarchy (e.g., standardizing `lib/services/`, `components/`, etc.).
+
+Consequences:
+
+- Developers must place generic services in `lib/services/` and shared UI components in `components/`.
+- Domain-specific logic should be organized by architectural layer rather than by feature.
+- File imports will need to be updated across the repository.
+
+### Decision 044: Standardize domain terminology to ThesisAuthors
+
+Status: Accepted
+
+Context: The codebase and documentation contained lingering references to `ThesisPeople` instead of the standardized `ThesisAuthors`, causing confusion for developers mapping API contracts to the database.
+
+Decision: Standardize domain terminology by migrating all remaining `ThesisPeople` references in the codebase and documentation to `ThesisAuthors`.
+
+Consequences:
+
+- All frontend and backend types must use `ThesisAuthor`.
+- Documentation referring to "Thesis People" should be updated to "Thesis Authors" or "Authors and Advisers".
+- The database table remains `thesis_authors`.
+
+### Decision 045: Use Supabase Storage with a stable file-access contract
+
+Status: Accepted
+
+Context: The implemented submission flow uploads PDFs to
+`thesis_files_bucket` in Supabase Storage, while Decision 041 makes accepted
+PDFs public to guests.
+
+Decision: Keep Supabase Storage as the MVP file provider. Store its object URL
+in `thesis_files.file_url`, but expose only `file_access.download_path` in thesis
+DTOs. The current bucket is public, PDF-only, and limited to 10 MiB.
+
+Consequences:
+
+- Submission code uploads through the authenticated server action.
+- Accepted thesis PDFs remain publicly accessible.
+- A future `GET /api/theses/:id/file` route may stream or redirect to storage.
+- Frontend components remain independent of the storage provider.
+
+### Decision 046: Separate repository UI routes from thesis API routes
+
+Status: Accepted
+
+Context: The repository browsing page and future thesis resource API need clear,
+non-overlapping names.
+
+Decision: Use `/home` for the public repository page, retain `/upload` for the
+submission page, and reserve `/api/theses` for future HTTP Route Handlers.
+Current submission uses `submitThesis(FormData)` rather than an HTTP endpoint.
+
+Consequences:
+
+- Member post-authentication redirects target `/home`.
+- Navigation links to the repository target `/home`.
+- Future HTTP thesis routes live under `/api/theses`.
+- `/upload/theses` is not part of the current or future route contract.

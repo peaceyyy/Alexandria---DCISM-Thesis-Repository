@@ -20,11 +20,11 @@ Alexandria is a web-based thesis repository for DCISM. The MVP must let students
 | Decision | Choice | Impact |
 | --- | --- | --- |
 | Database engine | Supabase/PostgreSQL | Use Postgres tables, foreign keys, migrations, indexes, and Row Level Security policies |
-| File storage | Supabase Storage/object storage | Store PDFs in a storage bucket and save object keys/metadata in `thesis_files` |
+| File storage | Supabase Storage/object storage | Store PDF-only files up to 10 MiB in a storage bucket and save object keys/metadata in `thesis_files` |
 | File storage fallback | External PDF/repository links only if storage is blocked | Keep `publication_link` on the `theses` table as fallback path |
 | Authentication | Supabase Auth + `users` table | Supabase Auth owns passwords and email verification. A single `users` table (id = Supabase UUID) stores role, affiliation, and display data. A Postgres trigger (`on_auth_user_created`) auto-populates `users` on every signup. If migrating away from Supabase, add `password_hash` via ALTER TABLE and issue force-password-resets |
 | Related theses | Frontend computation from overlapping keywords | No `thesis_related` table needed for MVP; frontend derives related theses at render time |
-| PDF access | Authenticated access via backend proxy | PDFs are stored on the department school server. `thesis_files.file_url` stores the full URL. The backend proxies authenticated requests; raw URLs are never exposed to unauthenticated clients |
+| PDF access | Public access for accepted theses via `file_access.download_path` | PDFs are stored in Supabase Storage. `thesis_files.file_url` remains internal to the data/service layer even though the underlying object is public |
 | Moderator review workflow | Moderators review uploads; review_status tracks state | Records start as `for_review`; moderators set `accepted` or `flagged` |
 | Admin workflow | Admins manage users and role access | Admins have a users list and role management view; they do not own the review/publish flow |
 | Metadata entry | Upload PDF and manually enter metadata | Upload flow should attach a PDF and require manual metadata entry before a record can be accepted |
@@ -130,13 +130,13 @@ Core thesis record.
 | id | Primary key |
 | title | Required; searchable |
 | abstract | Required |
-| year | Required; indexed for filtering |
+| year | Required; derived from `publication_date`, stored separately, and indexed for filtering |
 | department | Stored as text for MVP; normalize to FK in future |
 | research_area | Optional free text; used for search and filter dropdowns via `DISTINCT research_area` |
 | recommendations | Optional free-form text; uploaders paste or type this section directly from their thesis |
 | lessons_learned | Optional free-form text; uploaders paste or type this section directly from their thesis |
 | publication_link | Optional external publication or repository link |
-| publication_date | Optional date of external publication |
+| publication_date | Required by the submission contract; actual publication/conference date and cannot exceed today using the `Asia/Manila` date boundary. Audit existing rows before changing the live nullable column to `NOT NULL` |
 | conference | Optional conference presentation name |
 | review_status | Required: `for_review`, `flagged`, `accepted`, or `trashed`. CHECK constraint enforced. Default `for_review` |
 | created_at, updated_at | Standard timestamps |
@@ -171,19 +171,21 @@ Stores free hashtag-style tags directly on each thesis. Tags are member-assigned
 
 ### `thesis_files`
 
-Stores a URL pointer to the PDF. PDFs are hosted on the department's physical school server.
+Stores the Supabase Storage URL pointer for the PDF.
 
 | Column | Notes |
 | --- | --- |
 | id | Primary key |
 | thesis_id | Foreign key to `theses` |
-| file_url | Required; Full URL to the PDF on the school server; NOT NULL |
+| file_url | Required Supabase Storage object URL; NOT NULL; never returned in thesis DTOs |
 | file_type | Required; MIME type of the file; NOT NULL DEFAULT 'application/pdf' |
 | is_primary | Marks the current active PDF; old file rows are retained for history |
 
-> **Retrieval pattern:** The backend proxies authenticated file requests. The frontend never receives the raw `file_url` directly — it calls `GET /theses/:id/file`, the backend verifies the JWT, fetches from the school server internally, and streams the PDF back. This keeps raw URLs hidden from unauthenticated clients.
-
-> **School server requirement:** The server must expose files over HTTPS. Mixed content (HTTPS app + HTTP file) is blocked by all modern browsers.
+> **Retrieval pattern:** The frontend receives
+> `file_access.download_path`, currently shaped as
+> `GET /api/theses/:id/file`, rather than `file_url`. The future route may
+> stream or redirect to the public Supabase object after confirming the thesis
+> is accepted.
 
 ### `thesis_audits`
 
@@ -270,18 +272,17 @@ Use these as the early API/database boundary:
 
 | API intent | Database responsibility |
 | --- | --- |
-| `GET /theses` | Return paginated accepted thesis cards with filters and search |
-| `GET /theses/:id` | Return full detail page payload for an accepted thesis |
-| `POST /upload/theses` | Create a `for_review` thesis plus related metadata transactionally |
-| `PATCH /upload/theses/:id` | Update thesis plus nested metadata safely |
-| `POST /upload/theses/:id/files` | Upload to Supabase Storage, then store file metadata after storage succeeds |
-| `POST /upload/theses/:id/files/replace` | Store replacement metadata, keep old file metadata, and mark the newest valid PDF as primary |
-| `POST /moderator/theses/:id/accept` | Validate required metadata/file presence, then set `review_status = 'accepted'` |
-| `POST /moderator/theses/:id/flag` | Set `review_status = 'flagged'` and optionally record a reason in `thesis_audits` |
-| `POST /admin/theses/:id/trash` | Move a record to trashed state and remove it from public and active review results |
-| `DELETE /admin/theses/:id` | Internal soft delete only; not a normal UI action |
-| `GET /admin/users` | Paginated list of all users with role and profile info |
-| `PATCH /admin/users/:id/role` | Update a user's `role` in `users` |
+| `GET /api/theses` | Future route for paginated accepted thesis cards with filters and search |
+| `GET /api/theses/:id` | Future route for a full accepted-thesis detail payload |
+| `submitThesis(FormData)` | Current server action: authenticate, upload the PDF, and create a `for_review` thesis plus related metadata transactionally |
+| `PATCH /api/theses/:id` | Future route to update thesis plus nested metadata safely |
+| `POST /api/theses/:id/files` | Future route to attach a file to an existing thesis |
+| `POST /api/theses/:id/files/replace` | Future route to retain old metadata and replace the primary PDF |
+| `POST /api/moderator/theses/:id/accept` | Validate required metadata/file presence, then set `review_status = 'accepted'` |
+| `POST /api/moderator/theses/:id/flag` | Set `review_status = 'flagged'` and optionally record a reason in `thesis_audits` |
+| `POST /api/admin/theses/:id/trash` | Move a record to trashed state and remove it from public and active review results |
+| `GET /api/admin/users` | Future paginated user list |
+| `PATCH /api/admin/users/:id/role` | Future route to update a user's role |
 
 ## Seed Data Needed
 
@@ -354,7 +355,9 @@ These choices affect schema, storage policy, and backend API behavior.
    - Accepted: Free text on `theses.research_area`. Filter dropdown is populated via `SELECT DISTINCT research_area FROM theses WHERE review_status = 'accepted'`.
 
 6. PDF file storage:
-   - Accepted: PDFs stored on department school server. `thesis_files.file_url` stores full URL. Backend proxies authenticated requests; raw URL never exposed to unauthenticated clients.
+   - Superseded: the current implementation uploads PDFs to Supabase Storage,
+     allows public access for accepted theses, and keeps the provider URL behind
+     `file_access.download_path`.
 
 ## Recommended First Task For DB Engineer
 

@@ -146,7 +146,7 @@ export type ThesisDetail = ThesisCard & {
   file_access: {
     has_primary_file: boolean;
     requires_auth: boolean;
-    download_path: string | null; // e.g. "/theses/1/file" — never a raw URL
+    download_path: string | null; // e.g. "/api/theses/1/file" — never a raw URL
   };
   related_theses: ThesisCard[]; // frontend-computed from tag overlap
 };
@@ -198,21 +198,31 @@ export type ThesisAuthorInput = Omit<
 export type SubmitThesisPayload = {
   title: string;
   abstract: string;
+  /** Derived by the server from publication_date. */
   year: number;
   department: string;
   research_area: string;
-  authors: ThesisAuthor[];
+  authors: ThesisAuthorInput[];
   tags: string[];
-  publication_date?: string;
+  /** Added by the server after storage upload; never accepted from the browser. */
+  file_url: string;
+  file_type: "application/pdf";
+  /** Required YYYY-MM-DD; cannot exceed today. */
+  publication_date: string;
   publication_link?: string;
   conference?: string;
   recommendations?: string;
   lessons_learned?: string;
 };
+export type SubmitThesisInput = Omit<
+  SubmitThesisPayload,
+  "file_url" | "file_type" | "year"
+>;
 /** All fields optional — partial PATCH. */
 export type updateThesisStatusPayload = Partial<SubmitThesisPayload>;
 export type RegisterFilePayload = {
   file_url: string;
+  file_type?: string;
   is_primary: boolean;
 };
 export type ThesisListParams = {
@@ -271,7 +281,7 @@ import type {
   ServiceResult,
 } from "./types";
 /**
- * GET /theses
+ * Future HTTP equivalent: GET /api/theses
  * Returns a paginated, filtered list of accepted thesis cards.
  * Default sort: year DESC.
  * Used by: Browse/Search page.
@@ -280,7 +290,7 @@ export async function getTheses(
   params?: ThesisListParams,
 ): Promise<ServiceResult<ThesisCard[]>>;
 /**
- * GET /theses/:id
+ * Future HTTP equivalent: GET /api/theses/:id
  * Returns the full detail payload for a single accepted thesis.
  * Includes authors, tags, file_access, and related_theses.
  * Used by: Thesis Detail page.
@@ -289,7 +299,7 @@ export async function getThesisById(
   id: number,
 ): Promise<ServiceResult<ThesisDetail>>;
 /**
- * GET /filters
+ * Future HTTP equivalent: GET /api/filters
  * Returns distinct accepted values for year, department, and research_area.
  * Used by: Browse page filter dropdowns.
  */
@@ -305,7 +315,8 @@ export async function getFilterOptions(): Promise<ServiceResult<FilterOptions>>;
 ```ts
 import type { CurrentUser, RegisterPayload, ServiceResult } from "./types";
 /**
- * POST /auth/register
+ * Current server service: registerMember()
+ * Future HTTP equivalent: POST /api/auth/register
  * Creates a Supabase Auth user and supplies profile metadata.
  * The on_auth_user_created database trigger owns the public.users insert.
  * Validates that email domain is "usc.edu.ph" and affiliation is valid.
@@ -315,7 +326,8 @@ export async function registerMember(
   payload: RegisterPayload,
 ): Promise<ServiceResult<{ id: string }>>;
 /**
- * POST /auth/login
+ * Current server service: login()
+ * Future HTTP equivalent: POST /api/auth/login
  * Signs in with email and password via Supabase Auth.
  * Returns the active session (handled internally by Supabase SDK).
  * Used by: Login page.
@@ -325,7 +337,8 @@ export async function login(
   password: string,
 ): Promise<ServiceResult<CurrentUser>>;
 /**
- * POST /auth/logout
+ * Current server service: logout()
+ * Future HTTP equivalent: POST /api/auth/logout
  * Signs the current user out and invalidates the Supabase session.
  * Used by: Navigation / user menu.
  */
@@ -372,25 +385,31 @@ import type {
   ServiceResult,
 } from "./types";
 /**
- * GET /upload/theses/me
+ * Current server service: getOwnSubmissions()
+ * Future HTTP equivalent: GET /api/theses/me
  * Returns a list of all theses submitted by the current user.
  * This allows members to see their own pending (`for_review`), `flagged`, or `accepted` submissions,
  * which do not appear in the public catalog until accepted.
  * Used by: "My Submissions" page or dashboard.
  */
-export async function getOwnSubmissions(): Promise<ServiceResult<ThesisCard[]>>;
+export async function getOwnSubmissions(): Promise<ServiceResult<ThesisDetail[]>>;
 /**
- * POST /upload/theses
+ * Current server action: submitThesis(FormData)
+ * Future HTTP equivalent: POST /api/theses
  * Creates a new thesis record with review_status = 'for_review'.
- * Stores submitted_by_user_id from the current session.
+ * The database RPC derives submitted_by_user_id from auth.uid().
+ * Client payloads cannot choose or override submission ownership.
+ * Accepts one FormData packet containing serialized metadata and the file.
+ * Accepts PDF only, with a maximum file size of 10 MiB.
+ * Uploads on the server and removes the storage object if the RPC fails.
  * Inserts authors and/or advisers into thesis_authors.
  * Used by: Submit Thesis page.
  */
 export async function submitThesis(
-  payload: SubmitThesisPayload,
+  submissionPacket: FormData,
 ): Promise<ServiceResult<{ id: number }>>;
 /**
- * PATCH /upload/theses/:id
+ * Future HTTP equivalent: PATCH /api/theses/:id
  * Updates an existing thesis owned by the current user.
  * Members may only update their own submission when review_status = 'flagged'.
  * Ownership is checked against theses.submitted_by_user_id.
@@ -402,10 +421,10 @@ export async function updateOwnSubmission(
   payload: updateThesisStatusPayload,
 ): Promise<ServiceResult<null>>;
 /**
- * POST /upload/theses/:id/files
+ * Future HTTP equivalent: POST /api/theses/:id/files
  * Registers a PDF file URL for a thesis the member owns.
  * If is_primary = true, clears the primary flag on any existing primary file.
- * Used by: File attachment step of Submit Thesis page.
+ * Used by: Future file attachment flow for an existing thesis.
  */
 export async function registerThesisFile(
   thesisId: number,
@@ -430,7 +449,7 @@ import type {
   ServiceResult,
 } from "./types";
 /**
- * GET /admin/theses
+ * Future HTTP equivalent: GET /api/admin/theses
  * Returns paginated thesis records for the review dashboard.
  * Supports filtering by review_status (for_review | flagged | accepted | trashed).
  * Excludes trashed by default unless review_status = 'trashed' is passed.
@@ -440,7 +459,7 @@ export async function getAdminTheses(
   params?: AdminThesisListParams,
 ): Promise<ServiceResult<AdminThesisRow[]>>;
 /**
- * POST /upload/theses (admin variant)
+ * Future HTTP equivalent: POST /api/admin/theses
  * Admin/moderator creates a new thesis on behalf of a member or for import.
  * submitted_by_user_id may be null for admin-uploaded/imported theses.
  * Used by: Admin thesis import / manual upload.
@@ -449,7 +468,7 @@ export async function createThesis(
   payload: SubmitThesisPayload,
 ): Promise<ServiceResult<{ id: number }>>;
 /**
- * PATCH /upload/theses/:id (admin variant)
+ * Future HTTP equivalent: PATCH /api/admin/theses/:id
  * Updates any field of a thesis, including changing review_status to 'accepted' or 'flagged'.
  * No ownership restriction — admin and moderator can edit any reviewable record.
  * If updating review_status to 'accepted', this function MUST validate that all
@@ -461,7 +480,7 @@ export async function updateThesisStatus(
   payload: updateThesisStatusPayload,
 ): Promise<ServiceResult<null>>;
 /**
- * POST /admin/theses/:id/trash
+ * Future HTTP equivalent: POST /api/admin/theses/:id/trash
  * Sets review_status = 'trashed'. Hides the thesis from all public and review views.
  * Not recoverable through the admin UI for MVP.
  * Logs the action to thesis_audits.
@@ -469,7 +488,7 @@ export async function updateThesisStatus(
  */
 export async function trashThesis(id: number): Promise<ServiceResult<null>>;
 /**
- * POST /upload/theses/:id/files/replace
+ * Future HTTP equivalent: POST /api/theses/:id/files/replace
  * Adds a new primary file URL and marks the old one as non-primary.
  * Old file row is retained for audit history.
  * Used by: Admin file replacement panel.
@@ -512,7 +531,7 @@ export function validateThesisForAcceptance(thesis: {
 ```ts
 import type { ServiceResult } from "./types";
 /**
- * GET /theses/:id/file
+ * Future HTTP equivalent: GET /api/theses/:id/file
  * Returns the public URL or stream path for the thesis PDF.
  * No longer requires a Supabase session (per Decision 041).
  * Checks the thesis is accepted.
@@ -521,7 +540,7 @@ import type { ServiceResult } from "./types";
  * Implementation options (to be decided):
  *   (a) Return a short-lived signed/proxy URL.
  *   (b) Stream the file through a Next.js Route Handler.
- *   (c) Redirect to the file if the school server is already access-controlled.
+ *   (c) Redirect to the public Supabase Storage object.
  *
  * Used by: Thesis Detail page PDF viewer / download button.
  */
@@ -545,7 +564,7 @@ import type {
   ServiceResult,
 } from "./types";
 /**
- * GET /admin/users
+ * Future HTTP equivalent: GET /api/admin/users
  * Returns a paginated list of all users with role and affiliation.
  * Supports filtering by role.
  * Used by: Admin Users Management page.
@@ -554,7 +573,7 @@ export async function getUsers(
   params?: UserListParams,
 ): Promise<ServiceResult<UserAdminRow[]>>;
 /**
- * PATCH /admin/users/:id/role
+ * Future HTTP equivalent: PATCH /api/admin/users/:id/role
  * Updates a user's system role (admin | moderator | member).
  * Only admin may call this.
  * Used by: Admin Users Management page — role dropdown.
@@ -607,12 +626,12 @@ export async function requireOwnership(
 > Quick reference: which page calls which service functions.
 > | Page | Service Functions Called |
 > |------|--------------------------|
-> | **Home / Browse** | `getTheses()`, `getFilterOptions()` |
+> | **Home / Browse (`/home`)** | `getTheses()`, `getFilterOptions()` |
 > | **Search Results** | `getTheses({ q, year, department, research_area })` |
 > | **Thesis Detail** | `getThesisById(id)`, `getPublicFileUrl(id)` |
 > | **Login** | `login()` |
 > | **Sign-up (Registration)** | `registerMember()` |
-> | **Submit Thesis** | `submitThesis()`, `registerThesisFile()` |
+> | **Submit Thesis (`/upload`)** | `submitThesis()` |
 > | **My Submission (member edit)** | `updateOwnSubmission()`, `registerThesisFile()` |
 > | **Admin Review Queue** | `getAdminTheses()`, `acceptThesis()`, `flagThesis()`, `trashThesis()` |
 > | **Admin Thesis Detail / Edit** | `updateThesisStatus()`, `replacePrimaryFile()`, `validateThesisForAcceptance()` |

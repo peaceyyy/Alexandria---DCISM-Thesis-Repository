@@ -56,7 +56,7 @@ Must Complete Before: Phase 3, Phase 4, Phase 6
 Quick Scope:
 
 - Create core schema and seed data.
-- Configure private/authenticated PDF storage.
+- Configure the public, PDF-only, 10 MiB `thesis_files_bucket`.
 - Draft RLS policies for published metadata, roles, and admin/contributor work.
 - Add indexes for browse, filter, status, author, and tag queries.
 
@@ -67,7 +67,7 @@ Exit Criteria: Supabase project has schema, policies, seeds, and enough sample d
 Goal: Connect Supabase Auth to the Next.js app and enforce Admin, Contributor, and Student visitor roles.
 
 File: `.agent/plans/phase-3-auth-role-enforcement.md`
-Must Complete Before: Protected PDF access, admin workflows
+Must Complete Before: Protected contribution and admin workflows
 
 Quick Scope:
 
@@ -89,10 +89,10 @@ Quick Scope:
 
 - Implement public thesis listing with search, filters, sorting, and pagination.
 - Implement thesis detail payloads with recommendations, lessons, and related theses.
-- Implement authenticated PDF URL endpoint.
+- Implement the public accepted-thesis file route or equivalent redirect.
 - Shape responses so the frontend does not need raw Supabase join details.
 
-Exit Criteria: Public API contracts return real or seeded data and enforce PDF access boundaries.
+Exit Criteria: Public API contracts return real or seeded data and expose accepted-thesis PDFs without leaking storage URLs in thesis DTOs.
 
 ### Phase 5: Public Repository Frontend
 
@@ -106,7 +106,7 @@ Quick Scope:
 - Build repository page, thesis cards, filters, sorting, and empty/error/loading states.
 - Build thesis detail page with metadata, recommendations, lessons, related theses, and PDF controls.
 - Use agreed mock payloads first, then connect live endpoints.
-- Keep anonymous and authenticated PDF states clear.
+- Keep accepted PDF access public while contribution controls remain authenticated.
 
 Exit Criteria: Students can discover a relevant thesis quickly and understand its usefulness.
 

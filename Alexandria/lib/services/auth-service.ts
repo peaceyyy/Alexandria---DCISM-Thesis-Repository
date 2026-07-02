@@ -20,7 +20,7 @@ export function assertValidRole(role: string): role is "admin" | "moderator" | "
 }
 
 /**
- * POST /auth/register
+ * Server service: registerMember()
  * Creates a Supabase Auth user and supplies profile metadata.
  * The on_auth_user_created database trigger owns the public.users insert.
  * Validates that email domain is "usc.edu.ph" and affiliation is valid.
@@ -53,7 +53,7 @@ export async function registerMember(payload: RegisterPayload): Promise<ServiceR
 }
 
 /**
- * POST /auth/login
+ * Server service: login()
  * Signs in with email and password via Supabase Auth.
  * Returns the active session (handled internally by Supabase SDK).
  * Used by: Login page.
@@ -78,7 +78,7 @@ export async function login(email: string, password: string): Promise<ServiceRes
 }
 
 /**
- * POST /auth/logout
+ * Server service: logout()
  * Signs the current user out and invalidates the Supabase session.
  * Used by: Navigation / user menu.
  */

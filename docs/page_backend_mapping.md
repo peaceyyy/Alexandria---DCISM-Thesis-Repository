@@ -14,12 +14,13 @@ This document maps the 15 screens discovered in the Figma design to the specific
 | **Sign-Up Page** | `/sign-up` | `registerMember()`, `isAllowedEmailDomain()` | No |
 
 ### 2. Research Inspection & Submission
-| Page | Primary Backend Functions | Auth Required |
-| :--- | :--- | :--- |
-| **Main Page (Catalog)** | `getTheses()`, `getFilterOptions()` | No |
-| **Selected Page (Detail)**| `getThesisById()`, `getAuthenticatedFileUrl()` | Partial (For PDF) |
-| **Submission Form (New/Edit)** | `submitThesis()`, `registerThesisFile()`, `updateOwnSubmission()` | Yes (Member) |
-| **My Submissions (Missing)**| `getOwnSubmissions()` | Yes (Member) |
+| Page | Route | Primary Backend Functions | Auth Required |
+| :--- | :--- | :--- | :--- |
+| **Main Page (Catalog)** | `/home` | `getTheses()`, `getFilterOptions()` | No |
+| **Selected Page (Detail, not implemented)** | Not locked | `getThesisById()`, `getPublicFileUrl()` | No |
+| **Submission Form (New)** | `/upload` | `submitThesis()` | Yes (Member) |
+| **Submission Edit (not implemented)** | Not locked | `updateOwnSubmission()`, `registerThesisFile()` | Yes (Owner) |
+| **My Submissions (not implemented)** | Not locked | `getOwnSubmissions()` | Yes (Member) |
 
 ### 3. Moderator Workflow (Review & Management)
 | Page | Primary Backend Functions | Auth Required |
@@ -57,8 +58,8 @@ Based on the mapping above and the Backend Readiness Plan, we should prioritize 
 ### Phase 2: Content Ingestion & Viewing
 **Backend readiness:** The `submission-service` and `file-service` come next.
 * **Pages to Build:**
-  1. `Submission Form` (Allows members to push `for_review` data into the DB, giving moderators something to look at).
-  2. `Selected Page (Detail)` (Proves thesis detail viewing and authenticated PDF proxy logic via `getAuthenticatedFileUrl()`).
+  1. `Submission Form` (Allows members to submit one validated metadata-and-PDF packet as `for_review`).
+  2. `Selected Page (Detail)` (Proves thesis detail viewing and public PDF access through `getPublicFileUrl()`).
 
 ### Phase 3: Moderation & Approval
 **Backend readiness:** The `admin-thesis-service` and acceptance validation logic.
