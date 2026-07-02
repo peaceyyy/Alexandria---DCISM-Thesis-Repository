@@ -111,6 +111,13 @@ export type ThesisDetail = ThesisCard & {
 export type FilterOptions = {
   research_areas: string[];
   departments: string[];
+  };
+  related_theses: ThesisCard[]; // frontend-computed from tag overlap
+};
+/** Dropdowns for year/department/research_area filters on the Browse page. */
+export type FilterOptions = {
+  research_areas: string[];
+  departments: string[];
   years: number[];
 };
 /** Returned after successful login / getCurrentUser(). */
@@ -131,6 +138,7 @@ export type AdminThesisRow = {
   year: number;
   updated_at: string;
   submitted_by_user_id: string | null;
+  study_type: "thesis" | "capstone";
 };
 /** Row shape for the admin user management list. Alias of CurrentUser. */
 export type UserAdminRow = CurrentUser;
@@ -164,6 +172,7 @@ export type SubmitThesisPayload = {
   conference?: string;
   recommendations?: string;
   lessons_learned?: string;
+  study_type: "thesis" | "capstone";
 };
 export type SubmitThesisInput = Omit<
   SubmitThesisPayload,

@@ -196,6 +196,10 @@ export async function submitThesis(
       return err(makeError("VALIDATION_FAILED", "At least one tag is required"));
     }
 
+    if (!input.study_type || !["thesis", "capstone"].includes(input.study_type)) {
+      return err(makeError("VALIDATION_FAILED", "Study type must be either 'thesis' or 'capstone'"));
+    }
+
     const currentCalendarDate = getCurrentCalendarDate();
     if (
       !input.publication_date ||
@@ -235,11 +239,21 @@ export async function submitThesis(
       file_type: THESIS_PDF_MIME_TYPE,
     };
 
+    const finalPayload = {
+      ...payload,
+      submitted_by_user_id: user.id,
+    };
+
+    console.log("=== SUBMIT THESIS DEBUG ===");
+    console.log("User ID from session:", user.id);
+    console.log("Final RPC Payload:", JSON.stringify(finalPayload, null, 2));
+    console.log("===========================");
+
     // The related database inserts remain atomic inside the RPC.
     const { data: thesisId, error: rpcError } = await supabase.rpc(
       "submit_thesis_transaction",
       {
-        payload,
+        payload: finalPayload,
       }
     );
 

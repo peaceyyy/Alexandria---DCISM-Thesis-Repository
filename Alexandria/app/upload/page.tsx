@@ -1,82 +1,63 @@
 "use client";
 
-import { useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
+import { formSchema, type FormValues, STEPS, FIELD_STEP_MAP } from "@/lib/upload/schema";
 import { submitThesis } from "@/lib/services/submission-service";
 import { validateThesisPdf } from "@/lib/upload/file-validation";
 
-const APPLICATION_TIME_ZONE = "Asia/Manila";
+// Layout components
+import { UploadHeader } from "@/app/upload/_components/upload-header";
+import { Stepper } from "@/app/upload/_components/stepper";
+import { ExitWarningDialog } from "@/app/upload/_components/exit-warning-dialog";
+import { SubmitConfirmDialog } from "@/app/upload/_components/submit-confirm-dialog";
 
-function getCurrentCalendarDate() {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: APPLICATION_TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+// Wizard steps
+import { StepStudyBasics } from "./_components/steps/step-study-basics";
+import { StepPublication } from "./_components/steps/step-publication";
+import { StepPeople } from "./_components/steps/step-people";
+import { StepContent } from "./_components/steps/step-content";
+import { StepInsights } from "./_components/steps/step-insights";
+import { StepUpload } from "./_components/steps/step-upload";
+import { StepReview } from "./_components/steps/step-review";
+import { cn } from "@/lib/utils";
 
-  return `${values.year}-${values.month}-${values.day}`;
-}
-
-const currentCalendarDate = getCurrentCalendarDate();
-
-const authorSchema = z.object({
-  user_id: z.string().nullable(),
-  display_name: z.string().min(2, "Name is required"),
-  contribution_role: z.string().min(1),
-  sort_order: z.number().min(1),
-});
-
-const formSchema = z.object({
-  title: z.string().min(5, "Title must be at least 5 characters"),
-  abstract: z.string().min(50, "Abstract must be at least 50 characters"),
-  department: z.string().min(1),
-  research_area: z.string().min(1),
-  authors: z.array(authorSchema).min(1, "At least one author is required"),
-  tags: z.string().min(1, "At least one tag is required"),
-  publication_date: z.iso.date("Publication date is required"),
-  publication_link: z.string().optional().or(z.literal("")),
-  conference: z.string().optional(),
-  recommendations: z.string().optional(),
-  lessons_learned: z.string().optional(),
-}).superRefine((data, context) => {
-  if (!data.publication_date) {
-    return;
-  }
-
-  if (data.publication_date > currentCalendarDate) {
-    context.addIssue({
-      code: "custom",
-      path: ["publication_date"],
-      message: "Publication date cannot be later than today",
-    });
-  }
-});
-
-type FormValues = z.infer<typeof formSchema>;
+const TOTAL_STEPS = STEPS.length;
 
 export default function UploadPage() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const router = useRouter();
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<FormValues>({
+  // ── Wizard navigation state ──────────────────────────────────────────────
+  const [currentStep, setCurrentStep] = useState(1);
+  const [direction, setDirection] = useState<"forward" | "backward">("forward");
+  const [animKey, setAnimKey] = useState(0);
+
+  // ── File state (outside react-hook-form) ─────────────────────────────────
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+
+  // ── Dialog state ─────────────────────────────────────────────────────────
+  const [showExitWarning, setShowExitWarning] = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+
+  // ── Submission state ─────────────────────────────────────────────────────
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // ── Form setup ───────────────────────────────────────────────────────────
+  const methods = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    mode: "onChange",
     defaultValues: {
       title: "",
       abstract: "",
       department: "DCISM",
-      research_area: "",
+      type_of_study: "thesis",
+      research_areas: [],
       authors: [
         {
           user_id: null,
@@ -85,346 +66,232 @@ export default function UploadPage() {
           sort_order: 1,
         },
       ],
-      tags: "",
+      tags: [],
       publication_date: "",
       publication_link: "",
       conference: "",
       recommendations: "",
-      lessons_learned: "",
+      lessons_learned: [],
     },
   });
 
-  const {
-    fields: authorFields,
-    append: appendAuthor,
-    remove: removeAuthor,
-  } = useFieldArray({
-    name: "authors",
-    control,
-  });
+  const { isDirty, errors } = methods.formState;
 
-  const fillDummyData = () => {
-    setValue("title", "Test Thesis " + Math.floor(Math.random() * 1000));
-    setValue("abstract", "This is a mock abstract that is intentionally longer than 50 characters to ensure it passes the Zod validation schema successfully during our testing.");
-    setValue("department", "DCISM");
-    setValue("research_area", "Artificial Intelligence");
-    setValue("tags", "test, mock, ai");
-    setValue("authors.0.display_name", "Test User");
-    setValue("authors.0.contribution_role", "author");
-  };
+  // ── Unsaved changes — browser tab close / refresh ────────────────────────
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (isDirty || selectedFile) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty, selectedFile]);
 
-  const onSubmit = async (data: FormValues) => {
+  // ── Navigation helpers ───────────────────────────────────────────────────
+  const goToStep = useCallback(
+    (step: number) => {
+      const clamped = Math.max(1, Math.min(step, TOTAL_STEPS));
+      setDirection(clamped > currentStep ? "forward" : "backward");
+      setCurrentStep(clamped);
+      setAnimKey((k) => k + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    [currentStep],
+  );
+
+  function handleNext() {
+    goToStep(currentStep + 1);
+  }
+
+  function handleBack() {
+    goToStep(currentStep - 1);
+  }
+
+  // ── Logo click → exit warning ────────────────────────────────────────────
+  function handleLogoClick() {
+    if (isDirty || selectedFile) {
+      setShowExitWarning(true);
+    } else {
+      router.push("/home");
+    }
+  }
+
+  // ── File handling ────────────────────────────────────────────────────────
+  async function handleFileChange(file: File | null) {
+    setFileError(null);
+    if (!file) {
+      setSelectedFile(null);
+      return;
+    }
+    const validationError = await validateThesisPdf(file);
+    if (validationError) {
+      setFileError(validationError);
+      setSelectedFile(null);
+      return;
+    }
+    setSelectedFile(file);
+  }
+
+  // ── Open submit confirm (only if no errors) ──────────────────────────────
+  async function handleOpenSubmit() {
+    const isValid = await methods.trigger();
+    if (!isValid || !selectedFile) {
+      if (!selectedFile)
+        setFileError("Please attach a thesis PDF before submitting.");
+      return;
+    }
+    setShowSubmitConfirm(true);
+  }
+
+  // ── Actual submission ─────────────────────────────────────────────────────
+  async function handleConfirmSubmit() {
     setIsSubmitting(true);
-    setError(null);
-    setSuccess(null);
+    setSubmitError(null);
 
     try {
-      if (!selectedFile) {
-        throw new Error(
-          "Please attach a thesis PDF before submitting.",
-        );
-      }
-
-      const fileValidationError = await validateThesisPdf(selectedFile);
-      if (fileValidationError) {
-        throw new Error(fileValidationError);
-      }
+      const data = methods.getValues();
 
       const payload = {
-        ...data,
-        tags: data.tags
-          .split(",")
-          .map((tag) => tag.trim())
-          .filter(Boolean),
-        publication_link: data.publication_link || undefined,
-        conference: data.conference || undefined,
-        recommendations: data.recommendations || undefined,
-        lessons_learned: data.lessons_learned || undefined,
+        title: data.title,
+        abstract: data.abstract,
+        department: data.department,
+        research_area: data.research_areas.join(", "),
+        authors: data.authors,
+        tags: data.tags,
+        publication_date: data.publication_date,
+        publication_link: data.publication_link,
+        conference: data.conference,
+        recommendations: data.recommendations,
+        lessons_learned: data.lessons_learned.join("\n"),
       };
 
       const submissionPacket = new FormData();
       submissionPacket.set("payload", JSON.stringify(payload));
-      submissionPacket.set("file", selectedFile);
+      submissionPacket.set("file", selectedFile!);
 
       const result = await submitThesis(submissionPacket);
       if (result.error) {
-        throw new Error(
-          result.error.message || "Failed to create thesis record",
-        );
+        throw new Error(result.error.message || "Failed to submit thesis");
       }
 
-      setSuccess(
-        "Thesis and file submitted successfully! Your submission is now in review.",
-      );
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred");
+      // Success → redirect to home repository
+      router.push("/home");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      setSubmitError(message);
+      setShowSubmitConfirm(false);
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }
 
+  // ── Error step tracking (for stepper indicator) ──────────────────────────
+  const errorSteps =
+    currentStep === TOTAL_STEPS
+      ? Object.keys(errors)
+          .map((field) => FIELD_STEP_MAP[field] as number | undefined)
+          .filter((s): s is number => s !== undefined)
+          .concat(!selectedFile ? [6] : [])
+      : [];
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1>Submit Your Thesis</h1>
-        <button 
-          type="button" 
-          onClick={fillDummyData}
-          style={{ padding: "8px 16px", background: "#333", color: "white", borderRadius: "4px", cursor: "pointer" }}
-        >
-          Fill Dummy Data
-        </button>
+    <FormProvider {...methods}>
+      <div className="flex min-h-screen flex-col bg-[#14181C]">
+        {/* Focused-task header */}
+        <UploadHeader onLogoClick={handleLogoClick} />
+
+        {/* Step progress indicator */}
+        <div className="border-b border-white/5 px-4">
+          <Stepper
+            steps={STEPS}
+            currentStep={currentStep}
+            errorSteps={errorSteps}
+            onStepClick={goToStep}
+          />
+        </div>
+
+        {/* Step content — animated on navigation */}
+        <main className="flex-1 px-4 pt-10">
+          <div
+            key={animKey}
+            className={cn(
+              "w-full",
+              direction === "forward"
+                ? "animate-in fade-in slide-in-from-right-4 duration-200"
+                : "animate-in fade-in slide-in-from-left-4 duration-200",
+            )}
+          >
+            {currentStep === 1 && <StepStudyBasics />}
+            {currentStep === 2 && <StepPublication />}
+            {currentStep === 3 && <StepPeople />}
+            {currentStep === 4 && <StepContent />}
+            {currentStep === 5 && <StepInsights />}
+            {currentStep === 6 && (
+              <StepUpload
+                file={selectedFile}
+                onChange={handleFileChange}
+                error={fileError ?? undefined}
+              />
+            )}
+            {currentStep === 7 && (
+              <StepReview
+                onGoToStep={goToStep}
+                selectedFile={selectedFile}
+                onOpenSubmit={handleOpenSubmit}
+              />
+            )}
+          </div>
+        </main>
+
+        {/* ── Inline nav row — sits below the step, scrolls with the page ── */}
+        {currentStep < TOTAL_STEPS && (
+          <div className="mx-auto mb-16 mt-10 flex max-w-[540px] items-center justify-between px-4">
+            {/* Back */}
+            <button
+              type="button"
+              onClick={handleBack}
+              disabled={currentStep === 1}
+              className="flex items-center gap-1.5 rounded-lg border border-white/8 px-4 py-2 text-sm text-white/50 transition-all hover:border-white/15 hover:text-white disabled:pointer-events-none disabled:opacity-20"
+            >
+              <ChevronLeft size={15} aria-hidden />
+              Back
+            </button>
+
+            {/* Step counter */}
+            <p className="text-[10px] font-medium uppercase tracking-widest text-white/20">
+              {currentStep} / {TOTAL_STEPS}
+            </p>
+
+            {/* Next */}
+            <button
+              type="button"
+              onClick={handleNext}
+              className="flex items-center gap-1.5 rounded-lg bg-[#1752F0] px-5 py-2 text-sm font-medium text-white transition-all hover:bg-[#368BFE]"
+            >
+              Next
+              <ChevronRight size={15} aria-hidden />
+            </button>
+          </div>
+        )}
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
-        {error && <div style={{ color: "red" }}>{error}</div>}
-        {success && <div style={{ color: "green" }}>{success}</div>}
+      {/* ── Dialogs ──────────────────────────────────────────────────────── */}
+      <ExitWarningDialog
+        open={showExitWarning}
+        onStay={() => setShowExitWarning(false)}
+        onLeave={() => router.push("/home")}
+      />
 
-        <div>
-          <h2>Basic Details</h2>
-
-          <div>
-            <label>Title *</label>
-            <br />
-            <input {...register("title")} />
-            {errors.title && (
-              <p style={{ color: "red" }}>{errors.title.message}</p>
-            )}
-          </div>
-
-          <br />
-
-          <div>
-            <label>Abstract *</label>
-            <br />
-            <textarea {...register("abstract")} rows={4} />
-            {errors.abstract && (
-              <p style={{ color: "red" }}>{errors.abstract.message}</p>
-            )}
-          </div>
-
-          <br />
-
-          <div>
-            <label>Department *</label>
-            <br />
-            <select {...register("department")}>
-              <option value="DCISM">DCISM</option>
-              <option value="CAS">CAS</option>
-              <option value="TC">TC</option>
-            </select>
-            {errors.department && (
-              <p style={{ color: "red" }}>{errors.department.message}</p>
-            )}
-          </div>
-
-          <br />
-
-          <div>
-            <label>Research Area *</label>
-            <br />
-            <input {...register("research_area")} />
-            {errors.research_area && (
-              <p style={{ color: "red" }}>{errors.research_area.message}</p>
-            )}
-          </div>
-
-          <br />
-
-          <div>
-            <label>Tags * (comma separated)</label>
-            <br />
-            <input {...register("tags")} placeholder="e.g. AI, Web" />
-            {errors.tags && (
-              <p style={{ color: "red" }}>{errors.tags.message}</p>
-            )}
-          </div>
-        </div>
-
-        <br />
-        <hr />
-        <br />
-
-        <div>
-          <h2>Authors & Advisers</h2>
-          <button
-            type="button"
-            onClick={() =>
-              appendAuthor({
-                user_id: null,
-                display_name: "",
-                contribution_role: "author",
-                sort_order: authorFields.length + 1,
-              })
-            }
-          >
-            + Add Person
-          </button>
-
-          {authorFields.map((field, index) => (
-            <div
-              key={field.id}
-              style={{
-                border: "1px solid #ccc",
-                padding: "10px",
-                marginTop: "10px",
-              }}
-            >
-              <div>
-                <label>Name *</label>
-                <br />
-                <input {...register(`authors.${index}.display_name`)} />
-                {errors.authors?.[index]?.display_name && (
-                  <p style={{ color: "red" }}>
-                    {errors.authors[index]?.display_name?.message}
-                  </p>
-                )}
-              </div>
-
-              <br />
-
-              <div>
-                <label>Role *</label>
-                <br />
-                <select {...register(`authors.${index}.contribution_role`)}>
-                  <option value="author">Author</option>
-                  <option value="adviser">Adviser</option>
-                </select>
-              </div>
-
-              <input
-                type="hidden"
-                {...register(`authors.${index}.sort_order`)}
-              />
-
-              <br />
-
-              <button
-                type="button"
-                onClick={() => removeAuthor(index)}
-                disabled={authorFields.length === 1}
-              >
-                Remove
-              </button>
-            </div>
-          ))}
-          {errors.authors && !Array.isArray(errors.authors) && (
-            <p style={{ color: "red" }}>{errors.authors.message}</p>
-          )}
-        </div>
-
-        <br />
-        <hr />
-        <br />
-
-        <div>
-          <h2>File Upload</h2>
-          <div>
-            <label>Upload Thesis PDF Document *</label>
-            <br />
-            <input
-              type="file"
-              accept=".pdf,application/pdf"
-              onChange={async (event) => {
-                const input = event.currentTarget;
-                const file = input.files?.[0] ?? null;
-
-                if (!file) {
-                  setSelectedFile(null);
-                  return;
-                }
-
-                const validationError = await validateThesisPdf(file);
-                if (validationError) {
-                  setSelectedFile(null);
-                  setError(validationError);
-                  input.value = "";
-                  return;
-                }
-
-                setError(null);
-                setSelectedFile(file);
-              }}
-            />
-            {!selectedFile && <p>PDF only. Maximum file size 10 MiB.</p>}
-            {selectedFile && (
-              <p style={{ color: "green" }}>Selected: {selectedFile.name}</p>
-            )}
-          </div>
-        </div>
-
-        <br />
-        <hr />
-        <br />
-
-        <div>
-          <h2>Publication Details & Optional Metadata</h2>
-
-          <div>
-            <label>Publication Date *</label>
-            <br />
-            <input
-              type="date"
-              max={currentCalendarDate}
-              {...register("publication_date")}
-            />
-            {errors.publication_date && (
-              <p style={{ color: "red" }}>
-                {errors.publication_date.message}
-              </p>
-            )}
-          </div>
-
-          <br />
-
-          <div>
-            <label>Publication Link</label>
-            <br />
-            <input
-              type="text"
-              placeholder="https://..."
-              {...register("publication_link")}
-            />
-            {errors.publication_link && (
-              <p style={{ color: "red" }}>{errors.publication_link.message}</p>
-            )}
-          </div>
-
-          <br />
-
-          <div>
-            <label>Conference</label>
-            <br />
-            <input {...register("conference")} />
-          </div>
-
-          <br />
-
-          <div>
-            <label>Recommendations</label>
-            <br />
-            <textarea {...register("recommendations")} rows={3} />
-          </div>
-
-          <br />
-
-          <div>
-            <label>Lessons Learned</label>
-            <br />
-            <textarea {...register("lessons_learned")} rows={3} />
-          </div>
-        </div>
-
-        <br />
-        <hr />
-        <br />
-
-        <div>
-          <button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Submitting Securely..." : "Submit Thesis"}
-          </button>
-        </div>
-      </form>
-    </div>
+      <SubmitConfirmDialog
+        open={showSubmitConfirm}
+        onCancel={() => setShowSubmitConfirm(false)}
+        onConfirm={handleConfirmSubmit}
+        isSubmitting={isSubmitting}
+      />
+    </FormProvider>
   );
 }
