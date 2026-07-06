@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/layout/app-header";
+import FaqRail from "@/components/layout/faq";
 import { getCurrentUser } from "@/lib/services/auth-service";
 import Image from "next/image";
 
@@ -15,7 +16,7 @@ const items = [
       }
     ],
     year: 2025,
-    title: "This is an example title: Example research, thesis, or capstone title here Lorem Ipsum dolor vsit amet",
+    title: "AI-Based Student Attendance Monitoring Using Facial Recognition",
     abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim  veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea  commodo consequat. Duis aute irure dolor in reprehenderit in voluptate  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint  occaecat cupidatat non proident, sunt in culpa qui officia deserunt  mollit anim id est laborum",
     tags: ["AI/ML", "Data Science", "Godwin"]
   },
@@ -31,7 +32,7 @@ const items = [
       }
     ],
     year: 2023,
-    title: "This is an example title: Example research, thesis, or capstone title here Lorem Ipsum dolor vsit amet",
+    title: "A Mobile Inventory Management System for Small Businesses",
     abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim  veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea  commodo consequat. Duis aute irure dolor in reprehenderit in voluptate  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint  occaecat cupidatat non proident, sunt in culpa qui officia deserunt  mollit anim id est laborum",
     tags: ["Algorithms", "Data Science", "Pena"]
   },
@@ -47,7 +48,7 @@ const items = [
       }
     ],
     year: 2025,
-    title: "This is an example title: Example research, thesis, or capstone title here Lorem Ipsum dolor vsit amet",
+    title: "Cybersecurity Risk Assessment Framework for Small Enterprises",
     abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim  veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea  commodo consequat. Duis aute irure dolor in reprehenderit in voluptate  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint  occaecat cupidatat non proident, sunt in culpa qui officia deserunt  mollit anim id est laborum",
     tags: ["Web Development", "Data Science", "Elalto"]
   },
@@ -63,10 +64,106 @@ const items = [
       }
     ],
     year: 2024,
-    title: "This is an example title: Example research, thesis, or capstone title here Lorem Ipsum dolor vsit amet",
+    title: "Web-Based Appointment Scheduling System for Local Clinics",
     abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim  veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea  commodo consequat. Duis aute irure dolor in reprehenderit in voluptate  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint  occaecat cupidatat non proident, sunt in culpa qui officia deserunt  mollit anim id est laborum",
     tags: ["AI/ML", "Data Science", "Godwin"]
-  }
+  },
+  {
+    authors: [
+      {
+        id: "leira-bengil",
+        name: "Leira Bengil"
+      },
+      {
+        id: "jian-bryce",
+        name: "Jian Bryce Machacon"
+      }
+    ],
+    year: 2024,
+    title: "Web-Based Appointment Scheduling System for Local Clinics",
+    abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim  veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea  commodo consequat. Duis aute irure dolor in reprehenderit in voluptate  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint  occaecat cupidatat non proident, sunt in culpa qui officia deserunt  mollit anim id est laborum",
+    tags: ["AI/ML", "Data Science", "Godwin"]
+  },
+  {
+    authors: [
+      {
+        id: "leira-bengil",
+        name: "Leira Bengil"
+      },
+      {
+        id: "jian-bryce",
+        name: "Jian Bryce Machacon"
+      }
+    ],
+    year: 2024,
+    title: "Web-Based Appointment Scheduling System for Local Clinics",
+    abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim  veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea  commodo consequat. Duis aute irure dolor in reprehenderit in voluptate  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint  occaecat cupidatat non proident, sunt in culpa qui officia deserunt  mollit anim id est laborum",
+    tags: ["AI/ML", "Data Science", "Godwin"]
+  },
+  {
+    authors: [
+      {
+        id: "leira-bengil",
+        name: "Leira Bengil"
+      },
+      {
+        id: "jian-bryce",
+        name: "Jian Bryce Machacon"
+      }
+    ],
+    year: 2024,
+    title: "Web-Based Appointment Scheduling System for Local Clinics",
+    abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim  veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea  commodo consequat. Duis aute irure dolor in reprehenderit in voluptate  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint  occaecat cupidatat non proident, sunt in culpa qui officia deserunt  mollit anim id est laborum",
+    tags: ["AI/ML", "Data Science", "Godwin"]
+  },
+  {
+    authors: [
+      {
+        id: "leira-bengil",
+        name: "Leira Bengil"
+      },
+      {
+        id: "jian-bryce",
+        name: "Jian Bryce Machacon"
+      }
+    ],
+    year: 2024,
+    title: "Web-Based Appointment Scheduling System for Local Clinics",
+    abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim  veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea  commodo consequat. Duis aute irure dolor in reprehenderit in voluptate  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint  occaecat cupidatat non proident, sunt in culpa qui officia deserunt  mollit anim id est laborum",
+    tags: ["AI/ML", "Data Science", "Godwin"]
+  },
+  {
+    authors: [
+      {
+        id: "leira-bengil",
+        name: "Leira Bengil"
+      },
+      {
+        id: "jian-bryce",
+        name: "Jian Bryce Machacon"
+      }
+    ],
+    year: 2024,
+    title: "Web-Based Appointment Scheduling System for Local Clinics",
+    abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim  veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea  commodo consequat. Duis aute irure dolor in reprehenderit in voluptate  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint  occaecat cupidatat non proident, sunt in culpa qui officia deserunt  mollit anim id est laborum",
+    tags: ["AI/ML", "Data Science", "Godwin"]
+  },
+  {
+    authors: [
+      {
+        id: "leira-bengil",
+        name: "Leira Bengil"
+      },
+      {
+        id: "jian-bryce",
+        name: "Jian Bryce Machacon"
+      }
+    ],
+    year: 2024,
+    title: "Web-Based Appointment Scheduling System for Local Clinics",
+    abstract: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim  veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea  commodo consequat. Duis aute irure dolor in reprehenderit in voluptate  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint  occaecat cupidatat non proident, sunt in culpa qui officia deserunt  mollit anim id est laborum",
+    tags: ["AI/ML", "Data Science", "Godwin"]
+  },
 ]
 
 export default async function ThesesPage() {
@@ -74,9 +171,9 @@ export default async function ThesesPage() {
   const role = userResult.data?.role ?? null;
 
   return (
-    <main className="min-h-screen bg-[#14181c] text-white">
+    <main className="h-screen overflow-hidden bg-[#14181c] text-white">
       <AppHeader role={role} />
-      <div className="grid min-h-[calc(100vh-72px)] grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)_290px]">
+      <div className="grid min-h-[calc(100vh-72px)] grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)_360px]">
         <aside className="border-r border-white/15 px-3 py-4">
 
           <div className="">
@@ -137,8 +234,8 @@ export default async function ThesesPage() {
           </div>
         </aside>
 
-        <section className="border-r border-white/15 px-4 py-5 lg:px-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <section className="border-r border-white/15 px-4 py-5 lg:px-6 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="grid h-[calc(100vh-72px)] grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {items.map((item) => (
               <article
                 key={item.title}
@@ -162,7 +259,7 @@ export default async function ThesesPage() {
                   {item.title}
                 </h2>
 
-                <p className="mt-2 text-sm leading-5 text-white/70"> 
+                <p className="mt-2 line-clamp-3 text-sm leading-5 text-white/70"> 
                   {item.abstract}
                 </p>
 
@@ -181,28 +278,7 @@ export default async function ThesesPage() {
           </div>
         </section>
 
-        <aside className="px-4 py-5 lg:px-6">
-          <div className="rounded-lg border border-white/30 p-4">
-            <h3 className="mb-4 text-sm font-semibold">Frequently Asked Questions (FAQ)</h3>
-            <div className="space-y-3 text-sm text-white/75">
-              {[
-                "When is thesis?",
-                "When is capstone?",
-                "Who are the advisors?",
-                "How do I submit my paper?",
-                "Can I contribute?",
-                "How do I contribute?",
-                "Are these verified?",
-                "Can we use these as citations?",
-              ].map((q) => (
-                <button key={q} className="flex w-full items-center justify-between border-b border-white/10 pb-2 text-left">
-                  <span>{q}</span>
-                  <span>⌄</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </aside>
+        <FaqRail />
       </div>
     </main>
   );
@@ -210,6 +286,32 @@ export default async function ThesesPage() {
 
 
 /*
+
+FAQ section
+<aside className="px-4 py-5 lg:px-6">
+  <div className="rounded-lg border border-white/30 p-4">
+    <h3 className="mb-4 text-sm font-semibold">Frequently Asked Questions (FAQ)</h3>
+    <div className="space-y-3 text-sm text-white/75">
+      {[
+        "When is thesis?",
+        "When is capstone?",
+        "Who are the advisors?",
+        "How do I submit my paper?",
+        "Can I contribute?",
+        "How do I contribute?",
+        "Are these verified?",
+        "Can we use these as citations?",
+      ].map((q) => (
+        <button key={q} className="flex w-full items-center justify-between border-b border-white/10 pb-2 text-left">
+          <span>{q}</span>
+          <span>⌄</span>
+        </button>
+      ))}
+    </div>
+  </div>
+</aside>
+
+
       <main className="mx-auto max-w-7xl px-6 py-12 sm:px-10 lg:px-16">
         <h1 className="text-3xl font-bold mb-8">Repository</h1>
 
