@@ -26,6 +26,9 @@ export type DbUser = {
   role: UserRole;
   affiliation: Affiliation;
   created_at: string;
+  deactivated_at: string | null;
+  deactivation_reason: string | null;
+  deactivated_by_user_id: string | null;
 };
 export type DbThesis = {
   id: number; // bigint identity
@@ -40,7 +43,7 @@ export type DbThesis = {
   conference: string | null;
   recommendations: string | null;
   lessons_learned: string | null;
-  submitted_by_user_id: string | null; // uuid — nullable for legacy/admin uploads
+  submitted_by_user_id: string | null; // uuid — nullable for legacy/imported rows
   created_at: string;
   updated_at: string;
 };
@@ -60,17 +63,17 @@ export type DbThesisTag = {
 export type DbThesisFile = {
   id: number;
   thesis_id: number;
-  file_url: string; // NEVER returned to public payloads
+  file_url: string | null; // transitional legacy field
+  storage_path: string; // NEVER returned to public payloads
   file_type: string;
   is_primary: boolean;
-  created_at: string;
 };
 export type DbThesisAudit = {
   id: number;
   thesis_id: number;
   changed_by_user_id: string;
-  change_description: string;
-  created_at: string;
+  change_description: string | null;
+  updated_at: string;
 };
 // ─── UI / Service DTOs (frontend-safe shapes) ────────────────────────────────
 export type ThesisAuthor = {
@@ -102,15 +105,9 @@ export type ThesisDetail = ThesisCard & {
   lessons_learned: string | null;
   file_access: {
     has_primary_file: boolean;
-    requires_auth: boolean;
-    download_path: string | null; // e.g. "/api/theses/1/file" — never a raw URL
-  };
-  related_theses: ThesisCard[]; // frontend-computed from tag overlap
-};
-/** Dropdowns for year/department/research_area filters on the Browse page. */
-export type FilterOptions = {
-  research_areas: string[];
-  departments: string[];
+    preview_path: string | null;
+    download_path: string | null;
+    download_requires_auth: boolean;
   };
   related_theses: ThesisCard[]; // frontend-computed from tag overlap
 };
@@ -140,8 +137,44 @@ export type AdminThesisRow = {
   submitted_by_user_id: string | null;
   study_type: "thesis" | "capstone";
 };
-/** Row shape for the admin user management list. Alias of CurrentUser. */
-export type UserAdminRow = CurrentUser;
+export type DashboardUploadRow = {
+  id: number;
+  title: string;
+  author: string;
+  created_at: string;
+  review_status: Exclude<ReviewStatus, "trashed">;
+};
+export type DashboardActivityRow = {
+  id: number;
+  thesis_id: number;
+  text: string;
+  occurred_at: string;
+};
+export type DepartmentResearchCount = {
+  department: string;
+  count: number;
+};
+export type AdminDashboardSnapshot = {
+  viewer: {
+    profile_name: string;
+  };
+  metrics: {
+    total_research: number;
+    registered_users: number;
+    pending_docs: number;
+  };
+  recent_uploads: DashboardUploadRow[];
+  recent_activity: DashboardActivityRow[];
+  research_by_department: DepartmentResearchCount[];
+};
+export type UserAccountStatus = "active" | "deactivated";
+export type UserRoleCounts = Record<UserRole, number>;
+/** Frontend-safe row shape for admin user management. */
+export type UserAdminRow = CurrentUser & {
+  deactivated_at: string | null;
+  deactivation_reason: string | null;
+  deactivated_by_user_id: string | null;
+};
 /** Returned inside a VALIDATION_FAILED ServiceError's details. */
 export type ValidationErrorList = {
   missing_fields: string[];
@@ -165,7 +198,7 @@ export type SubmitThesisPayload = {
   research_area: string;
   authors: ThesisAuthorInput[];
   tags: string[];
-  file_url: string;
+  storage_path: string;
   file_type: "application/pdf";
   publication_date: string;
   publication_link?: string;
@@ -176,12 +209,12 @@ export type SubmitThesisPayload = {
 };
 export type SubmitThesisInput = Omit<
   SubmitThesisPayload,
-  "file_url" | "file_type" | "year"
+  "storage_path" | "file_type" | "year"
 >;
 /** All fields optional — partial PATCH. */
 export type updateThesisStatusPayload = Partial<SubmitThesisPayload>;
 export type RegisterFilePayload = {
-  file_url: string;
+  storage_path: string;
   file_type?: string;
   is_primary: boolean;
 };
@@ -200,6 +233,7 @@ export type AdminThesisListParams = {
 };
 export type UserListParams = {
   role?: UserRole;
+  account_status?: UserAccountStatus;
   page?: number;
   limit?: number;
 };

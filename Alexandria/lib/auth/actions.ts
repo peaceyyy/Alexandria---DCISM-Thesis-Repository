@@ -12,6 +12,10 @@ export async function loginAction(email: string, password: string) {
   return serviceLogin(email, password);
 }
 
+export async function clearSessionAction() {
+  return serviceLogout();
+}
+
 export async function registerAction(payload: RegisterPayload) {
   return serviceRegisterMember(payload);
 }
@@ -23,5 +27,5 @@ export async function logoutAction() {
     redirect("/profile?error=logout");
   }
 
-  redirect("/");
+  redirect("/home");
 }

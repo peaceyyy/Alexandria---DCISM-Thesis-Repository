@@ -2,10 +2,14 @@ import { describe, expect, it } from "vitest";
 import { getPostAuthDestination } from "./auth-routing";
 
 describe("getPostAuthDestination", () => {
-  it.each(["member", "moderator", "admin"] as const)(
-    "sends %s to the thesis preview after authentication",
+  it("sends members to the repository", () => {
+    expect(getPostAuthDestination("member")).toBe("/home");
+  });
+
+  it.each(["moderator", "admin"] as const)(
+    "sends %s to the shared admin dashboard",
     (role) => {
-      expect(getPostAuthDestination(role)).toBe("/home");
+      expect(getPostAuthDestination(role)).toBe("/admin/dashboard");
     },
   );
 

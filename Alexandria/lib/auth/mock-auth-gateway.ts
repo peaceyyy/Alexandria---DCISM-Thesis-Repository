@@ -3,6 +3,11 @@ import type { AuthGateway } from "./auth-gateway";
 const wait = () => new Promise((resolve) => window.setTimeout(resolve, 250));
 
 export const mockAuthGateway: AuthGateway = {
+  async clearSession() {
+    await wait();
+    return { data: null, error: null };
+  },
+
   async login(email) {
     await wait();
 

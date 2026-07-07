@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "../supabase/server";
 import { err, makeError, ok } from "./result";
 import type { CurrentUser, RegisterPayload, ServiceResult } from "./types";
@@ -99,7 +100,7 @@ export async function logout(): Promise<ServiceResult<null>> {
  * Returns null in data if no active session.
  * Used by: All protected layouts, navigation auth state, role guards.
  */
-export async function getCurrentUser(): Promise<ServiceResult<CurrentUser | null>> {
+async function resolveCurrentUser(): Promise<ServiceResult<CurrentUser | null>> {
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -108,20 +109,28 @@ export async function getCurrentUser(): Promise<ServiceResult<CurrentUser | null
     return ok(null); // No active session
   }
 
-  console.log("[DEBUG] getCurrentUser: user found in auth", user.id);
-
   const { data: profile, error: profileError } = await supabase
     .from("users")
-    .select("*")
+    .select(
+      "id, email, profile_name, usc_id, role, affiliation, created_at, deactivated_at",
+    )
     .eq("id", user.id)
     .single();
 
   if (profileError || !profile) {
-    console.error("[DEBUG] getCurrentUser: profile fetch failed", profileError, "profile:", profile);
     return err(makeError("NOT_FOUND", "Profile not found for authenticated user"));
   }
 
-  // Cast DB row to CurrentUser
+  if (profile.deactivated_at) {
+    await supabase.auth.signOut({ scope: "local" });
+    return err(
+      makeError(
+        "ACCOUNT_DEACTIVATED",
+        "This account is deactivated. Contact an administrator to restore access.",
+      ),
+    );
+  }
+
   const currentUser: CurrentUser = {
     id: profile.id,
     email: profile.email,
@@ -134,3 +143,6 @@ export async function getCurrentUser(): Promise<ServiceResult<CurrentUser | null
 
   return ok(currentUser);
 }
+
+/** Request-memoized active principal used by layouts, services, and actions. */
+export const getCurrentUser = cache(resolveCurrentUser);

@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { THESIS_PDF_MIME_TYPE } from "./file-validation";
 
 const THESIS_FILES_BUCKET = "thesis_files_bucket";
 
 export type StoredThesisFile = {
   filePath: string;
-  fileUrl: string;
 };
 
 export async function uploadThesisFileToStorage(
@@ -28,23 +28,24 @@ export async function uploadThesisFileToStorage(
     throw new Error(`Storage upload failed: ${error.message}`);
   }
 
-  const { data: urlData } = supabase.storage
-    .from(THESIS_FILES_BUCKET)
-    .getPublicUrl(data.path);
-
   return {
     filePath: data.path,
-    fileUrl: urlData.publicUrl,
   };
 }
 
 export async function removeThesisFileFromStorage(
   filePath: string,
 ): Promise<string | null> {
-  const supabase = await createClient();
-  const { error } = await supabase.storage
-    .from(THESIS_FILES_BUCKET)
-    .remove([filePath]);
+  try {
+    const supabase = createAdminClient();
+    const { error } = await supabase.storage
+      .from(THESIS_FILES_BUCKET)
+      .remove([filePath]);
 
-  return error?.message ?? null;
+    return error?.message ?? null;
+  } catch (error) {
+    return error instanceof Error
+      ? error.message
+      : "Storage cleanup could not be completed.";
+  }
 }

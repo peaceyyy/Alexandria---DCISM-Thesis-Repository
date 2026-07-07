@@ -29,3 +29,24 @@ export function makeError(
     ...(details ? { details } : {}),
   };
 }
+
+export function isServiceError(value: unknown): value is ServiceError {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<ServiceError>;
+  return typeof candidate.code === "string" && typeof candidate.message === "string";
+}
+
+/** Convert an unexpected thrown value into a client-safe service error. */
+export function normalizeServiceError(
+  value: unknown,
+  fallbackMessage = "The requested operation could not be completed.",
+): ServiceError {
+  if (isServiceError(value)) {
+    return value;
+  }
+
+  return makeError("INTERNAL_ERROR", fallbackMessage);
+}

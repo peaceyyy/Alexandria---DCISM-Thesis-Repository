@@ -11,6 +11,9 @@ import { getCurrentUser } from "./auth-service";
 export async function requireSession(): Promise<CurrentUser> {
   const result = await getCurrentUser();
   if (result.error || !result.data) {
+    if (result.error?.code === "ACCOUNT_DEACTIVATED") {
+      throw result.error;
+    }
     throw makeError("UNAUTHENTICATED", "Active session is required.");
   }
   return result.data;
