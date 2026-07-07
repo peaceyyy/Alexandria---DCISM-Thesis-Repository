@@ -303,72 +303,96 @@ export default function UploadPage() {
         </main>
 
         {/* ── Sticky footer nav bar ─────────────────────────────────────── */}
-        {currentStep < TOTAL_STEPS && (
-          <div className="sticky bottom-0 z-30 border-t border-white/[0.06] bg-[#14181C]/90 backdrop-blur-md">
-            <div className="mx-auto flex max-w-[540px] items-center gap-4 px-4 py-4">
+        <div className="sticky bottom-0 z-30 border-t border-white/[0.06] bg-[#14181C]/90 backdrop-blur-md">
+          <div className="mx-auto flex max-w-[540px] items-center gap-4 px-4 py-4">
 
-              {/* Back — ghost, clearly subordinate */}
-              <button
-                type="button"
-                onClick={handleBack}
-                disabled={currentStep === 1}
-                className="flex h-9 items-center gap-1 rounded-md px-3 text-sm text-white/35 transition-all hover:text-white/70 disabled:pointer-events-none disabled:opacity-20"
-              >
-                <ChevronLeft size={14} aria-hidden />
-                Back
-              </button>
-
-              {/* Progress track — fills the remaining space */}
-              <div className="flex flex-1 flex-col items-center gap-2">
-                {/* Segmented dots */}
-                <div className="flex items-center gap-1.5" role="progressbar" aria-valuenow={currentStep} aria-valuemin={1} aria-valuemax={TOTAL_STEPS}>
-                  {Array.from({ length: TOTAL_STEPS - 1 }).map((_, i) => {
-                    const seg = i + 1;
-                    return (
-                      <div
-                        key={seg}
-                        className={cn(
-                          "h-1 rounded-full transition-all duration-300",
-                          seg < currentStep
-                            ? "w-4 bg-[#1752F0]"
-                            : seg === currentStep
-                              ? "w-5 bg-[#368BFE]"
-                              : "w-3 bg-white/10",
-                        )}
-                      />
-                    );
-                  })}
-                </div>
-                {/* Step label */}
-                <span className="text-[9px] font-semibold uppercase tracking-widest text-white/20">
-                  Step {currentStep} of {TOTAL_STEPS - 1}
-                </span>
-              </div>
-
-              {/* Dev tool — muted, ghost, tucked away */}
-              {process.env.NODE_ENV === "development" && (
+            {currentStep < TOTAL_STEPS ? (
+              <>
+                {/* Back — ghost, clearly subordinate */}
                 <button
                   type="button"
-                  onClick={fillDummyData}
-                  title="Dev: Quick Fill"
-                  className="flex h-7 items-center rounded border border-white/8 px-2 text-[9px] font-semibold uppercase tracking-wider text-white/20 transition-colors hover:border-white/15 hover:text-white/40"
+                  onClick={handleBack}
+                  disabled={currentStep === 1}
+                  className="flex h-9 items-center gap-1 rounded-md px-3 text-sm text-white/35 transition-all hover:text-white/70 disabled:pointer-events-none disabled:opacity-20"
                 >
-                  Fill
+                  <ChevronLeft size={14} aria-hidden />
+                  Back
                 </button>
-              )}
 
-              {/* Next — primary CTA */}
-              <button
-                type="submit"
-                className="flex h-9 items-center gap-1.5 rounded-lg bg-[#1752F0] px-5 text-sm font-semibold text-white shadow-lg shadow-[#1752F0]/20 transition-all hover:bg-[#368BFE] hover:shadow-[#368BFE]/25"
-              >
-                Next
-                <ChevronRight size={14} aria-hidden />
-              </button>
+                {/* Progress track — fills the remaining space */}
+                <div className="flex flex-1 flex-col items-center gap-2">
+                  {/* Segmented dots */}
+                  <div className="flex items-center gap-1.5" role="progressbar" aria-valuenow={currentStep} aria-valuemin={1} aria-valuemax={TOTAL_STEPS}>
+                    {Array.from({ length: TOTAL_STEPS - 1 }).map((_, i) => {
+                      const seg = i + 1;
+                      return (
+                        <div
+                          key={seg}
+                          className={cn(
+                            "h-1 rounded-full transition-all duration-300",
+                            seg < currentStep
+                              ? "w-4 bg-[#1752F0]"
+                              : seg === currentStep
+                                ? "w-5 bg-[#368BFE]"
+                                : "w-3 bg-white/10",
+                          )}
+                        />
+                      );
+                    })}
+                  </div>
+                  {/* Step label */}
+                  <span className="text-[9px] font-semibold uppercase tracking-widest text-white/20">
+                    Step {currentStep} of {TOTAL_STEPS - 1}
+                  </span>
+                </div>
 
-            </div>
+                {/* Dev tool — muted, ghost, tucked away */}
+                {process.env.NODE_ENV === "development" && (
+                  <button
+                    type="button"
+                    onClick={fillDummyData}
+                    title="Dev: Quick Fill"
+                    className="flex h-7 items-center rounded border border-white/8 px-2 text-[9px] font-semibold uppercase tracking-wider text-white/20 transition-colors hover:border-white/15 hover:text-white/40"
+                  >
+                    Fill
+                  </button>
+                )}
+
+                {/* Next — primary CTA */}
+                <button
+                  type="submit"
+                  className="flex h-9 items-center gap-1.5 rounded-lg bg-[#1752F0] px-5 text-sm font-semibold text-white shadow-lg shadow-[#1752F0]/20 transition-all hover:bg-[#368BFE] hover:shadow-[#368BFE]/25"
+                >
+                  Next
+                  <ChevronRight size={14} aria-hidden />
+                </button>
+              </>
+            ) : (
+              /* ── Review step footer ─────────────────────────────────────── */
+              <>
+                <button
+                  type="button"
+                  onClick={handleLogoClick}
+                  className="flex h-9 items-center rounded-md px-3 text-sm text-white/35 transition-colors hover:text-white/60"
+                >
+                  Back to Home
+                </button>
+
+                <div className="flex-1" />
+
+                <button
+                  type="button"
+                  onClick={handleOpenSubmit}
+                  className="flex h-9 items-center gap-1.5 rounded-lg bg-[#1752F0] px-5 text-sm font-semibold text-white shadow-lg shadow-[#1752F0]/20 transition-all hover:bg-[#368BFE] hover:shadow-[#368BFE]/25"
+                >
+                  Submit Thesis
+                  <ChevronRight size={14} aria-hidden />
+                </button>
+              </>
+            )}
+
           </div>
-        )}
+        </div>
       </form>
 
       {/* ── Dialogs ──────────────────────────────────────────────────────── */}

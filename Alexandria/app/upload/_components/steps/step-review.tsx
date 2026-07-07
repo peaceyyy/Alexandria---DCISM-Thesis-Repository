@@ -157,7 +157,7 @@ export function StepReview({
   const advisersList = values.authors.filter((a) => a.contribution_role === "adviser");
 
   return (
-    <div className="mx-auto w-full max-w-[540px] space-y-6 px-4 pb-4 sm:px-0">
+    <div className="mx-auto w-full max-w-[540px] space-y-6 px-4 pb-0 sm:px-0">
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-white">Review & Submit</h2>
         <p className="text-sm text-white/35">
@@ -293,16 +293,6 @@ export function StepReview({
           <p className="text-sm italic text-[#ff6b6b]/70">No PDF uploaded yet.</p>
         )}
       </ReviewSection>
-
-      {/* Submit button */}
-      <button
-        type="button"
-        onClick={onOpenSubmit}
-        disabled={hasAnyError}
-        className="w-full rounded-xl bg-[#1752F0] py-3.5 text-sm font-semibold text-white transition-all hover:bg-[#368BFE] disabled:cursor-not-allowed disabled:opacity-35"
-      >
-        {hasAnyError ? "Fix the issues above to submit" : "Submit Thesis"}
-      </button>
     </div>
   );
 }
