@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type React from "react";
 import Image from "next/image";
 import FaqRail from "@/components/layout/faq";
 import FilterSidebar from "@/components/layout/filter-sidebar";
