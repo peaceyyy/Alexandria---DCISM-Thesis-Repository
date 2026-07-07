@@ -1,12 +1,12 @@
 /**
- * AppHeader — the shared header for all content pages (/theses, etc.)
+ * AppHeader — the shared header for all content pages (/home, etc.)
  *
  * Layout (left → right):
  *   [Logo mark + wordmark]  [────── Search bar ──────]  [Role/Dashboard group | Contribute]
  *
  * Right cluster behaviour by role:
  *   • Guest   → role pill (→ /login)  |  separator  |  "Sign In" (intercept modal)
- *   • Member  → role pill (→ /profile) |  separator  |  "Contribute" (→ /submit)
+ *   • Member  → role pill (→ /profile) |  separator  |  "Contribute" (→ /upload)
  *   • Mod     → role pill  +  "Dashboard →"  (no Contribute — mods don't submit)
  *   • Admin   → role pill  +  "Dashboard →"  (no Contribute — admins don't submit)
  *
@@ -33,7 +33,7 @@ export function AppHeader({ role }: AppHeaderProps) {
 
       {/* ── Brand ──────────────────────────────────────────────────────── */}
       <a
-        href="/theses"
+        href="/home"
         className="flex shrink-0 items-center gap-2.5 text-white no-underline"
         aria-label="Alexandria repository home"
       >

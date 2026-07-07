@@ -17,7 +17,7 @@ export default async function AdminLayout({
     redirect("/login");
   }
   if (user.role !== "admin" && user.role !== "moderator") {
-    redirect("/theses");
+    redirect("/home");
   }
 
   return (
