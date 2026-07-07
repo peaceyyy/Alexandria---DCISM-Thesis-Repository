@@ -1,6 +1,6 @@
 # Alexandria Backend Readiness Plan
 
-Last updated: 2026-07-01
+Last updated: 2026-07-08
 
 ## Purpose
 
@@ -44,6 +44,7 @@ These decisions came from project-lead clarification on 2026-06-26.
 | Recommendations and lessons | Keep `recommendations` and `lessons_learned` as free-form thesis text fields for MVP. |
 | Authors/advisers | Authors and advisers live in `thesis_authors` with required `display_name`, optional `user_id`, and `contribution_role` of `author` or `adviser`. |
 | Member editing | Members can edit their own submission only after it has been `flagged`. |
+| Flagged revisions | A `flagged` thesis is returned to the submitting member with moderator comments. When the member resubmits, it goes back to `for_review` and editing locks again. |
 | Member file attachment | Members can attach/register the thesis PDF or file URL for their own submission. |
 | Initial submission packet | The upload page sends metadata and the file together to the authenticated `submitThesis()` server action. Storage happens only after authentication; an RPC failure triggers removal of the newly uploaded storage object. |
 | Initial thesis file | PDF only, maximum 10 MiB. Browser and server validate extension, MIME metadata, size, and PDF signature. The Supabase bucket should enforce the same size and MIME restrictions. |
@@ -53,6 +54,9 @@ These decisions came from project-lead clarification on 2026-06-26.
 | Approved label | Keep the current DB value `accepted` unless the team chooses a migration; the UI can label it as `Approved`. |
 | Submission ownership | Use `theses.submitted_by_user_id uuid REFERENCES public.users(id)` for submission-owner edit/file permissions. Nullable is allowed for legacy/imported rows. Every new ordinary submission—including one performed by an admin—derives the actor from `auth.uid()` and does not accept an ownership override from the client. Confirmed added in live Supabase on 2026-06-27. |
 | Primary thesis PDF | Exactly one `thesis_files` row per thesis should be primary for PDF preview/download. |
+
+Detailed moderator-page handoff:
+`docs/handoffs/2026-07-08-moderator-review-lifecycle.md`.
 
 ## Backend Work Homer Can Start Now
 
