@@ -31,7 +31,7 @@ export default function Landing() {
 
           <div className="mt-12 flex flex-wrap gap-3">
             <Link
-              href="/home"
+              href="/theses"
               className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#368bfe] px-8 text-base font-semibold text-white transition-colors hover:bg-[#2f78ff]"
             >
               Browse

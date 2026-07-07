@@ -1,5 +1,5 @@
 /**
- * AppHeader — the shared header for all content pages (/home, etc.)
+ * AppHeader — the shared header for all content pages (/theses, etc.)
  *
  * Layout (left → right):
  *   [Logo mark + wordmark]  [────── Search bar ──────]  [Role/Dashboard group | Contribute]
@@ -33,7 +33,7 @@ export function AppHeader({ role }: AppHeaderProps) {
 
       {/* ── Brand ──────────────────────────────────────────────────────── */}
       <a
-        href="/home"
+        href="/theses"
         className="flex shrink-0 items-center gap-2.5 text-white no-underline"
         aria-label="Alexandria repository home"
       >
