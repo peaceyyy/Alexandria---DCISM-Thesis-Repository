@@ -5,8 +5,10 @@ import type React from "react";
 import Image from "next/image";
 import FaqRail from "@/components/layout/faq";
 import FilterSidebar from "@/components/layout/filter-sidebar";
+import Link from "next/link";
 
 type ThesisItem = {
+  id: number;
   authors: { id: string; name: string }[];
   year: number;
   title: string;
@@ -76,43 +78,45 @@ export default function ThesesBrowser({ items }: ThesesBrowserProps) {
       <section className="border-r border-white/15 px-4 py-5 lg:px-6 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredItems.map((item) => (
-            <article
-              key={item.title}
-              className="group rounded-xl border border-white/15 bg-white/[0.03] p-4 transition hover:-translate-y-0.5 hover:border-white/35 hover:bg-white/[0.06]"
-            >
-              <div className="mb-3 overflow-hidden rounded-lg border border-white/10 bg-white/5">
-                <Image
-                  src="/placeholder.svg"
-                  alt="Article preview"
-                  width={640}
-                  height={360}
-                  className="h-36 w-full object-cover"
-                />
-              </div>
+            <Link key={item.id} href={`/theses/${item.id}`} className="block">
+              <article
+                key={item.title}
+                className="group rounded-xl border border-white/15 bg-white/[0.03] p-4 transition hover:-translate-y-0.5 hover:border-white/35 hover:bg-white/[0.06]"
+              >
+                <div className="mb-3 overflow-hidden rounded-lg border border-white/10 bg-white/5">
+                  <Image
+                    src="/placeholder.svg"
+                    alt="Article preview"
+                    width={640}
+                    height={360}
+                    className="h-36 w-full object-cover"
+                  />
+                </div>
 
-              <div className="mb-2 text-[11px] uppercase tracking-wide text-white/50">
-                {item.authors.map((a) => a.name).join(" • ")} | {item.year}
-              </div>
+                <div className="mb-2 text-[11px] uppercase tracking-wide text-white/50">
+                  {item.authors.map((a) => a.name).join(" • ")} | {item.year}
+                </div>
 
-              <h2 className="text-base font-extrabold leading-tight text-white">
-                {item.title}
-              </h2>
+                <h2 className="text-base font-extrabold leading-tight text-white">
+                  {item.title}
+                </h2>
 
-              <p className="mt-2 line-clamp-3 text-sm leading-5 text-white/70">
-                {item.abstract}
-              </p>
+                <p className="mt-2 line-clamp-3 text-sm leading-5 text-white/70">
+                  {item.abstract}
+                </p>
 
-              <div className="mt-3 flex flex-wrap gap-2">
-                {item.research_area.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full border border-[#1da0c9]/50 bg-[#1da0c9]/10 px-2 py-0.5 text-[11px] font-medium text-[#9ddff2]"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </article>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {item.research_area.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full border border-[#1da0c9]/50 bg-[#1da0c9]/10 px-2 py-0.5 text-[11px] font-medium text-[#9ddff2]"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </article>
+            </Link>
           ))}
         </div>
       </section>
