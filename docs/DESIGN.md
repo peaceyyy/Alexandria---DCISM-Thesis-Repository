@@ -72,6 +72,13 @@ Use gradients sparingly. They are part of the landing identity, not general UI c
 
 Do not introduce broad background gradients or decorative glow fields.
 
+### Anti-Patterns: High Saturation Outlines
+
+We explicitly avoid highly saturated, thick outlines or "streaks" for focus rings and highlights (e.g., solid `#368bfe` rings). These tend to look overwhelming and break the subtle visual density of the UI.
+- **Instead of solid borders:** Use an alpha-blended approach.
+- **For focus states:** Use `color-mix(in oklch, var(--color-brand-bright) 25%, transparent)` to create a softer, more integrated glow.
+- **For active borders:** Use `var(--color-separator)` or heavily faded brand variants.
+
 ## Typography
 
 ### Font Families

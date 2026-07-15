@@ -49,7 +49,7 @@ export default function FilterSidebar({
   onToggleMySubmissions,
 }: FilterSidebarProps) {
   return (
-    <aside className={cn("border-r border-[var(--color-border-subtle)] px-3 py-4", className)}>
+    <aside className={cn("px-3 py-4", className)}>
       <div className="mb-4 text-sm font-semibold text-[var(--color-text-muted)]">Filter</div>
 
       {showMySubmissions && (

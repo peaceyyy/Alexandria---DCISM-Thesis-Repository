@@ -11,6 +11,7 @@ import {
   FileText,
 } from "lucide-react";
 import { StatusBadge } from "@/components/admin/status-badge";
+import { AdminMetadataEditorDialog } from "@/components/review/admin-metadata-editor-dialog";
 import { ReviewableField } from "@/components/review/reviewable-field";
 import { ReviewDecisionActions } from "@/components/review/review-decision-actions";
 import { ReviewAuditTimeline } from "@/components/review/review-audit-timeline";
@@ -18,12 +19,14 @@ import { CommentSidePanel } from "@/components/review/comment-side-panel";
 import type { ReviewFieldKey } from "@/components/review/types";
 import {
   addReviewComment,
+  adminUpdateSubmissionMetadata,
   getReviewSubmission,
   setReviewStatus,
 } from "@/lib/services/review-service";
 import type {
   ReviewStatus,
   ReviewSubmission,
+  SubmitThesisInput,
   UserRole,
 } from "@/lib/services/types";
 
@@ -92,6 +95,7 @@ export function ReviewDetailClient({
   const [reviewPanelOpen, setReviewPanelOpen] = useState(true);
   const [activeCommentField, setActiveCommentField] = useState<ReviewFieldKey | null>(null);
   const [commentAnchorY, setCommentAnchorY] = useState(120);
+  const [isAdminMetadataEditorOpen, setIsAdminMetadataEditorOpen] = useState(false);
 
   const handleAddComment = useCallback(
     async (fieldKey: ReviewFieldKey, comment: string) => {
@@ -127,7 +131,11 @@ export function ReviewDetailClient({
 
   const handleDecision = useCallback(
     async (nextStatus: ReviewStatus) => {
-      if (nextStatus === "for_review" && submission.reviewStatus !== "accepted") {
+      if (
+        nextStatus === "for_review"
+        && submission.reviewStatus !== "accepted"
+        && !(viewerRole === "admin" && submission.reviewStatus === "trashed")
+      ) {
         setActionError("Members return flagged submissions to pending by resubmitting.");
         return;
       }
@@ -150,6 +158,35 @@ export function ReviewDetailClient({
       setIsActionPending(false);
     },
     [submission.id],
+  );
+
+  const handleAdminMetadataSave = useCallback(
+    async ({
+      values,
+      correctionReason,
+    }: {
+      values: Partial<SubmitThesisInput>;
+      correctionReason: string;
+    }) => {
+      setIsActionPending(true);
+      setActionError(null);
+
+      const result = await adminUpdateSubmissionMetadata({
+        thesisId: submission.id,
+        values,
+        correctionReason,
+      });
+
+      setIsActionPending(false);
+
+      if (result.error || !result.data) {
+        return result.error?.message ?? "The submission metadata could not be corrected.";
+      }
+
+      setSubmission(result.data);
+      return null;
+    },
+    [submission.id, submission.reviewStatus, viewerRole],
   );
 
   // ── Helper: get comments for a specific field ────────────────────────────────
@@ -179,6 +216,14 @@ export function ReviewDetailClient({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, padding: "32px 32px 64px" }}>
+      {viewerRole === "admin" && (
+        <AdminMetadataEditorDialog
+          submission={submission}
+          open={isAdminMetadataEditorOpen}
+          onOpenChange={setIsAdminMetadataEditorOpen}
+          onSave={handleAdminMetadataSave}
+        />
+      )}
 
       {/* ── Two-column layout ─────────────────────────────────────────────── */}
       {actionError && (
@@ -310,6 +355,7 @@ export function ReviewDetailClient({
                 role={viewerRole}
                 onDecision={handleDecision}
                 isSubmitting={isActionPending}
+                onAdminEdit={() => setIsAdminMetadataEditorOpen(true)}
               />
 
               <div
@@ -405,17 +451,25 @@ export function ReviewDetailClient({
                 >
                   Study Review
                 </p>
-                <h1
-                  style={{
-                    margin: "6px 0 0",
-                    fontSize: 19,
-                    fontWeight: 700,
-                    color: "#ffffff",
-                    lineHeight: 1.35,
-                  }}
+                <ReviewableField
+                  fieldKey="title"
+                  label="Title"
+                  comments={fieldComments("title")}
+                  isActive={activeCommentField === "title"}
+                  onCommentIconClick={handleCommentIconClick}
                 >
-                  {submission.title}
-                </h1>
+                  <h1
+                    style={{
+                      margin: "6px 0 0",
+                      fontSize: 19,
+                      fontWeight: 700,
+                      color: "#ffffff",
+                      lineHeight: 1.35,
+                    }}
+                  >
+                    {submission.title}
+                  </h1>
+                </ReviewableField>
               </div>
               <StatusBadge status={submission.reviewStatus} />
             </div>

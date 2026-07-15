@@ -128,7 +128,7 @@ export default function ThesesBrowser({
     <div className="grid min-h-[calc(100vh-4rem)] grid-cols-1 xl:h-[calc(100vh-4rem)] xl:grid-cols-[220px_minmax(0,1fr)_320px]">
       <FilterSidebar className="hidden xl:block" {...filterSidebarProps} />
 
-      <section className="px-4 py-5 sm:px-6 xl:overflow-y-auto xl:border-r xl:border-[var(--color-border-subtle)] xl:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <section className="px-4 py-5 sm:px-6 xl:overflow-y-auto xl:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="mb-5 flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-4 xl:hidden">
           <p className="text-xs font-medium text-[var(--color-text-muted)]">
             {filteredItems.length} {filteredItems.length === 1 ? "study" : "studies"}

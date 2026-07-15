@@ -212,7 +212,7 @@ select {
 
 :focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--color-brand-bright);
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--color-brand-bright) 25%, transparent);
 }
 
 .dark {

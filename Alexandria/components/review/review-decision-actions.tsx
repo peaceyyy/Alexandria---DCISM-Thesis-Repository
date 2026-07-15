@@ -9,10 +9,10 @@ import styles from "./review-decision-actions.module.css";
 
 // ─── Allowed transitions (per handoff spec) ───────────────────────────────────
 //
-//   for_review → accepted | flagged | trashed
-//   flagged    → for_review (only by member resubmission) | trashed
+//   for_review → accepted | flagged | trashed (admin only)
+//   flagged    → for_review (only by member resubmission) | trashed (admin only)
 //   accepted   → for_review (moderator correction when approved by mistake)
-//   trashed    → (no further moderator transitions)
+//   trashed    → for_review (admin restore)
 //
 // The UI disables irrelevant actions to reflect these rules.
 
@@ -23,7 +23,7 @@ function canFlag(status: ReviewStatus) {
   return status === "for_review";
 }
 function canTrash(status: ReviewStatus) {
-  return status === "for_review" || status === "flagged";
+  return status !== "trashed";
 }
 function canSendBackToReview(status: ReviewStatus) {
   return status === "accepted";
@@ -79,6 +79,8 @@ interface ReviewDecisionActionsProps {
   onDecision: (nextStatus: ReviewStatus) => void;
   /** Shown in a disabled state when an async action is in progress. */
   isSubmitting?: boolean;
+  /** Opens the admin-only metadata correction workspace. */
+  onAdminEdit?: () => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -88,6 +90,7 @@ export function ReviewDecisionActions({
   role,
   onDecision,
   isSubmitting = false,
+  onAdminEdit,
 }: ReviewDecisionActionsProps) {
   const [pendingDecision, setPendingDecision] = useState<ConfirmDecision | null>(null);
 
@@ -102,7 +105,17 @@ export function ReviewDecisionActions({
     onDecision(nextStatus);
   };
 
-  const confirmCopy = pendingDecision ? CONFIRM_COPY[pendingDecision] : null;
+  const confirmCopy = pendingDecision
+    ? pendingDecision === "for_review" && status === "trashed"
+      ? {
+          ...CONFIRM_COPY.for_review,
+          title: "Restore this submission to review?",
+          body: "This will return the submission to the pending review queue for a fresh moderator decision.",
+          actionLabel: "Restore to Review",
+          titleId: "restore-confirm-title",
+        }
+      : CONFIRM_COPY[pendingDecision]
+    : null;
   const confirmIcon = confirmCopy?.icon === "trash"
     ? <Trash2 size={13} aria-hidden style={{ marginRight: 4 }} />
     : confirmCopy?.icon === "review"
@@ -130,11 +143,37 @@ export function ReviewDecisionActions({
               <RotateCcw size={14} aria-hidden />
               Send Back to Review
             </button>
+            {role === "admin" && (
+              <button
+                type="button"
+                className={styles.btnTrash}
+                onClick={() => setPendingDecision("trashed")}
+                disabled={isSubmitting}
+                aria-label="Move submission to trash"
+              >
+                <Trash2 size={14} aria-hidden />
+                Trash
+              </button>
+            )}
           </div>
         ) : alreadyDecided ? (
-          <p className={styles.statusNote}>
-            This submission has been trashed.
-          </p>
+          <div className={styles.primaryActions}>
+            <p className={styles.statusNote}>
+              This submission has been trashed.
+            </p>
+            {role === "admin" && (
+              <button
+                type="button"
+                className={styles.btnReview}
+                onClick={() => setPendingDecision("for_review")}
+                disabled={isSubmitting}
+                aria-label="Restore submission to review"
+              >
+                <RotateCcw size={14} aria-hidden />
+                Restore to Review
+              </button>
+            )}
+          </div>
         ) : (
           <div className={styles.primaryActions}>
             {/* Accept */}
@@ -162,16 +201,18 @@ export function ReviewDecisionActions({
             </button>
 
             {/* Trash — soft destructive, requires confirm */}
-            <button
-              type="button"
-              className={styles.btnTrash}
-              onClick={() => setPendingDecision("trashed")}
-              disabled={isSubmitting || !canTrash(status)}
-              aria-label="Move submission to trash"
-            >
-              <Trash2 size={14} aria-hidden />
-              Trash
-            </button>
+            {role === "admin" && (
+              <button
+                type="button"
+                className={styles.btnTrash}
+                onClick={() => setPendingDecision("trashed")}
+                disabled={isSubmitting || !canTrash(status)}
+                aria-label="Move submission to trash"
+              >
+                <Trash2 size={14} aria-hidden />
+                Trash
+              </button>
+            )}
           </div>
         )}
 
@@ -187,16 +228,20 @@ export function ReviewDecisionActions({
               <button
                 type="button"
                 className={styles.btnAdminEdit}
-                disabled
-                title="Direct metadata editing will be available after backend connection"
-                aria-label="Edit metadata — coming soon"
+                onClick={onAdminEdit}
+                disabled={isSubmitting || status === "trashed" || !onAdminEdit}
+                title={
+                  status === "trashed"
+                    ? "Restore the submission before correcting metadata"
+                    : "Correct submission metadata"
+                }
+                aria-label="Correct submission metadata"
               >
                 <Pencil size={13} aria-hidden />
-                Edit Metadata
+                Correct Metadata
               </button>
               <p className={styles.adminNote}>
-                Direct field and PDF editing is available after the backend
-                is connected.
+                Corrections keep the current review status and require an audit reason.
               </p>
             </div>
           </>

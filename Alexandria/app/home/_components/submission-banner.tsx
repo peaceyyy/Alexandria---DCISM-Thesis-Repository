@@ -15,12 +15,27 @@ export function SubmissionBanner() {
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
+  const [kind, setKind] = useState<"submitted" | "resubmitted" | null>(null);
 
   useEffect(() => {
-    if (params.get("submitted") === "1") {
+    const nextKind =
+      params.get("resubmitted") === "1"
+        ? "resubmitted"
+        : params.get("submitted") === "1"
+          ? "submitted"
+          : null;
+
+    if (nextKind) {
+      const nextParams = new URLSearchParams(params.toString());
+      nextParams.delete("submitted");
+      nextParams.delete("resubmitted");
+
+      setKind(nextKind);
       setVisible(true);
-      // Strip the param from the URL without a full navigation
-      router.replace(pathname, { scroll: false });
+      router.replace(
+        nextParams.size ? `${pathname}?${nextParams.toString()}` : pathname,
+        { scroll: false },
+      );
     }
   }, [params, pathname, router]);
 
@@ -47,16 +62,30 @@ export function SubmissionBanner() {
 
   if (!visible) return null;
 
+  const isResubmitted = kind === "resubmitted";
+
   return (
-    <div className="fixed left-0 right-0 top-24 z-50 flex pointer-events-none justify-center px-4">
+    <div
+      className={cn(
+        "fixed z-50 flex pointer-events-none px-4",
+        isResubmitted
+          ? "bottom-5 right-0 justify-end"
+          : "left-0 right-0 top-24 justify-center",
+      )}
+    >
       <div
         role="status"
         aria-live="polite"
         className={cn(
-          "pointer-events-auto flex items-center gap-3 overflow-hidden rounded-full border border-[#34d399]/20 bg-[#14181C]/80 py-2.5 pl-3 pr-4 text-sm shadow-2xl shadow-[#34d399]/5 backdrop-blur-xl transition-all",
+          "pointer-events-auto flex items-center gap-3 overflow-hidden border border-[#34d399]/25 bg-[#14181C] py-2.5 pl-3 pr-4 text-sm shadow-2xl shadow-[#34d399]/10 transition-all",
+          isResubmitted ? "w-full max-w-sm rounded-md" : "rounded-full",
           isExiting
-            ? "animate-out fade-out slide-out-to-top-4 duration-300 fill-mode-forwards"
-            : "animate-in fade-in slide-in-from-top-4 zoom-in-95 duration-500 ease-out"
+            ? "animate-out fade-out duration-300 fill-mode-forwards"
+            : "animate-in fade-in zoom-in-95 duration-500 ease-out",
+          isResubmitted &&
+            (isExiting ? "slide-out-to-right-4" : "slide-in-from-right-4"),
+          !isResubmitted &&
+            (isExiting ? "slide-out-to-top-4" : "slide-in-from-top-4"),
         )}
       >
         {/* Icon wrapper */}
@@ -66,8 +95,14 @@ export function SubmissionBanner() {
 
         {/* Messaging */}
         <p className="text-white/90">
-          <span className="font-semibold text-white">Thesis submitted!</span>{" "}
-          <span className="text-white/60">Pending moderator review.</span>
+          <span className="font-semibold text-white">
+            {isResubmitted ? "Submitted for review." : "Thesis submitted!"}
+          </span>{" "}
+          <span className="text-white/60">
+            {isResubmitted
+              ? "Editing is locked until it is flagged again."
+              : "Pending moderator review."}
+          </span>
         </p>
 
         {/* Divider */}

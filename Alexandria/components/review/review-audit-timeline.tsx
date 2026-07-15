@@ -16,12 +16,13 @@ const EVENT_CONFIG: Record<
   ReviewAuditEventType,
   { icon: React.ElementType; dotClass: string }
 > = {
-  submitted:       { icon: FileText,     dotClass: styles.iconDotSubmitted },
-  comment_added:   { icon: MessageSquare, dotClass: styles.iconDotComment },
-  status_changed:  { icon: CheckCircle2, dotClass: styles.iconDotStatus },
-  metadata_edited: { icon: Pencil,       dotClass: styles.iconDotEdit },
-  pdf_replaced:    { icon: FileText,     dotClass: styles.iconDotEdit },
-  resubmitted:     { icon: RotateCcw,   dotClass: styles.iconDotFlagged },
+  submitted:         { icon: FileText,      dotClass: styles.iconDotSubmitted },
+  comment_added:     { icon: MessageSquare, dotClass: styles.iconDotComment },
+  comment_addressed: { icon: CheckCircle2,  dotClass: styles.iconDotStatus },
+  status_changed:    { icon: CheckCircle2,  dotClass: styles.iconDotStatus },
+  metadata_edited:   { icon: Pencil,        dotClass: styles.iconDotEdit },
+  pdf_replaced:      { icon: FileText,      dotClass: styles.iconDotEdit },
+  resubmitted:       { icon: RotateCcw,     dotClass: styles.iconDotFlagged },
 };
 
 function formatDateTime(iso: string): string {

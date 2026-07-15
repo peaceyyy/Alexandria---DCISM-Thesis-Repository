@@ -1,7 +1,13 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { MessageSquare } from "lucide-react";
+import { Maximize2, MessageSquare } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type { ReviewComment, ReviewFieldKey } from "./types";
 import styles from "./reviewable-field.module.css";
 
@@ -23,7 +29,7 @@ interface ReviewableFieldProps {
   className?: string;
   /**
    * When true, the field content is initially collapsed to 4 lines.
-   * The user can toggle it open to read the full text.
+   * The user can open a focused preview to read the full text.
    * The comment trigger always remains accessible in the header.
    */
   expandable?: boolean;
@@ -42,7 +48,7 @@ export function ReviewableField({
   expandable = false,
 }: ReviewableFieldProps) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const hasComments = comments.length > 0;
 
   const handleIconClick = () => {
@@ -95,17 +101,23 @@ export function ReviewableField({
       {/* ── Field Content ────────────────────────────────────────────────── */}
       {expandable ? (
         <>
-          <div className={isExpanded ? styles.contentExpanded : styles.contentCollapsed}>
-            {children}
-          </div>
+          <div className={styles.contentCollapsed}>{children}</div>
           <button
             type="button"
             className={styles.expandToggle}
-            onClick={() => setIsExpanded((v) => !v)}
-            aria-expanded={isExpanded}
+            onClick={() => setIsPreviewOpen(true)}
           >
-            {isExpanded ? "Show less" : "Show more →"}
+            <Maximize2 size={13} aria-hidden="true" />
+            Open preview
           </button>
+          <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+            <DialogContent className="max-h-[82vh] max-w-3xl border-white/10 bg-[#1a1e23] text-white">
+              <DialogHeader>
+                <DialogTitle>{label}</DialogTitle>
+              </DialogHeader>
+              <div className={styles.previewContent}>{children}</div>
+            </DialogContent>
+          </Dialog>
         </>
       ) : (
         children

@@ -34,7 +34,7 @@ export function AppHeader({ role }: AppHeaderProps) {
   const isPrivileged = role === "admin" || role === "moderator";
 
   return (
-    <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b border-[var(--color-border-subtle)] bg-[var(--color-bg)]/95 px-6 backdrop-blur-md sm:px-10">
+    <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b border-[var(--color-separator)] bg-[var(--color-bg)]/95 px-6 backdrop-blur-md sm:px-10">
 
       {/* ── Brand ──────────────────────────────────────────────────────── */}
       <a
@@ -67,9 +67,9 @@ export function AppHeader({ role }: AppHeaderProps) {
             type="search"
             name="q"
             placeholder="Search Alexandria"
-            className="h-8 w-full rounded-md border border-[var(--color-border-subtle)] bg-transparent pl-9 pr-8 text-sm text-[var(--color-text)] placeholder-[var(--color-placeholder)] transition-colors focus:border-[#368bfe]/60 focus:bg-[var(--color-text)]/5 focus:outline-none"
+            className="h-8 w-full rounded-md border border-[var(--color-separator)] bg-transparent pl-9 pr-8 text-sm text-[var(--color-text)] placeholder-[var(--color-placeholder)] transition-colors focus:border-[var(--color-brand-bright)]/30 focus:bg-[var(--color-text)]/5 focus:outline-none"
           />
-          <div className="pointer-events-none absolute right-2 flex items-center justify-center rounded border border-[var(--color-border-subtle)] bg-[var(--color-text)]/5 px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-text-muted)]">
+          <div className="pointer-events-none absolute right-2 flex items-center justify-center rounded border border-[var(--color-separator)] bg-[var(--color-text)]/5 px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-text-muted)]">
             /
           </div>
         </label>
@@ -83,7 +83,7 @@ export function AppHeader({ role }: AppHeaderProps) {
 
         {/* Separator — only between role chip and a CTA pill */}
         {!isPrivileged && (
-          <span className="h-5 w-px bg-[var(--color-border-subtle)]" aria-hidden="true" />
+          <span className="h-5 w-px bg-[var(--color-separator)]" aria-hidden="true" />
         )}
 
         {/* Primary CTA — contextual by role */}

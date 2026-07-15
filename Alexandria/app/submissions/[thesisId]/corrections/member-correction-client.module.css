@@ -191,6 +191,57 @@
 .control select:disabled,
 .personRow input:disabled { opacity: 0.55; cursor: not-allowed; }
 
+.longTextPreview { display: grid; gap: 8px; }
+.longTextPreview p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: #d8dadc;
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.longTextPreview button,
+.doneButton {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #8ec5ff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.longTextPreview button:hover,
+.doneButton:hover { color: #ffffff; }
+.longTextPreview button:focus-visible,
+.doneButton:focus-visible {
+  outline: 2px solid #368bfe;
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.longTextEditor {
+  width: 100%;
+  min-height: min(52vh, 520px);
+  box-sizing: border-box;
+  resize: vertical;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #ffffff;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+  padding: 12px;
+}
+.longTextEditor:focus { outline: 2px solid rgba(54, 139, 254, 0.75); outline-offset: 1px; }
+.longTextEditor:disabled { opacity: 0.55; cursor: not-allowed; }
+
 .peopleEditor { display: grid; gap: 8px; }
 .personRow { display: grid; grid-template-columns: minmax(0, 1fr) 34px; gap: 8px; }
 .iconButton { border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 5px; background: transparent; color: #aab1bd; }

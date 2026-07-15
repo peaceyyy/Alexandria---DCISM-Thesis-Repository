@@ -18,6 +18,7 @@ import {
 } from "./result";
 import type {
   AddReviewCommentInput,
+  AdminUpdateSubmissionMetadataInput,
   MySubmissionListItem,
   OwnSubmissionListParams,
   ReviewAuditEvent,
@@ -931,6 +932,53 @@ export async function setReviewStatus(
   }
 }
 
+export async function adminUpdateSubmissionMetadata(
+  input: AdminUpdateSubmissionMetadataInput,
+): Promise<ServiceResult<ReviewSubmission>> {
+  try {
+    const validationError = validateThesisId(input.thesisId);
+    if (validationError) {
+      return err(validationError);
+    }
+
+    const payloadError = validateUpdatePayload(input.values);
+    if (payloadError) {
+      return err(payloadError);
+    }
+
+    const correctionReason = input.correctionReason.trim();
+    if (!correctionReason) {
+      return err(makeError("VALIDATION_FAILED", "A correction reason is required."));
+    }
+
+    if (correctionReason.length > 500) {
+      return err(makeError("VALIDATION_FAILED", "The correction reason must be 500 characters or fewer."));
+    }
+
+    await requireRole(["admin"]);
+
+    const supabase = await createClient();
+    const { error: rpcError } = await supabase.rpc(
+      "admin_update_submission_metadata",
+      {
+        target_thesis_id: input.thesisId,
+        payload: buildUpdatePayload(input.values),
+        correction_reason: correctionReason,
+      },
+    );
+
+    if (rpcError) {
+      return err(mutationError(rpcError, "The submission metadata could not be corrected."));
+    }
+
+    return ok(await loadReviewSubmission(input.thesisId));
+  } catch (error) {
+    return err(
+      normalizeServiceError(error, "The submission metadata could not be corrected."),
+    );
+  }
+}
+
 export async function listOwnSubmissions(
   params: OwnSubmissionListParams = {},
 ): Promise<ServiceResult<MySubmissionListItem[]>> {
@@ -1206,7 +1254,17 @@ export async function resubmitFlaggedSubmission(
       return err(mutationError(rpcError, "Your submission could not be resubmitted."));
     }
 
-    return ok(await loadReviewSubmission(thesisId));
+    const submission = await loadReviewSubmission(thesisId);
+    if (submission.reviewStatus !== "for_review") {
+      return err(
+        makeError(
+          "SUPABASE_ERROR",
+          "Your submission was not returned to the review queue. Please try again.",
+        ),
+      );
+    }
+
+    return ok(submission);
   } catch (error) {
     return err(
       normalizeServiceError(error, "Your submission could not be resubmitted."),

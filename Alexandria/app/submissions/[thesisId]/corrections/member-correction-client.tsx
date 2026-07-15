@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   CheckCircle2,
   FileUp,
   LoaderCircle,
+  Maximize2,
   Plus,
   RotateCcw,
   Save,
@@ -16,6 +18,13 @@ import { CommentSidePanel } from "@/components/review/comment-side-panel";
 import { ReviewAuditTimeline } from "@/components/review/review-audit-timeline";
 import { ReviewableField } from "@/components/review/reviewable-field";
 import type { ReviewFieldKey } from "@/components/review/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   markReviewCommentAddressed,
   replaceFlaggedSubmissionPdf,
@@ -117,6 +126,7 @@ export function MemberCorrectionClient({
 }: {
   initialSubmission: ReviewSubmission;
 }) {
+  const router = useRouter();
   const [submission, setSubmission] = useState(initialSubmission);
   const [form, setForm] = useState(() => createForm(initialSubmission));
   const [activeCommentField, setActiveCommentField] =
@@ -280,12 +290,8 @@ export function MemberCorrectionClient({
       return;
     }
 
-    setSubmission(result.data);
-    setShowResubmitConfirm(false);
-    setNotice(
-      "Resubmitted for review. Editing is now locked until another decision is made.",
-    );
     setIsResubmitting(false);
+    router.push("/home?mine=1&resubmitted=1");
   };
 
   const isLocked = submission.reviewStatus !== "flagged";
@@ -563,52 +569,36 @@ export function MemberCorrectionClient({
             </Field>
           </div>
 
-          <Field
+          <LongTextEditor
             fieldKey="abstract"
             label="Abstract"
             comments={commentsFor("abstract")}
             activeField={activeCommentField}
             onCommentIconClick={handleCommentIconClick}
-          >
-            <textarea
-              value={form.abstract}
-              onChange={(event) => updateField("abstract", event.target.value)}
-              disabled={isLocked}
-              rows={8}
-            />
-          </Field>
-          <Field
+            value={form.abstract}
+            disabled={isLocked}
+            onChange={(value) => updateField("abstract", value)}
+          />
+          <LongTextEditor
             fieldKey="recommendations"
             label="Recommendations"
             comments={commentsFor("recommendations")}
             activeField={activeCommentField}
             onCommentIconClick={handleCommentIconClick}
-          >
-            <textarea
-              value={form.recommendations}
-              onChange={(event) =>
-                updateField("recommendations", event.target.value)
-              }
-              disabled={isLocked}
-              rows={5}
-            />
-          </Field>
-          <Field
+            value={form.recommendations}
+            disabled={isLocked}
+            onChange={(value) => updateField("recommendations", value)}
+          />
+          <LongTextEditor
             fieldKey="lessons_learned"
             label="Lessons learned"
             comments={commentsFor("lessons_learned")}
             activeField={activeCommentField}
             onCommentIconClick={handleCommentIconClick}
-          >
-            <textarea
-              value={form.lessonsLearned}
-              onChange={(event) =>
-                updateField("lessonsLearned", event.target.value)
-              }
-              disabled={isLocked}
-              rows={5}
-            />
-          </Field>
+            value={form.lessonsLearned}
+            disabled={isLocked}
+            onChange={(value) => updateField("lessonsLearned", value)}
+          />
 
           <Field
             fieldKey="pdf_general"
@@ -686,8 +676,8 @@ export function MemberCorrectionClient({
           >
             <h2 id="resubmit-title">Resubmit this thesis for review?</h2>
             <p>
-              Your saved corrections and acknowledgement signals will be visible
-              to the review team. Editing will lock once you resubmit.
+              After resubmitting, you cannot edit or resolve comments until a
+              moderator flags this study again.
             </p>
             {correctionSummary.unacknowledgedCommentCount > 0 && (
               <p className={styles.modalWarning}>
@@ -756,6 +746,73 @@ function Field({
     >
       <div className={styles.control}>{children}</div>
     </ReviewableField>
+  );
+}
+
+function LongTextEditor({
+  fieldKey,
+  label,
+  comments,
+  activeField,
+  onCommentIconClick,
+  value,
+  disabled,
+  onChange,
+}: {
+  fieldKey: ReviewFieldKey;
+  label: string;
+  comments: ReviewSubmission["fieldComments"];
+  activeField: ReviewFieldKey | null;
+  onCommentIconClick: (fieldKey: ReviewFieldKey, anchorY: number) => void;
+  value: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      <ReviewableField
+        fieldKey={fieldKey}
+        label={label}
+        comments={comments}
+        isActive={activeField === fieldKey}
+        onCommentIconClick={onCommentIconClick}
+      >
+        <div className={styles.longTextPreview}>
+          <p>{value || "Not provided"}</p>
+          <button type="button" onClick={() => setIsOpen(true)}>
+            <Maximize2 size={13} aria-hidden="true" />
+            {disabled ? "View full text" : "Edit full text"}
+          </button>
+        </div>
+      </ReviewableField>
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-h-[82vh] max-w-3xl border-white/10 bg-[#1a1e23] text-white">
+          <DialogHeader>
+            <DialogTitle>{label}</DialogTitle>
+          </DialogHeader>
+          <textarea
+            className={styles.longTextEditor}
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            disabled={disabled}
+            aria-label={label}
+            rows={16}
+          />
+          <DialogFooter>
+            <button
+              type="button"
+              className={styles.doneButton}
+              onClick={() => setIsOpen(false)}
+            >
+              Done
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

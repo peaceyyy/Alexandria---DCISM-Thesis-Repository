@@ -119,13 +119,7 @@
   mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
 }
 
-.contentExpanded {
-  /* Full content — no clamp */
-  display: block;
-  overflow: visible;
-}
-
-/* "Show more →" / "Show less" toggle */
+/* Opens a focused preview without changing the page layout. */
 .expandToggle {
   display: inline-flex;
   align-items: center;
@@ -153,4 +147,11 @@
   outline-offset: 2px;
   border-radius: 3px;
   opacity: 1;
+}
+
+.previewContent {
+  max-height: min(64vh, 640px);
+  overflow-y: auto;
+  padding-right: 6px;
+  white-space: pre-wrap;
 }

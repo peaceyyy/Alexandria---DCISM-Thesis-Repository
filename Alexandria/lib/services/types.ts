@@ -359,6 +359,11 @@ export type SetReviewStatusInput = {
   thesisId: number;
   nextStatus: Extract<ReviewStatus, "for_review" | "flagged" | "accepted" | "trashed">;
 };
+export type AdminUpdateSubmissionMetadataInput = {
+  thesisId: number;
+  values: Partial<SubmitThesisInput>;
+  correctionReason: string;
+};
 export type UpdateFlaggedSubmissionInput = {
   thesisId: number;
   values: Partial<SubmitThesisInput>;

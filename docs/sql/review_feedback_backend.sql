@@ -12,6 +12,9 @@ BEGIN;
 ALTER TABLE public.thesis_audits
   ADD COLUMN IF NOT EXISTS event text;
 
+ALTER TABLE public.thesis_audits
+  ADD COLUMN IF NOT EXISTS change_details jsonb;
+
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -258,6 +261,13 @@ BEGIN
       USING ERRCODE = 'P0002';
   END IF;
 
+  IF next_status = 'trashed'
+    AND NOT public.current_user_is_active(ARRAY['admin'])
+  THEN
+    RAISE EXCEPTION 'Only administrators can move a submission to trash'
+      USING ERRCODE = '42501';
+  END IF;
+
   IF NOT (
     current_status = 'for_review'
     AND next_status IN ('flagged', 'accepted', 'trashed')
@@ -265,8 +275,15 @@ BEGIN
     current_status = 'accepted'
     AND next_status = 'for_review'
   ) AND NOT (
+    current_status = 'accepted'
+    AND next_status = 'trashed'
+  ) AND NOT (
     current_status = 'flagged'
     AND next_status = 'trashed'
+  ) AND NOT (
+    current_status = 'trashed'
+    AND next_status = 'for_review'
+    AND public.current_user_is_active(ARRAY['admin'])
   ) THEN
     RAISE EXCEPTION 'That review status transition is not allowed'
       USING ERRCODE = '22023';
@@ -293,6 +310,199 @@ BEGIN
     auth.uid(),
     'status_changed',
     'Review status changed from ' || current_status || ' to ' || next_status || '.'
+  );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.admin_update_submission_metadata(
+  target_thesis_id bigint,
+  payload jsonb,
+  correction_reason text
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+  current_thesis public.theses%ROWTYPE;
+  current_calendar_date date;
+  next_publication_date date;
+  next_study_type text;
+  author jsonb;
+  tag text;
+  before_details jsonb;
+  after_details jsonb;
+BEGIN
+  IF NOT public.current_user_is_active(ARRAY['admin']) THEN
+    RAISE EXCEPTION 'An active administrator account is required'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF jsonb_typeof(payload) IS DISTINCT FROM 'object' THEN
+    RAISE EXCEPTION 'Submission changes must be an object'
+      USING ERRCODE = '22023';
+  END IF;
+
+  IF NULLIF(btrim(correction_reason), '') IS NULL THEN
+    RAISE EXCEPTION 'A correction reason is required'
+      USING ERRCODE = '22023';
+  END IF;
+
+  SELECT *
+  INTO current_thesis
+  FROM public.theses
+  WHERE id = target_thesis_id
+  FOR UPDATE;
+
+  IF current_thesis.id IS NULL THEN
+    RAISE EXCEPTION 'Thesis was not found'
+      USING ERRCODE = 'P0002';
+  END IF;
+
+  IF current_thesis.review_status = 'trashed' THEN
+    RAISE EXCEPTION 'Restore the thesis before correcting its metadata'
+      USING ERRCODE = '42501';
+  END IF;
+
+  current_calendar_date := (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Manila')::date;
+
+  IF payload ? 'publication_date' THEN
+    next_publication_date := NULLIF(payload->>'publication_date', '')::date;
+
+    IF next_publication_date IS NULL THEN
+      RAISE EXCEPTION 'Publication date is required'
+        USING ERRCODE = '22023';
+    END IF;
+
+    IF next_publication_date > current_calendar_date THEN
+      RAISE EXCEPTION 'Publication date cannot be later than today'
+        USING ERRCODE = '22023';
+    END IF;
+  END IF;
+
+  IF payload ? 'study_type' THEN
+    next_study_type := payload->>'study_type';
+    IF next_study_type NOT IN ('thesis', 'capstone') THEN
+      RAISE EXCEPTION 'Study type must be thesis or capstone'
+        USING ERRCODE = '22023';
+    END IF;
+  END IF;
+
+  before_details := jsonb_build_object(
+    'thesis', to_jsonb(current_thesis),
+    'authors', COALESCE((
+      SELECT jsonb_agg(to_jsonb(thesis_author) ORDER BY thesis_author.sort_order, thesis_author.id)
+      FROM public.thesis_authors AS thesis_author
+      WHERE thesis_author.thesis_id = target_thesis_id
+    ), '[]'::jsonb),
+    'tags', COALESCE((
+      SELECT jsonb_agg(thesis_tag.tag ORDER BY thesis_tag.id)
+      FROM public.thesis_tags AS thesis_tag
+      WHERE thesis_tag.thesis_id = target_thesis_id
+    ), '[]'::jsonb)
+  );
+
+  UPDATE public.theses
+  SET
+    title = CASE WHEN payload ? 'title' THEN payload->>'title' ELSE title END,
+    abstract = CASE WHEN payload ? 'abstract' THEN payload->>'abstract' ELSE abstract END,
+    department = CASE WHEN payload ? 'department' THEN payload->>'department' ELSE department END,
+    research_area = CASE WHEN payload ? 'research_area' THEN NULLIF(payload->>'research_area', '') ELSE research_area END,
+    publication_date = CASE WHEN payload ? 'publication_date' THEN next_publication_date ELSE publication_date END,
+    year = CASE
+      WHEN payload ? 'publication_date' THEN EXTRACT(YEAR FROM next_publication_date)::integer
+      ELSE year
+    END,
+    publication_link = CASE WHEN payload ? 'publication_link' THEN NULLIF(payload->>'publication_link', '') ELSE publication_link END,
+    conference = CASE WHEN payload ? 'conference' THEN NULLIF(payload->>'conference', '') ELSE conference END,
+    recommendations = CASE WHEN payload ? 'recommendations' THEN NULLIF(payload->>'recommendations', '') ELSE recommendations END,
+    lessons_learned = CASE WHEN payload ? 'lessons_learned' THEN NULLIF(payload->>'lessons_learned', '') ELSE lessons_learned END,
+    study_type = CASE WHEN payload ? 'study_type' THEN next_study_type ELSE study_type END,
+    updated_at = now()
+  WHERE id = target_thesis_id;
+
+  IF payload ? 'authors' THEN
+    IF jsonb_typeof(payload->'authors') IS DISTINCT FROM 'array'
+      OR jsonb_array_length(payload->'authors') = 0
+    THEN
+      RAISE EXCEPTION 'At least one thesis author is required'
+        USING ERRCODE = '22023';
+    END IF;
+
+    DELETE FROM public.thesis_authors
+    WHERE thesis_id = target_thesis_id;
+
+    FOR author IN SELECT * FROM jsonb_array_elements(payload->'authors')
+    LOOP
+      IF NULLIF(btrim(author->>'display_name'), '') IS NULL THEN
+        RAISE EXCEPTION 'Every thesis author requires a display name'
+          USING ERRCODE = '22023';
+      END IF;
+
+      IF author->>'contribution_role' NOT IN ('author', 'adviser') THEN
+        RAISE EXCEPTION 'Contribution role must be author or adviser'
+          USING ERRCODE = '22023';
+      END IF;
+
+      INSERT INTO public.thesis_authors (
+        thesis_id, user_id, display_name, contribution_role, sort_order
+      ) VALUES (
+        target_thesis_id,
+        NULLIF(author->>'user_id', '')::uuid,
+        btrim(author->>'display_name'),
+        author->>'contribution_role',
+        NULLIF(author->>'sort_order', '')::integer
+      );
+    END LOOP;
+  END IF;
+
+  IF payload ? 'tags' THEN
+    IF jsonb_typeof(payload->'tags') IS DISTINCT FROM 'array'
+      OR jsonb_array_length(payload->'tags') = 0
+    THEN
+      RAISE EXCEPTION 'At least one tag is required'
+        USING ERRCODE = '22023';
+    END IF;
+
+    DELETE FROM public.thesis_tags
+    WHERE thesis_id = target_thesis_id;
+
+    FOR tag IN SELECT * FROM jsonb_array_elements_text(payload->'tags')
+    LOOP
+      IF NULLIF(btrim(tag), '') IS NOT NULL THEN
+        INSERT INTO public.thesis_tags (thesis_id, tag)
+        VALUES (target_thesis_id, btrim(tag));
+      END IF;
+    END LOOP;
+  END IF;
+
+  after_details := jsonb_build_object(
+    'thesis', (SELECT to_jsonb(thesis) FROM public.theses AS thesis WHERE thesis.id = target_thesis_id),
+    'authors', COALESCE((
+      SELECT jsonb_agg(to_jsonb(thesis_author) ORDER BY thesis_author.sort_order, thesis_author.id)
+      FROM public.thesis_authors AS thesis_author
+      WHERE thesis_author.thesis_id = target_thesis_id
+    ), '[]'::jsonb),
+    'tags', COALESCE((
+      SELECT jsonb_agg(thesis_tag.tag ORDER BY thesis_tag.id)
+      FROM public.thesis_tags AS thesis_tag
+      WHERE thesis_tag.thesis_id = target_thesis_id
+    ), '[]'::jsonb)
+  );
+
+  INSERT INTO public.thesis_audits (
+    thesis_id, changed_by_user_id, event, change_description, change_details
+  ) VALUES (
+    target_thesis_id,
+    auth.uid(),
+    'metadata_edited',
+    'Administrator corrected thesis metadata. Reason: ' || btrim(correction_reason),
+    jsonb_build_object(
+      'reason', btrim(correction_reason),
+      'before', before_details,
+      'after', after_details
+    )
   );
 END;
 $$;
@@ -935,6 +1145,13 @@ REVOKE ALL ON FUNCTION public.set_review_status(bigint, text)
 REVOKE ALL ON FUNCTION public.set_review_status(bigint, text)
   FROM anon;
 GRANT EXECUTE ON FUNCTION public.set_review_status(bigint, text)
+  TO authenticated;
+
+REVOKE ALL ON FUNCTION public.admin_update_submission_metadata(bigint, jsonb, text)
+  FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.admin_update_submission_metadata(bigint, jsonb, text)
+  FROM anon;
+GRANT EXECUTE ON FUNCTION public.admin_update_submission_metadata(bigint, jsonb, text)
   TO authenticated;
 
 REVOKE ALL ON FUNCTION public.update_flagged_submission(bigint, jsonb)
