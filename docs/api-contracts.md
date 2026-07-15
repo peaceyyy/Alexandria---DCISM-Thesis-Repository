@@ -132,7 +132,7 @@ Returns paginated thesis cards for repository browsing and keyword search.
   | --------------- | ------ | --------------------------------------------- |
   | `q`             | string | Search query (title, authors, tags, abstract) |
   | `year`          | int    | Filter by thesis year                         |
-  | `department`    | string | Filter by department name (e.g. `DCISM`)      |
+  | `department`    | string | Filter by `CS`, `IT`, or `IS`                 |
   | `research_area` | string | Filter by research area                       |
   | `page`          | int    | Default `1`                                   |
   | `limit`         | int    | Default `20`                                  |
@@ -195,7 +195,7 @@ Returns the full detail payload for a single accepted thesis.
           "sort_order": 1
         }
       ],
-      "department": "DCISM",
+      "department": "CS",
       "research_area": "Web Development",
       "tags": ["#react", "#ai", "#progressive-web-apps"],
       "publication_date": "2026-05-14",
@@ -254,13 +254,13 @@ Returns controlled vocabulary values for filter dropdowns.
         "Web Development",
         "Information Systems"
       ],
-      "departments": ["DCISM", "CAS", "TC"],
+      "departments": ["CS", "IT", "IS"],
       "years": [2026, 2025, 2024]
     }
   }
   ```
 
-> **Note:** `research_areas` and `departments` are derived via `SELECT DISTINCT research_area FROM theses WHERE review_status = 'accepted'` and `SELECT DISTINCT department...` respectively.
+> **Note:** `research_areas` and `years` are derived from accepted theses. Departments are the controlled `CS`, `IT`, and `IS` vocabulary and are not derived from stored rows.
 
 ---
 
@@ -340,7 +340,7 @@ API is introduced later, its equivalent route is `POST /api/theses`.
   {
     "title": "Thesis Title",
     "abstract": "...",
-    "department": "DCISM",
+    "department": "CS",
     "research_area": "Machine Learning",
     "authors": [
       {

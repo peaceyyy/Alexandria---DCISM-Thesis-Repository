@@ -1,3 +1,5 @@
+import type { Department } from "../domain/departments";
+
 // ─── Primitives ──────────────────────────────────────────────────────────────
 export type ReviewStatus = "for_review" | "flagged" | "accepted" | "trashed";
 export type UserRole = "admin" | "moderator" | "member";
@@ -152,7 +154,7 @@ export type ThesisDetail = ThesisCard & {
 /** Dropdowns for year/department/research_area filters on the Browse page. */
 export type FilterOptions = {
   research_areas: string[];
-  departments: string[];
+  departments: Department[];
   years: number[];
 };
 /** Returned after successful login / getCurrentUser(). */
@@ -263,7 +265,6 @@ export type AdminDashboardSnapshot = {
   };
   metrics: {
     total_research: number;
-    registered_users: number;
     pending_docs: number;
   };
   recent_uploads: DashboardUploadRow[];
@@ -342,6 +343,7 @@ export type UserListParams = {
 };
 export type ReviewSubmissionListParams = {
   reviewStatus?: ReviewStatus;
+  department?: Department;
   q?: string;
   page?: number;
   limit?: number;

@@ -10,6 +10,7 @@ import {
   THESIS_PDF_MIME_TYPE,
   validateThesisPdf,
 } from "../upload/file-validation";
+import { isDepartment } from "../domain/departments";
 import { err, makeError, ok } from "./result";
 import { requireSession, requireOwnership } from "./_guards";
 import type {
@@ -202,6 +203,10 @@ export async function submitThesis(
 
     if (!input.study_type || !["thesis", "capstone"].includes(input.study_type)) {
       return err(makeError("VALIDATION_FAILED", "Study type must be either 'thesis' or 'capstone'"));
+    }
+
+    if (!isDepartment(input.department)) {
+      return err(makeError("VALIDATION_FAILED", "Department must be CS, IT, or IS."));
     }
 
     const currentCalendarDate = getCurrentCalendarDate();

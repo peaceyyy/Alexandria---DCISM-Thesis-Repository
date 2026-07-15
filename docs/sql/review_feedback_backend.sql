@@ -389,6 +389,13 @@ BEGIN
     END IF;
   END IF;
 
+  IF payload ? 'department'
+    AND payload->>'department' NOT IN ('CS', 'IT', 'IS')
+  THEN
+    RAISE EXCEPTION 'Department must be CS, IT, or IS'
+      USING ERRCODE = '22023';
+  END IF;
+
   before_details := jsonb_build_object(
     'thesis', to_jsonb(current_thesis),
     'authors', COALESCE((
@@ -589,6 +596,13 @@ BEGIN
       RAISE EXCEPTION 'Study type must be thesis or capstone'
         USING ERRCODE = '22023';
     END IF;
+  END IF;
+
+  IF payload ? 'department'
+    AND payload->>'department' NOT IN ('CS', 'IT', 'IS')
+  THEN
+    RAISE EXCEPTION 'Department must be CS, IT, or IS'
+      USING ERRCODE = '22023';
   END IF;
 
   IF payload ? 'title' AND payload->>'title' IS DISTINCT FROM current_thesis.title THEN

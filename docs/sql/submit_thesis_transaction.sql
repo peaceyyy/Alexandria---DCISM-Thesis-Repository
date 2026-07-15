@@ -65,6 +65,11 @@ BEGIN
       USING ERRCODE = '22023';
   END IF;
 
+  IF payload->>'department' NOT IN ('CS', 'IT', 'IS') THEN
+    RAISE EXCEPTION 'Department must be CS, IT, or IS'
+      USING ERRCODE = '22023';
+  END IF;
+
   IF payload->>'file_type' IS DISTINCT FROM 'application/pdf' THEN
     RAISE EXCEPTION 'Thesis file type must be application/pdf'
       USING ERRCODE = '22023';

@@ -33,7 +33,6 @@ describe("getAdminDashboardSnapshot", () => {
       data: {
         metrics: {
           total_research: 12,
-          registered_users: 8,
           pending_docs: 3,
         },
         recent_uploads: [
@@ -46,7 +45,7 @@ describe("getAdminDashboardSnapshot", () => {
           },
         ],
         recent_activity: [],
-        research_by_department: [{ department: "DCISM", count: 12 }],
+        research_by_department: [{ department: "CS", count: 12 }],
       },
       error: null,
     });
@@ -57,7 +56,7 @@ describe("getAdminDashboardSnapshot", () => {
     expect(rpc).toHaveBeenCalledWith("get_admin_dashboard_snapshot");
     expect(result.data?.viewer.profile_name).toBe("Alex Admin");
     expect(result.data?.research_by_department).toEqual([
-      { department: "DCISM", count: 12 },
+      { department: "CS", count: 12 },
     ]);
   });
 

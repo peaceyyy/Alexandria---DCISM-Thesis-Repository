@@ -205,7 +205,6 @@ export type AdminDashboardSnapshot = {
   viewer: { profile_name: string };
   metrics: {
     total_research: number;
-    registered_users: number;
     pending_docs: number;
   };
   recent_uploads: DashboardUploadRow[];

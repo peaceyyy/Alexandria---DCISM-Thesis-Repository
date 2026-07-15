@@ -9,6 +9,7 @@ import {
   THESIS_PDF_MIME_TYPE,
   validateThesisPdf,
 } from "../upload/file-validation";
+import { isDepartment } from "../domain/departments";
 import { requireOwnership, requireRole, requireSession } from "./_guards";
 import {
   err,
@@ -419,6 +420,10 @@ function validateUpdatePayload(values: Partial<SubmitThesisInput>) {
     return makeError("VALIDATION_FAILED", "Study type must be thesis or capstone.");
   }
 
+  if (values.department !== undefined && !isDepartment(values.department)) {
+    return makeError("VALIDATION_FAILED", "Department must be CS, IT, or IS.");
+  }
+
   if (values.publication_date !== undefined) {
     if (
       !isValidCalendarDate(values.publication_date)
@@ -767,6 +772,11 @@ export async function listReviewSubmissions(
     if (params.reviewStatus && !isReviewStatus(params.reviewStatus)) {
       return err(makeError("VALIDATION_FAILED", "A valid review status is required."));
     }
+    if (params.department && !isDepartment(params.department)) {
+      return err(
+        makeError("VALIDATION_FAILED", "Department must be CS, IT, or IS."),
+      );
+    }
 
     const page = normalizedPage(params.page);
     const limit = normalizedLimit(params.limit);
@@ -801,6 +811,10 @@ export async function listReviewSubmissions(
       query = query.eq("review_status", params.reviewStatus);
     } else {
       query = query.neq("review_status", "trashed");
+    }
+
+    if (params.department) {
+      query = query.eq("department", params.department);
     }
 
     if (params.q?.trim()) {

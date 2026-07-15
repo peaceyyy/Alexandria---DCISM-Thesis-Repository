@@ -51,7 +51,7 @@ Each thesis record must support:
 | Authors | Yes | Multiple authors per thesis; stored via `thesis_authors` with `contribution_role = 'author'`. `display_name` is required; `user_id` is optional |
 | Adviser | Yes | Stored in `thesis_authors` with `contribution_role = 'adviser'`. `user_id` is optional; advisers without accounts are credited by name only |
 | Year | Yes | Used for display and filtering |
-| Department | Yes | MVP default is DCISM, but keep normalized for future expansion |
+| Department | Yes | Controlled MVP values are `CS`, `IT`, and `IS` for DCISM records. |
 | Abstract | Yes | Full detail page text; preview derived by backend/frontend |
 | Keywords / tags | Yes | Free hashtag-style; used for search, filtering, and related thesis matching |
 | Research area | No | Free text on `theses.research_area`; used for search and filter dropdowns derived from distinct values |
@@ -299,7 +299,7 @@ Minimum seed data for frontend/backend integration:
 
 | Data | Minimum count |
 | --- | --- |
-| Department names | 1: "DCISM" (as text on theses) |
+| Department values | 3: `CS`, `IT`, and `IS` (as text on theses) |
 | Research areas | 5 to 8 (broader curated domains) |
 | Accepted thesis records | 8 to 12 |
 | For-review thesis records | 2 |

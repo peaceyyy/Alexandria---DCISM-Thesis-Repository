@@ -1,4 +1,5 @@
 import { createAdminClient } from "../supabase/admin";
+import { DEPARTMENTS } from "../domain/departments";
 import { err, makeError, ok } from "./result";
 import type {
   FilterOptions,
@@ -270,25 +271,20 @@ export async function getThesisById(
 
 /**
  * Future HTTP equivalent: GET /api/filters
- * Returns distinct accepted values for year, department, and research_area.
+ * Returns controlled department values plus distinct accepted years and research areas.
  * Used by: Browse page filter dropdowns.
  */
 export async function getFilterOptions(): Promise<ServiceResult<FilterOptions>> {
   try {
     const supabase = createAdminClient();
 
-    const [areasResult, departmentsResult, yearsResult] = await Promise.all([
+    const [areasResult, yearsResult] = await Promise.all([
       supabase
         .from("theses")
         .select("research_area")
         .eq("review_status", "accepted")
         .not("research_area", "is", null)
         .order("research_area", { ascending: true }),
-      supabase
-        .from("theses")
-        .select("department")
-        .eq("review_status", "accepted")
-        .order("department", { ascending: true }),
       supabase
         .from("theses")
         .select("year")
@@ -298,9 +294,6 @@ export async function getFilterOptions(): Promise<ServiceResult<FilterOptions>> 
 
     if (areasResult.error) {
       return err(makeError("SUPABASE_ERROR", areasResult.error.message));
-    }
-    if (departmentsResult.error) {
-      return err(makeError("SUPABASE_ERROR", departmentsResult.error.message));
     }
     if (yearsResult.error) {
       return err(makeError("SUPABASE_ERROR", yearsResult.error.message));
@@ -314,11 +307,7 @@ export async function getFilterOptions(): Promise<ServiceResult<FilterOptions>> 
       ),
     ];
 
-    const departments: string[] = [
-      ...new Set(
-        (departmentsResult.data ?? []).map((r) => r.department as string),
-      ),
-    ];
+    const departments = [...DEPARTMENTS];
 
     const years: number[] = [
       ...new Set(

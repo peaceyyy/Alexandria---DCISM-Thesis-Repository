@@ -1,4 +1,7 @@
 import * as z from "zod";
+import { DEPARTMENTS } from "@/lib/domain/departments";
+
+export { DEPARTMENTS };
 
 const APPLICATION_TIME_ZONE = "Asia/Manila";
 
@@ -27,8 +30,6 @@ export const RESEARCH_AREAS = [
   "Mathematics",
 ] as const;
 
-export const DEPARTMENTS = ["DCISM", "CAS", "TC"] as const;
-
 export const authorSchema = z.object({
   user_id: z.string().nullable(),
   display_name: z.string().min(2, "Please enter the person's full name (not abbreviated)"),
@@ -40,7 +41,7 @@ export const formSchema = z
   .object({
     title: z.string().min(5, "Title must be at least 5 characters"),
     abstract: z.string().min(50, "Abstract must be at least 50 characters"),
-    department: z.string().min(1, "Department is required"),
+    department: z.enum(DEPARTMENTS, "Department must be CS, IT, or IS."),
     type_of_study: z.enum(["thesis", "capstone"]),
     research_areas: z.array(z.string()).min(1, "Select at least one research area"),
     authors: z.array(authorSchema).min(1, "At least one author is required"),

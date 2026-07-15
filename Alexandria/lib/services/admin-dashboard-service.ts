@@ -108,7 +108,6 @@ function mapSnapshot(
     viewer: { profile_name: viewerName },
     metrics: {
       total_research: asNumber(value.metrics.total_research),
-      registered_users: asNumber(value.metrics.registered_users),
       pending_docs: asNumber(value.metrics.pending_docs),
     },
     recent_uploads: uploads,

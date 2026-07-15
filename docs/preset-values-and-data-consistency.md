@@ -1,8 +1,8 @@
 # Preset Values and Data Consistency Guide
 
-Last updated: 2026-07-14
+Last updated: 2026-07-15
 
-Status: planning source of truth. This document does not implement any app changes yet.
+Status: implemented policy source of truth.
 
 ## Purpose
 
@@ -12,11 +12,11 @@ This guide organizes the agreed preset values so future implementation can remov
 
 ## Consistency Rules
 
-1. Store canonical values, display friendly labels.
-   - Example: store `DCISM`; display `DCISM` or `Department of Computer Information Science and Mathematics` depending on screen density.
+1. Store canonical values and display the same clear, controlled labels.
+   - Example: store and display `CS`, `IT`, or `IS`.
 
-2. Do not use courses or programs as departments.
-   - `BSCS`, `BSIT`, `BSIS`, `Computer Science`, `Information Technology`, and `Information Systems` are not department values for Alexandria metadata.
+2. Keep the DCISM repository scope separate from its program classifications.
+   - Alexandria is for DCISM work; `CS`, `IT`, and `IS` classify each submitted record.
 
 3. Use one preset source in code.
    - Upload forms, browse filters, admin pages, review pages, mock data, and seed data should consume the same preset source.
@@ -33,37 +33,39 @@ This guide organizes the agreed preset values so future implementation can remov
 
 ### Department
 
-Meaning: the academic department or unit responsible for the thesis/capstone record.
+Meaning: the DCISM academic program classification for a thesis/capstone record.
 
 MVP decision:
 
-Alexandria is DCISM-only for now. The UI may be designed to look expandable so users understand that other departments could be supported later, but `DCISM` is the only enabled, valid, and submitted department value in the MVP.
+Alexandria is a DCISM repository. For this MVP, the only enabled, valid, and submitted department values are `CS`, `IT`, and `IS`.
 
 MVP canonical value:
 
 | Stored value | Display label | Notes |
 | --- | --- | --- |
-| `DCISM` | DCISM | Department of Computer Information Science and Mathematics. Current Alexandria MVP owner. |
+| `CS` | CS | Computer Science |
+| `IT` | IT | Information Technology |
+| `IS` | IS | Information Systems |
 
 Department UI rule:
 
 | UI location | Expected treatment |
 | --- | --- |
-| Upload form | Show a department select/control with `DCISM` selected by default. Do not allow submitting any other value yet. |
-| Browse filters | Show `DCISM` as the active department filter option. The control may be styled as if the filter group can grow later. |
-| Admin/review/detail pages | Display the stored department as `DCISM`. |
-| Future-looking empty/disabled states | If shown, mark other department choices as unavailable or future support, not as selectable values. |
+| Upload, correction, and admin edit forms | Select only `CS`, `IT`, or `IS`. |
+| Browse and dashboard filters | Offer only `CS`, `IT`, and `IS`. Do not derive choices from stored rows. |
+| Review and detail pages | Display the stored code. |
+| Legacy data | Remove records holding other values manually in Supabase. No automated migration is planned. |
 
 Invalid department values:
 
 | Invalid value | Why invalid | Recommended handling |
 | --- | --- | --- |
-| `BSCS` | Course/program, not department | Map to `DCISM` if record belongs to DCISM. |
-| `BSIT` | Course/program, not department | Map to `DCISM` if record belongs to DCISM. |
-| `BSIS` | Course/program, not department | Map to `DCISM` if record belongs to DCISM. |
-| `Computer Science` | Course/program area, not department | Map to `DCISM` or move to a future `program` field. |
-| `Information Technology` | Course/program area, not department | Map to `DCISM` or move to a future `program` field. |
-| `Information Systems` | Course/program area, not department | Map to `DCISM` or move to a future `program` field. |
+| `BSCS` | Legacy course code | Remove or manually correct to `CS`. |
+| `BSIT` | Legacy course code | Remove or manually correct to `IT`. |
+| `BSIS` | Legacy course code | Remove or manually correct to `IS`. |
+| `Computer Science` | Legacy display label | Remove or manually correct to `CS`. |
+| `Information Technology` | Legacy display label | Remove or manually correct to `IT`. |
+| `Information Systems` | Legacy display label | Remove or manually correct to `IS`. |
 
 Candidate future department values needing official codes/names:
 
@@ -78,11 +80,9 @@ Known current drift:
 
 | Location | Current value shape | Problem |
 | --- | --- | --- |
-| `Alexandria/lib/upload/schema.ts` | `DCISM`, `CAS`, `TC` | Includes non-confirmed department codes and omits user-mentioned candidates. |
-| `Alexandria/components/layout/filter-sidebar.tsx` | `Computer Science`, `Information Technology`, `Information Systems` | Uses program/course-like labels as departments. |
-| `Alexandria/lib/mock-data/theses.ts` | `Computer Science`, `Information Technology`, `Information Systems` | Mock records teach the wrong department vocabulary. |
-| `Alexandria/components/admin/mock-data.ts` | `BSCS`, `BSIT`, `BSIS` | Admin/review mock records use course codes as departments. |
-| `docs/api-contracts.md` | `DCISM`, `CAS`, `TC` | Contract examples do not match the clarified department rule. |
+| Submission, correction, admin, and staff dashboard filters | `CS`, `IT`, `IS` | Uses the shared controlled vocabulary. |
+| Public filter service | `CS`, `IT`, `IS` | Returns the controlled vocabulary rather than values found in stored rows. |
+| Legacy Supabase rows | Older department values | Must be cleared manually before relying on department reporting. |
 
 ### Research Area
 
