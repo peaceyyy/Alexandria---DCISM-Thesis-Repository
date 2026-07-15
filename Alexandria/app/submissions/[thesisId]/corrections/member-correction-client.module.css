@@ -215,7 +215,17 @@
   line-height: 1.45;
 }
 .errorMessage { border: 1px solid rgba(255, 107, 107, 0.34); background: rgba(255, 107, 107, 0.08); color: #ffb3b3; }
-.noticeMessage { border: 1px solid rgba(29, 160, 201, 0.3); background: rgba(29, 160, 201, 0.08); color: #a3e7f4; }
+.noticeMessage { border: 1px solid rgba(29, 160, 201, 0.48); background: #173442; color: #d5f6fb; }
+
+.noticeMessage {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 100;
+  width: min(360px, calc(100vw - 40px));
+  margin: 0;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+}
 
 .modalOverlay { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 20px; background: rgba(4, 6, 8, 0.7); }
 .modal { width: min(430px, 100%); padding: 22px; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 7px; background: #1a1e23; box-shadow: 0 20px 48px rgba(0, 0, 0, 0.38); }

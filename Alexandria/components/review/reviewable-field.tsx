@@ -83,6 +83,7 @@ export function ReviewableField({
           title={hasComments ? `${comments.length} comment${comments.length !== 1 ? "s" : ""}` : "Add a comment"}
         >
           <MessageSquare size={13} aria-hidden />
+          {hasComments && <span className={styles.commentLabel}>Feedback</span>}
           {hasComments && (
             <span className={styles.commentCount} aria-hidden>
               {comments.length}

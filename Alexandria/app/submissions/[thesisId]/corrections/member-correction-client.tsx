@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -71,13 +71,15 @@ function createForm(submission: ReviewSubmission): CorrectionForm {
     recommendations: submission.recommendations ?? "",
     lessonsLearned: submission.lessonsLearned ?? "",
     tags: submission.tags.join(", "),
-    contributors: (submission.contributorEntries ?? fallbackContributors).map((entry) => ({
-      id: entry.id,
-      user_id: entry.user_id,
-      display_name: entry.display_name,
-      contribution_role: entry.contribution_role,
-      sort_order: entry.sort_order ?? 0,
-    })),
+    contributors: (submission.contributorEntries ?? fallbackContributors).map(
+      (entry) => ({
+        id: entry.id,
+        user_id: entry.user_id,
+        display_name: entry.display_name,
+        contribution_role: entry.contribution_role,
+        sort_order: entry.sort_order ?? 0,
+      }),
+    ),
   };
 }
 
@@ -103,8 +105,9 @@ function toUpdateValues(form: CorrectionForm) {
       contribution_role: contributor.contribution_role,
       sort_order: form.contributors
         .slice(0, index)
-        .filter((entry) => entry.contribution_role === contributor.contribution_role)
-        .length,
+        .filter(
+          (entry) => entry.contribution_role === contributor.contribution_role,
+        ).length,
     })),
   };
 }
@@ -116,7 +119,8 @@ export function MemberCorrectionClient({
 }) {
   const [submission, setSubmission] = useState(initialSubmission);
   const [form, setForm] = useState(() => createForm(initialSubmission));
-  const [activeCommentField, setActiveCommentField] = useState<ReviewFieldKey | null>(null);
+  const [activeCommentField, setActiveCommentField] =
+    useState<ReviewFieldKey | null>(null);
   const [commentAnchorY, setCommentAnchorY] = useState(120);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingPdf, setIsUploadingPdf] = useState(false);
@@ -135,11 +139,22 @@ export function MemberCorrectionClient({
 
   const commentsFor = useCallback(
     (fieldKey: ReviewFieldKey) =>
-      submission.fieldComments.filter((comment) => comment.fieldKey === fieldKey),
+      submission.fieldComments.filter(
+        (comment) => comment.fieldKey === fieldKey,
+      ),
     [submission.fieldComments],
   );
 
-  const updateField = <Key extends Exclude<keyof CorrectionForm, "contributors">>(
+  useEffect(() => {
+    if (!notice) return;
+
+    const timeoutId = window.setTimeout(() => setNotice(null), 4000);
+    return () => window.clearTimeout(timeoutId);
+  }, [notice]);
+
+  const updateField = <
+    Key extends Exclude<keyof CorrectionForm, "contributors">,
+  >(
     key: Key,
     value: CorrectionForm[Key],
   ) => {
@@ -163,7 +178,9 @@ export function MemberCorrectionClient({
 
   const handleCommentIconClick = useCallback(
     (fieldKey: ReviewFieldKey, anchorY: number) => {
-      setActiveCommentField((current) => current === fieldKey ? null : fieldKey);
+      setActiveCommentField((current) =>
+        current === fieldKey ? null : fieldKey,
+      );
       setCommentAnchorY(anchorY);
     },
     [],
@@ -188,7 +205,9 @@ export function MemberCorrectionClient({
     setSubmission(result.data);
     setForm(createForm(result.data));
     setHasUnsavedChanges(false);
-    setNotice("Changes saved. Comments on revised fields can now be marked addressed.");
+    setNotice(
+      "Changes saved. Comments on revised fields can now be marked addressed.",
+    );
     setIsSaving(false);
   };
 
@@ -207,14 +226,18 @@ export function MemberCorrectionClient({
     });
 
     if (result.error || !result.data) {
-      setError(result.error?.message ?? "The corrected PDF could not be attached.");
+      setError(
+        result.error?.message ?? "The corrected PDF could not be attached.",
+      );
       setIsUploadingPdf(false);
       return;
     }
 
     setSubmission(result.data);
     setSelectedPdf(null);
-    setNotice("Corrected PDF attached. PDF feedback now shows the revision evidence.");
+    setNotice(
+      "Corrected PDF attached. PDF feedback now shows the revision evidence.",
+    );
     setIsUploadingPdf(false);
   };
 
@@ -236,12 +259,10 @@ export function MemberCorrectionClient({
     setSubmission((current) => ({
       ...current,
       fieldComments: current.fieldComments.map((comment) =>
-        comment.id === commentId && result.data
-          ? result.data
-          : comment,
+        comment.id === commentId && result.data ? result.data : comment,
       ),
     }));
-    setNotice("Comment marked addressed. It remains visible to your reviewer.");
+    setNotice("Comment marked addressed.");
     setIsAcknowledging(false);
   };
 
@@ -251,14 +272,19 @@ export function MemberCorrectionClient({
     const result = await resubmitFlaggedSubmission(submission.id);
 
     if (result.error || !result.data) {
-      setError(result.error?.message ?? "Your submission could not be returned for review.");
+      setError(
+        result.error?.message ??
+          "Your submission could not be returned for review.",
+      );
       setIsResubmitting(false);
       return;
     }
 
     setSubmission(result.data);
     setShowResubmitConfirm(false);
-    setNotice("Resubmitted for review. Editing is now locked until another decision is made.");
+    setNotice(
+      "Resubmitted for review. Editing is now locked until another decision is made.",
+    );
     setIsResubmitting(false);
   };
 
@@ -274,22 +300,37 @@ export function MemberCorrectionClient({
 
         <div className={styles.statusBlock}>
           <p className={styles.eyebrow}>Correction status</p>
-          <strong className={isLocked ? styles.pendingStatus : styles.flaggedStatus}>
+          <strong
+            className={isLocked ? styles.pendingStatus : styles.flaggedStatus}
+          >
             {isLocked ? "Pending review" : "Flagged for correction"}
           </strong>
-          <p>{isLocked
-            ? "Your submission is back with the review team."
-            : "Save edits, acknowledge feedback you addressed, then resubmit when ready."}
+          <p>
+            {isLocked
+              ? "Your submission is back for review. Our team will be on it and get back to you as soon as possible!"
+              : "Save edits, acknowledge feedback you addressed, then resubmit when ready."}
           </p>
         </div>
 
         <div className={styles.summary}>
           <p className={styles.eyebrow}>Feedback summary</p>
           <dl>
-            <div><dt>Total comments</dt><dd>{correctionSummary.totalComments}</dd></div>
-            <div><dt>Fields revised</dt><dd>{correctionSummary.revisedCommentCount}</dd></div>
-            <div><dt>Marked addressed</dt><dd>{correctionSummary.acknowledgedCommentCount}</dd></div>
-            <div><dt>Not yet marked</dt><dd>{correctionSummary.unacknowledgedCommentCount}</dd></div>
+            <div>
+              <dt>Total comments</dt>
+              <dd>{correctionSummary.totalComments}</dd>
+            </div>
+            <div>
+              <dt>Fields revised</dt>
+              <dd>{correctionSummary.revisedCommentCount}</dd>
+            </div>
+            <div>
+              <dt>Marked addressed</dt>
+              <dd>{correctionSummary.acknowledgedCommentCount}</dd>
+            </div>
+            <div>
+              <dt>Not yet marked</dt>
+              <dd>{correctionSummary.unacknowledgedCommentCount}</dd>
+            </div>
           </dl>
         </div>
 
@@ -300,7 +341,11 @@ export function MemberCorrectionClient({
             onClick={handleSave}
             disabled={isLocked || isSaving || isUploadingPdf || isResubmitting}
           >
-            {isSaving ? <LoaderCircle className={styles.spinning} size={15} aria-hidden /> : <Save size={15} aria-hidden />}
+            {isSaving ? (
+              <LoaderCircle className={styles.spinning} size={15} aria-hidden />
+            ) : (
+              <Save size={15} aria-hidden />
+            )}
             Save changes
           </button>
           <button
@@ -325,25 +370,79 @@ export function MemberCorrectionClient({
           <div>
             <p className={styles.eyebrow}>Submission corrections</p>
             <h1>{submission.title}</h1>
-            <p>All fields are available while this submission is flagged. Comments stay visible beside the field they concern.</p>
+            <p>
+              All fields are available while this submission is flagged.
+              Comments stay visible beside the field they concern.
+            </p>
           </div>
-          {isLocked && <CheckCircle2 className={styles.lockedIcon} size={24} aria-label="Submitted for review" />}
+          {isLocked && (
+            <CheckCircle2
+              className={styles.lockedIcon}
+              size={24}
+              aria-label="Submitted for review"
+            />
+          )}
         </header>
 
-        {error && <p className={styles.errorMessage} role="alert">{error}</p>}
-        {notice && <p className={styles.noticeMessage} role="status">{notice}</p>}
+        {error && (
+          <p className={styles.errorMessage} role="alert">
+            {error}
+          </p>
+        )}
+        {notice && (
+          <p className={styles.noticeMessage} role="status">
+            {notice}
+          </p>
+        )}
 
         <div className={styles.fieldGroups} aria-disabled={isLocked}>
-          <Field fieldKey="title" label="Title" comments={commentsFor("title")} activeField={activeCommentField} onCommentIconClick={handleCommentIconClick}>
-            <input value={form.title} onChange={(event) => updateField("title", event.target.value)} disabled={isLocked} />
+          <Field
+            fieldKey="title"
+            label="Title"
+            comments={commentsFor("title")}
+            activeField={activeCommentField}
+            onCommentIconClick={handleCommentIconClick}
+          >
+            <input
+              value={form.title}
+              onChange={(event) => updateField("title", event.target.value)}
+              disabled={isLocked}
+            />
           </Field>
 
           <div className={styles.twoColumns}>
-            <Field fieldKey="department" label="Department" comments={commentsFor("department")} activeField={activeCommentField} onCommentIconClick={handleCommentIconClick}>
-              <input value={form.department} onChange={(event) => updateField("department", event.target.value)} disabled={isLocked} />
+            <Field
+              fieldKey="department"
+              label="Department"
+              comments={commentsFor("department")}
+              activeField={activeCommentField}
+              onCommentIconClick={handleCommentIconClick}
+            >
+              <input
+                value={form.department}
+                onChange={(event) =>
+                  updateField("department", event.target.value)
+                }
+                disabled={isLocked}
+              />
             </Field>
-            <Field fieldKey="study_type" label="Study type" comments={commentsFor("study_type")} activeField={activeCommentField} onCommentIconClick={handleCommentIconClick}>
-              <select value={form.studyType} onChange={(event) => updateField("studyType", event.target.value as CorrectionForm["studyType"])} disabled={isLocked}>
+            <Field
+              fieldKey="study_type"
+              label="Study type"
+              comments={commentsFor("study_type")}
+              activeField={activeCommentField}
+              onCommentIconClick={handleCommentIconClick}
+            >
+              <select
+                value={form.studyType}
+                onChange={(event) =>
+                  updateField(
+                    "studyType",
+                    event.target.value as CorrectionForm["studyType"],
+                  )
+                }
+                disabled={isLocked}
+              >
                 <option value="thesis">Thesis</option>
                 <option value="capstone">Capstone</option>
               </select>
@@ -351,16 +450,54 @@ export function MemberCorrectionClient({
           </div>
 
           <div className={styles.twoColumns}>
-            <Field fieldKey="publication_date" label="Publication date" comments={commentsFor("publication_date")} activeField={activeCommentField} onCommentIconClick={handleCommentIconClick}>
-              <input type="date" value={form.publicationDate} onChange={(event) => updateField("publicationDate", event.target.value)} disabled={isLocked} />
+            <Field
+              fieldKey="publication_date"
+              label="Publication date"
+              comments={commentsFor("publication_date")}
+              activeField={activeCommentField}
+              onCommentIconClick={handleCommentIconClick}
+            >
+              <input
+                type="date"
+                value={form.publicationDate}
+                onChange={(event) =>
+                  updateField("publicationDate", event.target.value)
+                }
+                disabled={isLocked}
+              />
             </Field>
-            <Field fieldKey="conference" label="Conference" comments={commentsFor("conference")} activeField={activeCommentField} onCommentIconClick={handleCommentIconClick}>
-              <input value={form.conference} onChange={(event) => updateField("conference", event.target.value)} disabled={isLocked} />
+            <Field
+              fieldKey="conference"
+              label="Conference"
+              comments={commentsFor("conference")}
+              activeField={activeCommentField}
+              onCommentIconClick={handleCommentIconClick}
+            >
+              <input
+                value={form.conference}
+                onChange={(event) =>
+                  updateField("conference", event.target.value)
+                }
+                disabled={isLocked}
+              />
             </Field>
           </div>
 
-          <Field fieldKey="publication_link" label="Publication link" comments={commentsFor("publication_link")} activeField={activeCommentField} onCommentIconClick={handleCommentIconClick}>
-            <input type="url" value={form.publicationLink} onChange={(event) => updateField("publicationLink", event.target.value)} disabled={isLocked} />
+          <Field
+            fieldKey="publication_link"
+            label="Publication link"
+            comments={commentsFor("publication_link")}
+            activeField={activeCommentField}
+            onCommentIconClick={handleCommentIconClick}
+          >
+            <input
+              type="url"
+              value={form.publicationLink}
+              onChange={(event) =>
+                updateField("publicationLink", event.target.value)
+              }
+              disabled={isLocked}
+            />
           </Field>
 
           <PeopleEditor
@@ -373,7 +510,10 @@ export function MemberCorrectionClient({
             disabled={isLocked}
             onCommentIconClick={handleCommentIconClick}
             onUpdate={updateContributor}
-            onChange={(contributors) => { setForm((current) => ({ ...current, contributors })); setHasUnsavedChanges(true); }}
+            onChange={(contributors) => {
+              setForm((current) => ({ ...current, contributors }));
+              setHasUnsavedChanges(true);
+            }}
           />
           <PeopleEditor
             label="Advisers"
@@ -385,31 +525,102 @@ export function MemberCorrectionClient({
             disabled={isLocked}
             onCommentIconClick={handleCommentIconClick}
             onUpdate={updateContributor}
-            onChange={(contributors) => { setForm((current) => ({ ...current, contributors })); setHasUnsavedChanges(true); }}
+            onChange={(contributors) => {
+              setForm((current) => ({ ...current, contributors }));
+              setHasUnsavedChanges(true);
+            }}
           />
 
           <div className={styles.twoColumns}>
-            <Field fieldKey="research_area" label="Research area" comments={commentsFor("research_area")} activeField={activeCommentField} onCommentIconClick={handleCommentIconClick}>
-              <input value={form.researchArea} onChange={(event) => updateField("researchArea", event.target.value)} disabled={isLocked} />
+            <Field
+              fieldKey="research_area"
+              label="Research area"
+              comments={commentsFor("research_area")}
+              activeField={activeCommentField}
+              onCommentIconClick={handleCommentIconClick}
+            >
+              <input
+                value={form.researchArea}
+                onChange={(event) =>
+                  updateField("researchArea", event.target.value)
+                }
+                disabled={isLocked}
+              />
             </Field>
-            <Field fieldKey="tags" label="Tags" comments={commentsFor("tags")} activeField={activeCommentField} onCommentIconClick={handleCommentIconClick}>
-              <input value={form.tags} onChange={(event) => updateField("tags", event.target.value)} disabled={isLocked} placeholder="Comma-separated tags" />
+            <Field
+              fieldKey="tags"
+              label="Tags"
+              comments={commentsFor("tags")}
+              activeField={activeCommentField}
+              onCommentIconClick={handleCommentIconClick}
+            >
+              <input
+                value={form.tags}
+                onChange={(event) => updateField("tags", event.target.value)}
+                disabled={isLocked}
+                placeholder="Comma-separated tags"
+              />
             </Field>
           </div>
 
-          <Field fieldKey="abstract" label="Abstract" comments={commentsFor("abstract")} activeField={activeCommentField} onCommentIconClick={handleCommentIconClick}>
-            <textarea value={form.abstract} onChange={(event) => updateField("abstract", event.target.value)} disabled={isLocked} rows={8} />
+          <Field
+            fieldKey="abstract"
+            label="Abstract"
+            comments={commentsFor("abstract")}
+            activeField={activeCommentField}
+            onCommentIconClick={handleCommentIconClick}
+          >
+            <textarea
+              value={form.abstract}
+              onChange={(event) => updateField("abstract", event.target.value)}
+              disabled={isLocked}
+              rows={8}
+            />
           </Field>
-          <Field fieldKey="recommendations" label="Recommendations" comments={commentsFor("recommendations")} activeField={activeCommentField} onCommentIconClick={handleCommentIconClick}>
-            <textarea value={form.recommendations} onChange={(event) => updateField("recommendations", event.target.value)} disabled={isLocked} rows={5} />
+          <Field
+            fieldKey="recommendations"
+            label="Recommendations"
+            comments={commentsFor("recommendations")}
+            activeField={activeCommentField}
+            onCommentIconClick={handleCommentIconClick}
+          >
+            <textarea
+              value={form.recommendations}
+              onChange={(event) =>
+                updateField("recommendations", event.target.value)
+              }
+              disabled={isLocked}
+              rows={5}
+            />
           </Field>
-          <Field fieldKey="lessons_learned" label="Lessons learned" comments={commentsFor("lessons_learned")} activeField={activeCommentField} onCommentIconClick={handleCommentIconClick}>
-            <textarea value={form.lessonsLearned} onChange={(event) => updateField("lessonsLearned", event.target.value)} disabled={isLocked} rows={5} />
+          <Field
+            fieldKey="lessons_learned"
+            label="Lessons learned"
+            comments={commentsFor("lessons_learned")}
+            activeField={activeCommentField}
+            onCommentIconClick={handleCommentIconClick}
+          >
+            <textarea
+              value={form.lessonsLearned}
+              onChange={(event) =>
+                updateField("lessonsLearned", event.target.value)
+              }
+              disabled={isLocked}
+              rows={5}
+            />
           </Field>
 
-          <Field fieldKey="pdf_general" label="Primary PDF" comments={commentsFor("pdf_general")} activeField={activeCommentField} onCommentIconClick={handleCommentIconClick}>
+          <Field
+            fieldKey="pdf_general"
+            label="Primary PDF"
+            comments={commentsFor("pdf_general")}
+            activeField={activeCommentField}
+            onCommentIconClick={handleCommentIconClick}
+          >
             <div className={styles.pdfSection}>
-              <p>{submission.primaryFile?.fileName ?? "No primary PDF attached"}</p>
+              <p>
+                {submission.primaryFile?.fileName ?? "No primary PDF attached"}
+              </p>
               {submission.primaryFile && (
                 <a
                   href={submission.primaryFile.pdfUrl}
@@ -423,10 +634,30 @@ export function MemberCorrectionClient({
               <label className={styles.filePicker}>
                 <FileUp size={15} aria-hidden />
                 <span>{selectedPdf?.name ?? "Choose corrected PDF"}</span>
-                <input type="file" accept="application/pdf,.pdf" onChange={(event) => setSelectedPdf(event.target.files?.[0] ?? null)} disabled={isLocked || isUploadingPdf} />
+                <input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={(event) =>
+                    setSelectedPdf(event.target.files?.[0] ?? null)
+                  }
+                  disabled={isLocked || isUploadingPdf}
+                />
               </label>
-              <button type="button" className={styles.attachButton} onClick={handlePdfUpload} disabled={isLocked || !selectedPdf || isUploadingPdf}>
-                {isUploadingPdf ? <LoaderCircle className={styles.spinning} size={14} aria-hidden /> : <FileUp size={14} aria-hidden />}
+              <button
+                type="button"
+                className={styles.attachButton}
+                onClick={handlePdfUpload}
+                disabled={isLocked || !selectedPdf || isUploadingPdf}
+              >
+                {isUploadingPdf ? (
+                  <LoaderCircle
+                    className={styles.spinning}
+                    size={14}
+                    aria-hidden
+                  />
+                ) : (
+                  <FileUp size={14} aria-hidden />
+                )}
                 Attach corrected PDF
               </button>
             </div>
@@ -447,16 +678,49 @@ export function MemberCorrectionClient({
 
       {showResubmitConfirm && (
         <div className={styles.modalOverlay} role="presentation">
-          <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="resubmit-title">
+          <div
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="resubmit-title"
+          >
             <h2 id="resubmit-title">Resubmit this thesis for review?</h2>
-            <p>Your saved corrections and acknowledgement signals will be visible to the review team. Editing will lock once you resubmit.</p>
+            <p>
+              Your saved corrections and acknowledgement signals will be visible
+              to the review team. Editing will lock once you resubmit.
+            </p>
             {correctionSummary.unacknowledgedCommentCount > 0 && (
-              <p className={styles.modalWarning}>{correctionSummary.unacknowledgedCommentCount} comment{correctionSummary.unacknowledgedCommentCount === 1 ? " remains" : "s remain"} unacknowledged. You can still resubmit.</p>
+              <p className={styles.modalWarning}>
+                {correctionSummary.unacknowledgedCommentCount} comment
+                {correctionSummary.unacknowledgedCommentCount === 1
+                  ? " remains"
+                  : "s remain"}{" "}
+                unacknowledged. You can still resubmit.
+              </p>
             )}
             <div className={styles.modalActions}>
-              <button type="button" onClick={() => setShowResubmitConfirm(false)} disabled={isResubmitting}>Cancel</button>
-              <button type="button" className={styles.confirmResubmit} onClick={handleResubmit} disabled={isResubmitting}>
-                {isResubmitting ? <LoaderCircle className={styles.spinning} size={14} aria-hidden /> : <RotateCcw size={14} aria-hidden />}
+              <button
+                type="button"
+                onClick={() => setShowResubmitConfirm(false)}
+                disabled={isResubmitting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={styles.confirmResubmit}
+                onClick={handleResubmit}
+                disabled={isResubmitting}
+              >
+                {isResubmitting ? (
+                  <LoaderCircle
+                    className={styles.spinning}
+                    size={14}
+                    aria-hidden
+                  />
+                ) : (
+                  <RotateCcw size={14} aria-hidden />
+                )}
                 Resubmit for review
               </button>
             </div>
@@ -532,18 +796,31 @@ function PeopleEditor({
     >
       <div className={styles.peopleEditor}>
         {matching.map(({ contributor, index }) => (
-          <div key={`${contributor.id ?? "new"}-${index}`} className={styles.personRow}>
+          <div
+            key={`${contributor.id ?? "new"}-${index}`}
+            className={styles.personRow}
+          >
             <input
               value={contributor.display_name}
-              onChange={(event) => onUpdate(index, { display_name: event.target.value })}
+              onChange={(event) =>
+                onUpdate(index, { display_name: event.target.value })
+              }
               disabled={disabled}
               aria-label={`${label} ${index + 1}`}
             />
             <button
               type="button"
               className={styles.iconButton}
-              onClick={() => onChange(contributors.filter((_, contributorIndex) => contributorIndex !== index))}
-              disabled={disabled || (role === "author" && matching.length === 1)}
+              onClick={() =>
+                onChange(
+                  contributors.filter(
+                    (_, contributorIndex) => contributorIndex !== index,
+                  ),
+                )
+              }
+              disabled={
+                disabled || (role === "author" && matching.length === 1)
+              }
               aria-label={`Remove ${label.slice(0, -1).toLowerCase()}`}
               title={`Remove ${label.slice(0, -1).toLowerCase()}`}
             >
@@ -554,12 +831,17 @@ function PeopleEditor({
         <button
           type="button"
           className={styles.addPersonButton}
-          onClick={() => onChange([...contributors, {
-            user_id: null,
-            display_name: "",
-            contribution_role: role,
-            sort_order: contributors.length,
-          }])}
+          onClick={() =>
+            onChange([
+              ...contributors,
+              {
+                user_id: null,
+                display_name: "",
+                contribution_role: role,
+                sort_order: contributors.length,
+              },
+            ])
+          }
           disabled={disabled}
         >
           <Plus size={14} aria-hidden />

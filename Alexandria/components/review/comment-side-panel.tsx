@@ -215,7 +215,7 @@ export function CommentSidePanel({
                       ? "Marked addressed"
                       : c.memberRevisedAt
                         ? "Mark as addressed"
-                        : "Save a field change first"}
+                        : `Edit ${label} and save first`}
                   </button>
                 )}
               </div>
