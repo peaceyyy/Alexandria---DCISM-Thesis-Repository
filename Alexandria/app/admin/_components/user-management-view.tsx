@@ -239,20 +239,20 @@ export function UserManagementView({
 
   return (
     <div className="flex flex-col gap-6 p-8">
-      <h1 className="text-2xl font-bold text-white">
-        Good day, <span className="text-[#368bfe]">{viewerName}</span>!
+      <h1 className="text-2xl font-bold text-[var(--color-text)]">
+        Good day, <span className="text-[var(--color-brand-bright)]">{viewerName}</span>!
       </h1>
 
       <div>
-        <h2 className="text-lg font-bold text-white">User Management</h2>
-        <p className="mt-1 text-sm text-[#969696]">
+        <h2 className="text-lg font-bold text-[var(--color-text)]">User Management</h2>
+        <p className="mt-1 text-sm text-[var(--color-text-muted)] opacity-70">
           View accounts by role and manage member or moderator access.
         </p>
       </div>
 
       <nav
         aria-label="User account roles"
-        className="flex w-fit flex-wrap gap-1 rounded-[9px] border border-white/[0.08] bg-[#14181c] p-1"
+        className="flex w-fit flex-wrap gap-1 rounded-[9px] border border-[var(--color-separator)] bg-[var(--color-surface-alt)] p-1"
       >
         {ROLE_TABS.map((tab) => {
           const isActive = role === tab.role;
@@ -263,16 +263,16 @@ export function UserManagementView({
               aria-current={isActive ? "page" : undefined}
               className={
                 isActive
-                  ? "rounded-[7px] bg-[#203858] px-4 py-2 text-sm font-semibold text-white"
-                  : "rounded-[7px] px-4 py-2 text-sm font-semibold text-[#969696] transition-colors hover:bg-white/[0.05] hover:text-white"
+                  ? "rounded-[7px] bg-[var(--color-brand)]/20 px-4 py-2 text-sm font-semibold text-[var(--color-text)]"
+                  : "rounded-[7px] px-4 py-2 text-sm font-semibold text-[var(--color-text-muted)] opacity-70 transition-colors hover:bg-[var(--color-text)]/5 hover:text-[var(--color-text)]"
               }
             >
               {tab.label}
               <span
                 className={
                   isActive
-                    ? "ml-2 rounded-full bg-[#368bfe]/25 px-2 py-0.5 text-xs text-[#78adff]"
-                    : "ml-2 rounded-full bg-white/[0.06] px-2 py-0.5 text-xs"
+                    ? "ml-2 rounded-full bg-[var(--color-brand-bright)]/25 px-2 py-0.5 text-xs text-[var(--color-brand-bright)]"
+                    : "ml-2 rounded-full bg-[var(--color-text)]/10 px-2 py-0.5 text-xs"
                 }
               >
                 {roleCounts[tab.role]}
@@ -295,7 +295,7 @@ export function UserManagementView({
       </div>
 
       {isAdministratorList ? (
-        <p className="rounded-[8px] border border-[#368bfe]/20 bg-[#368bfe]/[0.07] px-4 py-3 text-sm text-[#a9c9ff]">
+        <p className="rounded-[8px] border border-[var(--color-brand-bright)]/20 bg-[var(--color-brand-bright)]/[0.07] px-4 py-3 text-sm text-[var(--color-brand-bright)]">
           Administrator accounts are visible here for transparency but cannot
           be modified from the dashboard.
         </p>
@@ -306,8 +306,8 @@ export function UserManagementView({
           role={feedback.tone === "error" ? "alert" : "status"}
           className={
             feedback.tone === "error"
-              ? "text-sm text-[#ff6b6b]"
-              : "text-sm text-[#59c987]"
+              ? "text-sm text-[var(--color-danger)]"
+              : "text-sm text-[var(--color-success)]"
           }
         >
           {feedback.message}
@@ -327,29 +327,29 @@ export function UserManagementView({
 
       {deactivationTarget ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           aria-labelledby="deactivate-title"
         >
           <form
             onSubmit={handleDeactivateSubmit}
-            className="w-full max-w-md rounded-[10px] border border-white/[0.1] bg-[#1a1e23] p-6 shadow-2xl"
+            className="w-full max-w-md rounded-[10px] border border-[var(--color-separator)] bg-[var(--color-surface-alt)] p-6 shadow-2xl"
           >
             <h2
               id="deactivate-title"
-              className="text-lg font-bold text-white"
+              className="text-lg font-bold text-[var(--color-text)]"
             >
               Deactivate {deactivationTarget.profile_name}
             </h2>
-            <p className="mt-2 text-sm text-[#969696]">
+            <p className="mt-2 text-sm text-[var(--color-text-muted)] opacity-70">
               Their profile and thesis credits will remain. They will be
               denied authenticated access until an administrator reactivates
               the account.
             </p>
             <label
               htmlFor="deactivation-reason"
-              className="mt-5 block text-sm font-semibold text-[#d8dadc]"
+              className="mt-5 block text-sm font-semibold text-[var(--color-text-muted)]"
             >
               Reason
             </label>
@@ -359,10 +359,10 @@ export function UserManagementView({
               maxLength={300}
               value={reason}
               onChange={(event) => setReason(event.target.value)}
-              className="mt-2 min-h-24 w-full rounded-[7px] border border-white/10 bg-[#14181c] p-3 text-sm text-white outline-none focus:border-[#368bfe]"
+              className="mt-2 min-h-24 w-full rounded-[7px] border border-[var(--color-separator)] bg-[var(--color-surface)] p-3 text-sm text-[var(--color-text)] outline-none focus:border-[var(--color-brand-bright)]"
             />
             {feedback?.tone === "error" ? (
-              <p role="alert" className="mt-3 text-sm text-[#ff6b6b]">
+              <p role="alert" className="mt-3 text-sm text-[var(--color-danger)]">
                 {feedback.message}
               </p>
             ) : null}
@@ -371,14 +371,14 @@ export function UserManagementView({
                 type="button"
                 disabled={isPending}
                 onClick={() => setDeactivationTarget(null)}
-                className="rounded-[7px] border border-white/10 px-4 py-2 text-sm font-semibold text-[#d8dadc]"
+                className="rounded-[7px] border border-[var(--color-separator)] px-4 py-2 text-sm font-semibold text-[var(--color-text)] hover:bg-[var(--color-text)]/5 transition"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isPending || !reason.trim()}
-                className="rounded-[7px] bg-[#ff6b6b] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-[7px] bg-[var(--color-danger)] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isPending ? "Deactivating..." : "Deactivate"}
               </button>

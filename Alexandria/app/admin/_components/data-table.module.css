@@ -1,6 +1,6 @@
 .wrapper {
-  background: #1a1e23;
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-separator);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -12,13 +12,13 @@
   justify-content: space-between;
   gap: 12px;
   padding: 14px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid var(--color-separator);
 }
 
 .tableTitle {
   font-size: 15px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--color-text);
   margin: 0;
 }
 
@@ -41,14 +41,14 @@
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #969696;
+  color: var(--color-text-muted);
   white-space: nowrap;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  background: #181c20;
+  border-bottom: 1px solid var(--color-separator);
+  background: var(--color-surface);
 }
 
 .tr {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--color-separator);
   transition: background 0.12s ease;
 }
 
@@ -57,12 +57,12 @@
 }
 
 .tr:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-surface);
 }
 
 .td {
   padding: 12px 16px;
-  color: #d8dadc;
+  color: var(--color-text);
   vertical-align: middle;
   white-space: nowrap;
   overflow: hidden;
@@ -73,7 +73,7 @@
 .empty {
   padding: 32px 16px;
   text-align: center;
-  color: #969696;
+  color: var(--color-text-muted);
   font-size: 14px;
 }
 
@@ -83,7 +83,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid var(--color-separator);
   gap: 8px;
 }
 
@@ -95,17 +95,17 @@
   border-radius: 7px;
   font-size: 13px;
   font-weight: 500;
-  color: #d8dadc;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-separator);
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
 .pageBtn:hover:not(:disabled) {
-  background: rgba(54, 139, 254, 0.15);
-  color: #368bfe;
-  border-color: rgba(54, 139, 254, 0.3);
+  background: var(--color-chip-cyan-bg);
+  color: var(--color-brand-bright);
+  border-color: var(--color-brand-bright);
 }
 
 .pageBtn:disabled {
@@ -115,5 +115,5 @@
 
 .pageInfo {
   font-size: 13px;
-  color: #969696;
+  color: var(--color-text-muted);
 }

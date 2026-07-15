@@ -8,7 +8,7 @@ import { StatusBadge } from "@/components/admin/status-badge";
 
 export function PublishedStudiesDetailPage({ submissionId }: { submissionId: number }) {
   const selectedSubmission = useMemo(() => {
-    return mockReviewSubmissions.find((item) => item.id === submissionId && item.status === "Approved") ?? null;
+    return mockReviewSubmissions.find((item) => item.id === submissionId && item.reviewStatus === "accepted") ?? null;
   }, [submissionId]);
 
   if (!selectedSubmission) {
@@ -44,7 +44,7 @@ export function PublishedStudiesDetailPage({ submissionId }: { submissionId: num
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#969696]">Published Study</p>
             <h1 className="mt-1 text-[20px] font-bold text-white">{selectedSubmission.title}</h1>
           </div>
-          <StatusBadge status={selectedSubmission.status} />
+          <StatusBadge status={selectedSubmission.reviewStatus} />
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-2">
@@ -80,17 +80,18 @@ export function PublishedStudiesDetailPage({ submissionId }: { submissionId: num
           <p className="mt-3 text-sm leading-6 text-[#d8dadc]">{selectedSubmission.abstract}</p>
         </div>
 
+
         <div className="mt-5 rounded-[8px] border border-white/[0.07] bg-[#14181c] p-4">
           <div className="flex items-center gap-2 text-white">
             <MessageSquareText size={16} aria-hidden />
             <h2 className="text-[14px] font-semibold">Research Area</h2>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
-            {selectedSubmission.researchArea.map((area) => (
-              <span key={area} className="rounded-full border border-[#368bfe]/30 bg-[#368bfe]/10 px-3 py-1 text-sm text-[#8ec5ff]">
-                {area}
+            {selectedSubmission.researchArea && (
+              <span className="rounded-full border border-[#368bfe]/30 bg-[#368bfe]/10 px-3 py-1 text-sm text-[#8ec5ff]">
+                {selectedSubmission.researchArea}
               </span>
-            ))}
+            )}
           </div>
         </div>
 
@@ -100,13 +101,19 @@ export function PublishedStudiesDetailPage({ submissionId }: { submissionId: num
             <h2 className="text-[14px] font-semibold">Attached PDF</h2>
           </div>
           <div className="mt-3 rounded-[8px] border border-white/[0.07] bg-white/[0.03] p-3">
-            <p className="text-sm font-medium text-white">{selectedSubmission.fileName}</p>
-            <p className="mt-1 text-xs text-[#9ea4ad]">{selectedSubmission.fileSize}</p>
-            <iframe
-              src={selectedSubmission.pdfUrl}
-              title={`${selectedSubmission.title} PDF preview`}
-              className="mt-4 h-[420px] w-full rounded-[8px] border border-white/10 bg-white"
-            />
+            {selectedSubmission.primaryFile ? (
+              <>
+                <p className="text-sm font-medium text-white">{selectedSubmission.primaryFile.fileName}</p>
+                <p className="mt-1 text-xs text-[#9ea4ad]">{selectedSubmission.primaryFile.fileSize}</p>
+                <iframe
+                  src={selectedSubmission.primaryFile.pdfUrl}
+                  title={`${selectedSubmission.title} PDF preview`}
+                  className="mt-4 h-[420px] w-full rounded-[8px] border border-white/10 bg-white"
+                />
+              </>
+            ) : (
+              <p className="text-sm text-[#5a6070]">No PDF attached.</p>
+            )}
           </div>
         </div>
       </div>

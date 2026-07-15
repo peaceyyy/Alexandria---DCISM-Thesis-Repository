@@ -8,12 +8,17 @@
   left: 0;
   height: 100svh;
   width: 240px;
-  background: #0d1014;
-  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-separator);
   display: flex;
   flex-direction: column;
   z-index: 40;
   padding: 0;
+  transition: width 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+}
+
+.collapsed {
+  width: 72px;
 }
 
 /* Brand / Logo */
@@ -22,9 +27,10 @@
   align-items: center;
   gap: 10px;
   padding: 20px 20px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  color: #ffffff;
+  border-bottom: 1px solid var(--color-separator);
+  color: var(--color-text);
   text-decoration: none;
+  position: relative;
 }
 
 .brandText {
@@ -32,7 +38,61 @@
   font-weight: 800;
   font-size: 17px;
   letter-spacing: 0.04em;
-  color: #368bfe;
+  color: var(--color-brand-bright);
+}
+
+.collapseButton,
+.mobileCloseButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 6px;
+  color: var(--color-text-muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.collapseButton {
+  position: absolute;
+  top: 22px;
+  right: -14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--color-separator);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.collapseButton:hover {
+  color: var(--color-text);
+  background: var(--color-surface-alt);
+  transform: scale(1.05);
+}
+
+.mobileCloseButton:hover {
+  color: var(--color-text);
+  background: var(--color-separator);
+}
+
+.collapseButton:focus-visible,
+.mobileCloseButton:focus-visible,
+.navLink:focus-visible,
+.viewSiteLink:focus-visible,
+.logoutBtn:focus-visible {
+  outline: 2px solid var(--color-brand-bright);
+  outline-offset: 2px;
+}
+
+.mobileCloseButton {
+  display: none;
 }
 
 /* Nav */
@@ -59,7 +119,7 @@
   border-radius: 7px;
   font-size: 14px;
   font-weight: 500;
-  color: #969696;
+  color: var(--color-text-muted);
   text-decoration: none;
   transition: color 0.15s ease, background 0.15s ease;
   position: relative;
@@ -67,14 +127,14 @@
 }
 
 .navLink:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text);
+  background: var(--color-separator);
 }
 
 .navLinkActive {
-  color: #ffffff;
-  background: rgba(54, 139, 254, 0.1);
-  border-left-color: #368bfe;
+  color: var(--color-brand-cyan);
+  background: oklch(0.63 0.12 220 / 12%);
+  border-left-color: var(--color-brand-bright);
 }
 
 .navIcon {
@@ -84,7 +144,44 @@
 
 .navLinkActive .navIcon {
   opacity: 1;
-  color: #368bfe;
+  color: var(--color-brand-bright);
+}
+
+.collapsed .brand {
+  justify-content: center;
+  gap: 0;
+  padding-inline: 0;
+}
+
+.collapsed .brand img {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+.collapsed .brandText,
+.collapsed .navText,
+.collapsed .viewSiteText,
+.collapsed .logoutText {
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.collapsed .nav {
+  padding-inline: 10px;
+}
+
+.collapsed .navLink,
+.collapsed .viewSiteLink,
+.collapsed .logoutBtn {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.collapsed .viewSite,
+.collapsed .footer {
+  padding-inline: 10px;
 }
 
 /* Browse Repository */
@@ -137,4 +234,72 @@
 .logoutBtn:hover {
   color: #ff6b6b;
   background: rgba(255, 107, 107, 0.08);
+}
+
+@media (max-width: 1023px) {
+  .sidebar,
+  .sidebar.collapsed {
+    width: min(84vw, 280px);
+    transform: translateX(-100%);
+    visibility: hidden;
+    pointer-events: none;
+    box-shadow: none;
+    z-index: 50;
+  }
+
+  .sidebar.mobileOpen {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+    box-shadow: 12px 0 28px rgba(0, 0, 0, 0.34);
+  }
+
+  .sidebar.collapsed .brand {
+    justify-content: flex-start;
+    padding-inline: 20px;
+  }
+
+  .sidebar.collapsed .brandText,
+  .sidebar.collapsed .navText,
+  .sidebar.collapsed .viewSiteText,
+  .sidebar.collapsed .logoutText {
+    width: auto;
+    opacity: 1;
+    overflow: visible;
+  }
+
+  .sidebar.collapsed .nav {
+    padding-inline: 12px;
+  }
+
+  .sidebar.collapsed .navLink,
+  .sidebar.collapsed .viewSiteLink,
+  .sidebar.collapsed .logoutBtn {
+    justify-content: flex-start;
+    padding-inline: 12px;
+  }
+
+  .sidebar.collapsed .viewSite,
+  .sidebar.collapsed .footer {
+    padding-inline: 12px;
+  }
+
+  .collapseButton {
+    display: none;
+  }
+
+  .mobileCloseButton {
+    display: inline-flex;
+    position: absolute;
+    top: 20px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
 }

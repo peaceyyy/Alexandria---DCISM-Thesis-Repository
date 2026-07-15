@@ -1,15 +1,19 @@
 "use client";
 
-import { BookText, Clock, Search } from "lucide-react";
+import { BookText, Check, Clock, ListFilter, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Popover } from "@base-ui/react/popover";
 import { DEPARTMENTS, type Department } from "@/lib/domain/departments";
+import { RESEARCH_AREAS, type ResearchAreaId } from "@/lib/domain/research-areas";
 import { DASHBOARD_QUEUE_PAGE_SIZE } from "./dashboard-constants";
 import { DataTable, type Column } from "./data-table";
 import { StatCard } from "./stat-card";
 import { StatusBadge } from "./status-badge";
 import type {
   AdminDashboardSnapshot,
+  ReviewSearchScope,
   ReviewStatus,
   ReviewSubmissionListItem,
 } from "@/lib/services/types";
@@ -25,6 +29,16 @@ const dateTimeFormatter = new Intl.DateTimeFormat("en-PH", {
 
 type DashboardStatusFilter = ReviewStatus | "all";
 type DashboardDepartmentFilter = Department | "all";
+type DashboardResearchAreaFilter = ResearchAreaId | "all";
+
+const SEARCH_SCOPES: Array<{
+  value: ReviewSearchScope;
+  label: string;
+  placeholder: string;
+}> = [
+  { value: "title", label: "Title", placeholder: "Search titles" },
+  { value: "author", label: "Author", placeholder: "Search authors" },
+];
 
 const STATUS_FILTERS: Array<{
   value: DashboardStatusFilter;
@@ -80,7 +94,7 @@ const reviewQueueColumns: Column<ReviewSubmissionListItem>[] = [
     render: (row) => (
       <Link
         href={`/admin/review/${row.id}`}
-        className="inline-flex items-center justify-center rounded-[7px] border border-[#368bfe]/40 bg-[#368bfe]/10 px-3 py-1.5 text-[12px] font-semibold text-[#7db2ff] transition hover:border-[#368bfe]/70 hover:bg-[#368bfe]/15"
+        className="inline-flex items-center justify-center rounded-[7px] border border-[var(--color-brand-bright)]/40 bg-[var(--color-brand-bright)]/10 px-3 py-1.5 text-[12px] font-semibold text-[var(--color-brand-bright)] transition hover:border-[var(--color-brand-bright)]/70 hover:bg-[var(--color-brand-bright)]/15"
       >
         Open Review
       </Link>
@@ -94,7 +108,9 @@ export function AdminDashboardView({
   reviewQueueError,
   selectedStatus,
   selectedDepartment,
+  selectedResearchArea,
   query,
+  searchScope,
   reviewQueuePage,
   reviewQueueTotalPages,
 }: {
@@ -103,32 +119,107 @@ export function AdminDashboardView({
   reviewQueueError: string | null;
   selectedStatus: DashboardStatusFilter;
   selectedDepartment: DashboardDepartmentFilter;
+  selectedResearchArea: DashboardResearchAreaFilter;
   query: string;
+  searchScope: ReviewSearchScope;
   reviewQueuePage: number;
   reviewQueueTotalPages: number;
 }) {
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState(query);
+  const searchTimeoutRef = useRef<number | null>(null);
+  const lastSubmittedQueryRef = useRef(query);
   const largestDepartmentCount =
     snapshot.research_by_department[0]?.count ?? 0;
 
-  function handleQueuePageChange(page: number) {
+  const buildDashboardUrl = useCallback((
+    nextQuery: string,
+    page: number,
+    scope = searchScope,
+    status = selectedStatus,
+    department = selectedDepartment,
+    researchArea = selectedResearchArea,
+  ) => {
     const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    if (selectedStatus !== "all") params.set("status", selectedStatus);
-    if (selectedDepartment !== "all") {
-      params.set("department", selectedDepartment);
+    const normalizedQuery = nextQuery.trim();
+    if (normalizedQuery) params.set("q", normalizedQuery);
+    if (scope !== "title") params.set("scope", scope);
+    if (status !== "all") params.set("status", status);
+    if (department !== "all") {
+      params.set("department", department);
+    }
+    if (researchArea !== "all") {
+      params.set("research_area", researchArea);
     }
     if (page > 1) params.set("page", String(page));
 
     const search = params.toString();
-    router.push(search ? `/admin/dashboard?${search}` : "/admin/dashboard");
+    return search ? `/admin/dashboard?${search}` : "/admin/dashboard";
+  }, [searchScope, selectedDepartment, selectedResearchArea, selectedStatus]);
+
+  useEffect(() => {
+    if (query === lastSubmittedQueryRef.current) return;
+
+    setSearchQuery(query);
+    lastSubmittedQueryRef.current = query;
+  }, [query]);
+
+  useEffect(() => {
+    if (searchQuery.trim() === query) return;
+
+    searchTimeoutRef.current = window.setTimeout(() => {
+      const nextQuery = searchQuery.trim();
+      lastSubmittedQueryRef.current = nextQuery;
+      router.replace(buildDashboardUrl(nextQuery, 1, searchScope));
+    }, 350);
+
+    return () => {
+      if (searchTimeoutRef.current !== null) {
+        window.clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [buildDashboardUrl, query, router, searchQuery, searchScope]);
+
+  function handleQueuePageChange(page: number) {
+    router.push(buildDashboardUrl(query, page, searchScope));
   }
+
+  function handleSearchScopeChange(scope: ReviewSearchScope) {
+    router.replace(buildDashboardUrl(searchQuery, 1, scope));
+  }
+
+  function handleStatusChange(status: DashboardStatusFilter) {
+    router.replace(buildDashboardUrl(searchQuery, 1, searchScope, status));
+  }
+
+  function handleDepartmentChange(department: DashboardDepartmentFilter) {
+    router.replace(
+      buildDashboardUrl(searchQuery, 1, searchScope, selectedStatus, department),
+    );
+  }
+
+  function handleResearchAreaChange(researchArea: DashboardResearchAreaFilter) {
+    router.replace(
+      buildDashboardUrl(
+        searchQuery,
+        1,
+        searchScope,
+        selectedStatus,
+        selectedDepartment,
+        researchArea,
+      ),
+    );
+  }
+
+  const activeSearchScope = SEARCH_SCOPES.find(
+    (scope) => scope.value === searchScope,
+  ) ?? SEARCH_SCOPES[0];
 
   return (
     <div className="flex flex-col gap-6 p-8">
-      <h1 className="text-2xl font-bold text-white">
+      <h1 className="text-2xl font-semibold text-[var(--color-text)]">
         Good day,{" "}
-        <span className="text-[#368bfe]">
+        <span className="font-bold text-[var(--color-text)]">
           {snapshot.viewer.profile_name}
         </span>
         !
@@ -159,23 +250,99 @@ export function AdminDashboardView({
         headerAction={
           <div className="flex flex-col items-end gap-2">
             {reviewQueueError && (
-              <p className="max-w-[420px] text-right text-[12px] text-[#ffb3b3]">
+              <p className="max-w-[420px] text-right text-[12px] text-[var(--color-danger)]">
                 {reviewQueueError}
               </p>
             )}
-            <form action="/admin/dashboard" className="flex flex-wrap items-center justify-end gap-2">
-              <input
-                name="q"
-                defaultValue={query}
-                placeholder="Search titles"
-                aria-label="Search study titles"
-                className="h-9 w-44 rounded-[6px] border border-white/10 bg-[#14181c] px-3 text-[12px] text-white outline-none placeholder:text-[#8f96a0] focus:border-[#368bfe]"
-              />
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <div className="relative">
+                <Search
+                  size={14}
+                  aria-hidden
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] opacity-70"
+                />
+                <input
+                  value={searchQuery}
+                  placeholder={activeSearchScope.placeholder}
+                  aria-label={`Search by ${activeSearchScope.label.toLowerCase()}`}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  className="h-9 w-44 rounded-[6px] border border-[var(--color-separator)] bg-[var(--color-surface-alt)] py-0 pl-8 pr-3 text-[12px] text-[var(--color-text)] outline-none placeholder:text-[var(--color-placeholder)] focus:border-[var(--color-brand-bright)]"
+                />
+              </div>
+              <span className="sr-only" aria-live="polite">
+                {searchQuery.trim() !== query
+                  ? `Searching ${activeSearchScope.label.toLowerCase()}s`
+                  : ""}
+              </span>
+              <Popover.Root>
+                <Popover.Trigger
+                  aria-label="Choose search field"
+                  title="Choose search field"
+                  className="inline-flex size-9 items-center justify-center rounded-[6px] border border-[var(--color-separator)] bg-[var(--color-surface-alt)] text-[var(--color-text-muted)] transition hover:border-[var(--color-brand-bright)]/50 hover:text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-bright)]"
+                >
+                  <ListFilter size={15} aria-hidden />
+                </Popover.Trigger>
+                <Popover.Portal>
+                  <Popover.Positioner align="end" side="bottom" sideOffset={8}>
+                    <Popover.Popup
+                      aria-label="Search and research-area filters"
+                      className="z-50 w-52 rounded-[7px] border border-[var(--color-separator)] bg-[var(--color-surface)] p-1.5 text-[var(--color-text)] shadow-[0_12px_24px_rgba(0,0,0,0.28)] outline-none"
+                    >
+                      <p className="px-2 py-1 text-[11px] font-semibold uppercase tracking-widest text-[var(--color-text-muted)] opacity-70">
+                        Search in
+                      </p>
+                      <div className="flex flex-col gap-0.5" role="group" aria-label="Search field">
+                        {SEARCH_SCOPES.map((scope) => {
+                          const isActive = scope.value === searchScope;
+                          return (
+                            <button
+                              key={scope.value}
+                              type="button"
+                              className={`flex h-8 items-center justify-between rounded-[5px] px-2 text-left text-[12px] font-medium transition ${
+                                isActive
+                                  ? "bg-[var(--color-brand-bright)]/14 text-[var(--color-brand-bright)]"
+                                  : "text-[var(--color-text-muted)] hover:bg-[var(--color-text)]/5"
+                              }`}
+                              aria-pressed={isActive}
+                              onClick={() => handleSearchScopeChange(scope.value)}
+                            >
+                              {scope.label}
+                              {isActive && <Check size={14} aria-hidden />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div className="mt-2 border-t border-[var(--color-separator)] pt-2">
+                        <label className="flex flex-col gap-1 px-2 text-[11px] font-semibold uppercase tracking-widest text-[var(--color-text-muted)] opacity-70">
+                          Research area
+                          <select
+                            value={selectedResearchArea}
+                            aria-label="Filter by research area"
+                            onChange={(event) =>
+                              handleResearchAreaChange(
+                                event.target.value as DashboardResearchAreaFilter,
+                              )
+                            }
+                            className="h-8 rounded-[5px] border border-[var(--color-separator)] bg-[var(--color-surface-alt)] px-2 text-[12px] font-medium normal-case tracking-normal text-[var(--color-text)] outline-none focus:border-[var(--color-brand-bright)]"
+                          >
+                            <option value="all">All research areas</option>
+                            {RESEARCH_AREAS.map((area) => (
+                              <option key={area.id} value={area.id}>
+                                {area.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+                    </Popover.Popup>
+                  </Popover.Positioner>
+                </Popover.Portal>
+              </Popover.Root>
               <select
-                name="status"
-                defaultValue={selectedStatus}
+                value={selectedStatus}
                 aria-label="Filter by review status"
-                className="h-9 rounded-[6px] border border-white/10 bg-[#14181c] px-2 text-[12px] font-semibold text-[#d8dadc] outline-none focus:border-[#368bfe]"
+                onChange={(event) => handleStatusChange(event.target.value as DashboardStatusFilter)}
+                className="h-9 rounded-[6px] border border-[var(--color-separator)] bg-[var(--color-surface-alt)] px-2 text-[12px] font-semibold text-[var(--color-text-muted)] outline-none focus:border-[var(--color-brand-bright)]"
               >
                 {STATUS_FILTERS.map((filter) => (
                   <option key={filter.value} value={filter.value}>
@@ -184,10 +351,10 @@ export function AdminDashboardView({
                 ))}
               </select>
               <select
-                name="department"
-                defaultValue={selectedDepartment}
+                value={selectedDepartment}
                 aria-label="Filter by department"
-                className="h-9 rounded-[6px] border border-white/10 bg-[#14181c] px-2 text-[12px] font-semibold text-[#d8dadc] outline-none focus:border-[#368bfe]"
+                onChange={(event) => handleDepartmentChange(event.target.value as DashboardDepartmentFilter)}
+                className="h-9 rounded-[6px] border border-[var(--color-separator)] bg-[var(--color-surface-alt)] px-2 text-[12px] font-semibold text-[var(--color-text-muted)] outline-none focus:border-[var(--color-brand-bright)]"
               >
                 <option value="all">All departments</option>
                 {DEPARTMENTS.map((department) => (
@@ -196,36 +363,29 @@ export function AdminDashboardView({
                   </option>
                 ))}
               </select>
-              <button
-                type="submit"
-                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-[6px] border border-[#368bfe]/45 bg-[#368bfe]/10 px-3 text-[12px] font-semibold text-[#8ec5ff] transition hover:bg-[#368bfe]/18"
-              >
-                <Search size={13} aria-hidden />
-                Search
-              </button>
-            </form>
+            </div>
           </div>
         }
       />
 
       <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
         <section
-          className="rounded-[10px] border border-white/[0.07] bg-[#1a1e23] p-5"
+          className="rounded-[10px] border border-[var(--color-separator)] bg-[var(--color-surface-alt)] p-5"
           aria-label="Recent Activity"
         >
-          <h2 className="mb-4 text-[15px] font-bold text-white">
+          <h2 className="mb-4 text-[15px] font-bold text-[var(--color-text)]">
             Recent Activity
           </h2>
           {snapshot.recent_activity.length === 0 ? (
-            <p className="text-sm text-[#969696]">No audit activity yet.</p>
+            <p className="text-sm text-[var(--color-text-muted)] opacity-70">No audit activity yet.</p>
           ) : (
             <ul className="flex flex-col gap-3" role="list">
               {snapshot.recent_activity.map((item) => (
                 <li key={item.id}>
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-[#969696]">
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-[var(--color-text-muted)] opacity-70">
                     {formatDate(item.occurred_at, true)}
                   </p>
-                  <p className="mt-0.5 text-sm text-[#d8dadc]">{item.text}</p>
+                  <p className="mt-0.5 text-sm text-[var(--color-text)]">{item.text}</p>
                 </li>
               ))}
             </ul>
@@ -233,14 +393,14 @@ export function AdminDashboardView({
         </section>
 
         <section
-          className="rounded-[10px] border border-white/[0.07] bg-[#1a1e23] p-5"
+          className="rounded-[10px] border border-[var(--color-separator)] bg-[var(--color-surface-alt)] p-5"
           aria-label="Research by Department"
         >
-          <h2 className="mb-4 text-[15px] font-bold text-white">
+          <h2 className="mb-4 text-[15px] font-bold text-[var(--color-text)]">
             Research by Department
           </h2>
           {snapshot.research_by_department.length === 0 ? (
-            <p className="text-sm text-[#969696]">
+            <p className="text-sm text-[var(--color-text-muted)] opacity-70">
               No department totals yet.
             </p>
           ) : (
@@ -250,13 +410,13 @@ export function AdminDashboardView({
                   key={department.department}
                   className="flex items-center justify-between"
                 >
-                  <span className="text-sm text-[#d8dadc]">
+                  <span className="text-sm text-[var(--color-text)]">
                     {department.department}
                   </span>
                   <div className="flex items-center gap-3">
-                    <div className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10 max-sm:hidden">
+                    <div className="h-1.5 w-24 overflow-hidden rounded-full bg-[var(--color-separator-mid)] max-sm:hidden">
                       <div
-                        className="h-full rounded-full bg-[#368bfe]"
+                        className="h-full rounded-full bg-[var(--color-brand)]"
                         style={{
                           width: `${
                             largestDepartmentCount
@@ -270,7 +430,7 @@ export function AdminDashboardView({
                         }}
                       />
                     </div>
-                    <span className="text-sm font-bold text-white tabular-nums">
+                    <span className="text-sm font-bold text-[var(--color-text)] tabular-nums">
                       {department.count}
                     </span>
                   </div>

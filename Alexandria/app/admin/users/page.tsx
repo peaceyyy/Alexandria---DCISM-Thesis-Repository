@@ -52,7 +52,7 @@ export default async function UsersPage({
   ) {
     return (
       <div className="flex flex-col gap-6 p-8">
-        <h1 className="text-2xl font-bold text-white">User Management</h1>
+        <h1 className="text-2xl font-bold text-[var(--color-text)]">User Management</h1>
         <AdminDataState
           title="Accounts unavailable"
           message={

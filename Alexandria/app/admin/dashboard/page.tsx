@@ -3,8 +3,9 @@ import { AdminDataState } from "@/app/admin/_components/admin-data-state";
 import { DASHBOARD_QUEUE_PAGE_SIZE } from "@/app/admin/_components/dashboard-constants";
 import { getAdminDashboardSnapshot } from "@/lib/services/admin-dashboard-service";
 import { isDepartment, type Department } from "@/lib/domain/departments";
+import { isResearchAreaId, type ResearchAreaId } from "@/lib/domain/research-areas";
 import { listReviewSubmissions } from "@/lib/services/review-service";
-import type { ReviewStatus } from "@/lib/services/types";
+import type { ReviewSearchScope, ReviewStatus } from "@/lib/services/types";
 
 type DashboardStatusFilter = ReviewStatus | "all";
 
@@ -27,6 +28,16 @@ function parseDepartment(value?: string | string[]): Department | undefined {
   return department && isDepartment(department) ? department : undefined;
 }
 
+function parseSearchScope(value?: string | string[]): ReviewSearchScope {
+  const scope = firstValue(value);
+  return scope === "author" ? scope : "title";
+}
+
+function parseResearchArea(value?: string | string[]): ResearchAreaId | undefined {
+  const researchArea = firstValue(value);
+  return researchArea && isResearchAreaId(researchArea) ? researchArea : undefined;
+}
+
 function parsePage(value?: string | string[]): number {
   const page = Number(firstValue(value));
   return Number.isInteger(page) && page > 0 ? page : 1;
@@ -39,6 +50,8 @@ export default async function AdminDashboardPage({
     status?: string | string[];
     department?: string | string[];
     q?: string | string[];
+    scope?: string | string[];
+    research_area?: string | string[];
     page?: string | string[];
   }>;
 }) {
@@ -46,13 +59,17 @@ export default async function AdminDashboardPage({
   const status = parseStatus(params.status);
   const department = parseDepartment(params.department);
   const query = firstValue(params.q)?.trim() ?? "";
+  const searchScope = parseSearchScope(params.scope);
+  const researchArea = parseResearchArea(params.research_area);
   const page = parsePage(params.page);
   const [snapshotResult, reviewQueueResult] = await Promise.all([
     getAdminDashboardSnapshot(),
     listReviewSubmissions({
       reviewStatus: status === "all" ? undefined : status,
       department,
+      researchArea,
       q: query || undefined,
+      searchScope,
       page,
       limit: DASHBOARD_QUEUE_PAGE_SIZE,
     }),
@@ -64,7 +81,7 @@ export default async function AdminDashboardPage({
   ) {
     return (
       <div className="flex flex-col gap-6 p-8">
-        <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
+        <h1 className="text-2xl font-bold text-[var(--color-text)]">Admin Dashboard</h1>
         <AdminDataState
           title="Dashboard unavailable"
           message={
@@ -88,6 +105,8 @@ export default async function AdminDashboardPage({
       selectedStatus={status}
       selectedDepartment={department ?? "all"}
       query={query}
+      searchScope={searchScope}
+      selectedResearchArea={researchArea ?? "all"}
       reviewQueuePage={reviewQueueMeta?.page ?? page}
       reviewQueueTotalPages={Math.max(
         1,

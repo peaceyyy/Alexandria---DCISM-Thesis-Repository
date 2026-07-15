@@ -79,53 +79,6 @@ export function AllStudiesDetailPage({ submissionId }: { submissionId: number })
           </div>
           <p className="mt-3 text-sm leading-6 text-[#d8dadc]">{selectedSubmission.abstract}</p>
         </div>
-        className="flex w-fit items-center gap-2 rounded-[7px] border border-white/10 bg-white/[0.04] px-3 py-2 text-[13px] font-semibold text-[#d8dadc] transition hover:bg-white/[0.08]"
-      >
-        <ArrowLeft size={14} aria-hidden />
-        Back to All Studies
-      </Link>
-
-      <div className="rounded-[10px] border border-white/[0.07] bg-[#1a1e23] p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#969696]">Study Details</p>
-            <h1 className="mt-1 text-[20px] font-bold text-white">{selectedSubmission.title}</h1>
-          </div>
-          <StatusBadge status={selectedSubmission.reviewStatus} />
-        </div>
-
-        <div className="mt-5 grid gap-3 md:grid-cols-2">
-          <div className="rounded-[8px] border border-white/[0.07] bg-[#14181c] p-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#969696]">Authors</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {selectedSubmission.authors.map((author) => (
-                <span key={author} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-sm text-[#d8dadc]">
-                  {author}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div className="rounded-[8px] border border-white/[0.07] bg-[#14181c] p-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#969696]">Department</p>
-            <p className="mt-1 text-sm font-medium text-white">{selectedSubmission.department}</p>
-          </div>
-          <div className="rounded-[8px] border border-white/[0.07] bg-[#14181c] p-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#969696]">Study Type</p>
-            <p className="mt-1 text-sm font-medium text-white">{selectedSubmission.studyType === "thesis" ? "Thesis" : "Capstone"}</p>
-          </div>
-          <div className="rounded-[8px] border border-white/[0.07] bg-[#14181c] p-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#969696]">Publication Date</p>
-            <p className="mt-1 text-sm font-medium text-white">{selectedSubmission.publicationDate}</p>
-          </div>
-        </div>
-
-        <div className="mt-5 rounded-[8px] border border-white/[0.07] bg-[#14181c] p-4">
-          <div className="flex items-center gap-2 text-white">
-            <MessageSquareText size={16} aria-hidden />
-            <h2 className="text-[14px] font-semibold">Research Abstract</h2>
-          </div>
-          <p className="mt-3 text-sm leading-6 text-[#d8dadc]">{selectedSubmission.abstract}</p>
-        </div>
 
         <div className="mt-5 rounded-[8px] border border-white/[0.07] bg-[#14181c] p-4">
           <div className="flex items-center gap-2 text-white">

@@ -3,8 +3,8 @@
   align-items: center;
   gap: 16px;
   padding: 20px 24px;
-  background: #1a1e23;
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-separator);
   border-radius: 10px;
   min-width: 0;
 }
@@ -15,8 +15,8 @@
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  background: rgba(54, 139, 254, 0.12);
-  color: #368bfe;
+  background: oklch(0.63 0.12 220 / 12%);
+  color: var(--color-brand-cyan);
   flex-shrink: 0;
 }
 
@@ -30,7 +30,7 @@
 .value {
   font-size: 28px;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--color-text);
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -38,7 +38,7 @@
 .label {
   font-size: 13px;
   font-weight: 500;
-  color: #969696;
+  color: var(--color-text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
