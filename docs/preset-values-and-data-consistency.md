@@ -1,6 +1,6 @@
 # Preset Values and Data Consistency Guide
 
-Last updated: 2026-07-15
+Last updated: 2026-07-16
 
 Status: implemented policy source of truth.
 
@@ -88,48 +88,40 @@ Known current drift:
 
 Meaning: a broad research domain used for discovery, filtering, and related-thesis matching. Research area values should be curated. Tags remain flexible.
 
-Current proposed canonical list from the upload schema:
+MVP canonical taxonomy:
 
-| Stored/display value | Notes |
+| Stored ID | Display label |
 | --- | --- |
-| `AI / Machine Learning` | Prefer this over `AI / ML` for clarity. |
-| `Web Development` | Current upload preset. |
-| `Mobile Development` | Current upload preset. |
-| `Cybersecurity` | Current upload preset. |
-| `IoT` | Current upload preset. |
-| `Data Science` | Current upload preset. |
-| `Networking` | Present in upload schema; needs product confirmation. |
-| `Algorithms` | Current upload preset. |
-| `Mathematics` | Current upload preset. |
+| `ai_engineering` | AI Engineering |
+| `machine_learning` | Machine Learning |
+| `web_development` | Web Development |
+| `mobile_development` | Mobile Development |
+| `cybersecurity` | Cybersecurity |
+| `iot` | IoT |
+| `data_science` | Data Science |
+| `networking` | Networking |
+| `algorithms` | Algorithms |
+| `mathematics` | Mathematics |
 
-Aliases and cleanup targets:
+Storage and UI rule:
 
-| Existing value | Recommended action |
+- A study may have more than one research area.
+- `theses.research_area` remains a nullable text column for MVP and stores canonical IDs joined by commas, for example `web_development,algorithms`.
+- Never store display labels, free text, or numeric array indices. The client parses this deterministic value into an array and displays labels.
+- Upload, member correction, and admin correction surfaces must use the shared controlled multi-select.
+- The `theses_research_area_ids_check` constraint rejects unrecognized IDs. New areas require a deliberate code and database migration.
+
+Legacy cleanup performed by the normalization migration:
+
+| Existing value | Canonical stored value |
 | --- | --- |
-| `AI / ML` | Replace with `AI / Machine Learning`. |
-| `Computer Vision` | Decide whether to add as its own research area or map under `AI / Machine Learning`. |
-| `Software Engineering` | Decide whether to add as its own research area or map under `Web Development` or a future `Software Engineering` preset. |
-| `Wireless Network` / wireless communication tags | Keep as tags unless the thesis is broadly classified as `Networking`. |
+| `Artificial Intelligence` | `ai_engineering` |
+| `Web Development, Algorithms` | `web_development,algorithms` |
+| `IoT` | `iot` |
+| `Networking` | `networking` |
+| `Web Development, Algorithms, hello, i just chaged it` | `web_development,algorithms` |
 
-Known current drift:
-
-| Location | Current value shape | Problem |
-| --- | --- | --- |
-| `docs/Alexandria PRD.md` | Both "free text" and "controlled values" | Product docs contradict themselves. |
-| `docs/database-engineer-reference.md` | Free text in DB, frontend-controlled dropdown | This is workable, but must be documented as a deliberate DB-flexible/UI-controlled pattern. |
-| `Alexandria/lib/upload/schema.ts` | Controlled list | Good candidate for the initial preset source. |
-| `Alexandria/components/layout/filter-sidebar.tsx` | Separate hardcoded list with `AI / ML` | Drift from upload schema. |
-| `Alexandria/lib/mock-data/theses.ts` | `AI / ML` and other hardcoded values | Drift from upload schema. |
-| `Alexandria/components/admin/mock-data.ts` | `Software Engineering`, `Computer Vision` | Values appear in admin/review data but not upload schema. |
-
-Important modeling decision:
-
-The upload UI currently allows multiple research areas, but the service/database contract stores a singular `research_area` text value. Before implementation, decide whether Alexandria should support:
-
-| Option | Effect |
-| --- | --- |
-| Single research area per thesis | Keep `research_area` as one text value and make upload single-select. |
-| Multiple research areas per thesis | Add a proper multi-value contract instead of joining values into one string. |
+Tags remain flexible contributor keywords. They are not a staff-dashboard search scope in the current UI; the retained backend tag-search RPC is future capability, not a current product control.
 
 ### Study Type
 
@@ -232,9 +224,6 @@ When implementation begins, prefer this order:
 
 1. What are the official stored codes and display names for the future departments: CpE, CE, Biology, and Psychology?
 2. Should BSCS, BSIT, and BSIS become a separate `program` or `course` field later, or should Alexandria avoid storing them entirely for the MVP?
-3. Should each thesis have one research area or multiple research areas?
-4. Should `Networking` remain in the approved research-area list?
-5. Should `Software Engineering` and `Computer Vision` be added as approved research areas, or mapped to broader existing areas?
-6. Is `conference` required for every accepted thesis/capstone, or should it be optional metadata?
-7. Is `publication_link` required for every submission, or should the uploaded PDF be enough when no public URL exists?
-8. If the database keeps a date-shaped `publication_date` column, what internal placeholder day should represent month/year-only values?
+3. Is `conference` required for every accepted thesis/capstone, or should it be optional metadata?
+4. Is `publication_link` required for every submission, or should the uploaded PDF be enough when no public URL exists?
+5. If the database keeps a date-shaped `publication_date` column, what internal placeholder day should represent month/year-only values?

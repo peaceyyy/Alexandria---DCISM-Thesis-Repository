@@ -124,9 +124,10 @@ CREATE INDEX IF NOT EXISTS thesis_review_comments_thesis_created_at_idx
 CREATE INDEX IF NOT EXISTS thesis_review_comments_thesis_field_idx
   ON public.thesis_review_comments (thesis_id, field_key);
 
-CREATE INDEX IF NOT EXISTS thesis_review_comments_open_idx
+DROP INDEX IF EXISTS thesis_review_comments_open_idx;
+CREATE INDEX thesis_review_comments_open_idx
   ON public.thesis_review_comments (thesis_id)
-  WHERE addressed_at IS NULL;
+  WHERE member_revised_at IS NULL;
 
 CREATE INDEX IF NOT EXISTS thesis_review_comments_field_revision_idx
   ON public.thesis_review_comments (thesis_id, field_key, member_revised_at);
@@ -839,93 +840,7 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.mark_review_comment_addressed(
-  target_thesis_id bigint,
-  target_comment_id bigint
-)
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = pg_catalog, public
-AS $$
-DECLARE
-  owner_id uuid;
-  current_status text;
-  changed_count integer;
-BEGIN
-  IF auth.uid() IS NULL OR NOT public.current_user_is_active(ARRAY['member']) THEN
-    RAISE EXCEPTION 'An active member account is required'
-      USING ERRCODE = '42501';
-  END IF;
-
-  SELECT submitted_by_user_id, review_status
-  INTO owner_id, current_status
-  FROM public.theses
-  WHERE id = target_thesis_id
-  FOR UPDATE;
-
-  IF current_status IS NULL THEN
-    RAISE EXCEPTION 'Thesis was not found'
-      USING ERRCODE = 'P0002';
-  END IF;
-
-  IF owner_id IS DISTINCT FROM auth.uid() THEN
-    RAISE EXCEPTION 'You are not the owner of this thesis'
-      USING ERRCODE = '42501';
-  END IF;
-
-  IF current_status <> 'flagged' THEN
-    RAISE EXCEPTION 'Only flagged submissions can have addressed comments'
-      USING ERRCODE = '42501';
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1
-    FROM public.thesis_review_comments
-    WHERE id = target_comment_id
-      AND thesis_id = target_thesis_id
-  ) THEN
-    RAISE EXCEPTION 'Review comment was not found'
-      USING ERRCODE = 'P0002';
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1
-    FROM public.thesis_review_comments
-    WHERE id = target_comment_id
-      AND thesis_id = target_thesis_id
-      AND member_revised_at IS NOT NULL
-  ) THEN
-    RAISE EXCEPTION 'Save a change to this field before marking the comment addressed'
-      USING ERRCODE = '22023';
-  END IF;
-
-  UPDATE public.thesis_review_comments
-  SET
-    addressed_at = now(),
-    addressed_by_user_id = auth.uid()
-  WHERE id = target_comment_id
-    AND thesis_id = target_thesis_id
-    AND addressed_at IS NULL;
-
-  GET DIAGNOSTICS changed_count = ROW_COUNT;
-
-  IF changed_count > 0 THEN
-    INSERT INTO public.thesis_audits (
-      thesis_id,
-      changed_by_user_id,
-      event,
-      change_description
-    )
-    VALUES (
-      target_thesis_id,
-      auth.uid(),
-      'comment_addressed',
-      'Submitter marked a review comment as addressed.'
-    );
-  END IF;
-END;
-$$;
+DROP FUNCTION IF EXISTS public.mark_review_comment_addressed(bigint, bigint);
 
 CREATE OR REPLACE FUNCTION public.replace_flagged_submission_file(
   target_thesis_id bigint,
@@ -1180,13 +1095,6 @@ REVOKE ALL ON FUNCTION public.replace_flagged_submission_file(bigint, text, text
 REVOKE ALL ON FUNCTION public.replace_flagged_submission_file(bigint, text, text)
   FROM anon;
 GRANT EXECUTE ON FUNCTION public.replace_flagged_submission_file(bigint, text, text)
-  TO authenticated;
-
-REVOKE ALL ON FUNCTION public.mark_review_comment_addressed(bigint, bigint)
-  FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.mark_review_comment_addressed(bigint, bigint)
-  FROM anon;
-GRANT EXECUTE ON FUNCTION public.mark_review_comment_addressed(bigint, bigint)
   TO authenticated;
 
 REVOKE ALL ON FUNCTION public.resubmit_flagged_submission(bigint)

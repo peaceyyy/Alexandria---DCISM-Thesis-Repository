@@ -39,7 +39,7 @@ Alexandria is a web-based thesis repository for DCISM. The MVP must let students
 | PDF replacement | Retain old file metadata | Mark the current file as primary and keep old storage-path metadata for history |
 | Search behavior | Search plus filters plus sort | Repository queries should support all three discovery modes |
 | Default sort | Newest thesis year first | Use year-descending ordering by default |
-| Classification | Free-text research area plus free hashtag-style tags | `research_area` is a text field on `theses`; distinct values are derived at query time for filter dropdowns. Tags are member-assigned narrow keywords |
+| Classification | Controlled research areas plus flexible tags | `research_area` is a comma-delimited canonical-ID text field on `theses`; tags are member-assigned narrow keywords. |
 
 ## MVP Data Requirements
 
@@ -54,7 +54,7 @@ Each thesis record must support:
 | Department | Yes | Controlled MVP values are `CS`, `IT`, and `IS` for DCISM records. |
 | Abstract | Yes | Full detail page text; preview derived by backend/frontend |
 | Keywords / tags | Yes | Free hashtag-style; used for search, filtering, and related thesis matching |
-| Research area | No | Free text on `theses.research_area`; used for search and filter dropdowns derived from distinct values |
+| Research area | No | Controlled comma-delimited canonical IDs on `theses.research_area`; used for search and filters |
 | PDF file or repository link | Yes | Store one or both depending on policy |
 | Publication date | No | Optional; displayed on detail page |
 | Publication link | No | Optional external publication or repository link |
@@ -84,11 +84,11 @@ erDiagram
 
 ### `research_areas`
 
-Not a separate table. No DB enum. `research_area` is stored as free text on `theses`.
+Not a separate table. `research_area` is a nullable text field containing one or more comma-delimited canonical IDs, such as `web_development,algorithms`.
 
-**Pattern:** The frontend restricts input to a predefined controlled dropdown list. The DB stays flexible so new research areas can be added without a schema migration. Filter dropdowns are populated via `SELECT DISTINCT research_area FROM theses WHERE review_status = 'accepted'`.
+**Pattern:** The frontend restricts input to the controlled taxonomy in `Alexandria/lib/domain/research-areas.ts`, while the database check `theses_research_area_ids_check` accepts only those IDs. Display labels are mapped by the client; storage never uses display labels or numeric indexes.
 
-**Data integrity contract:** Any direct DB inserts (seed scripts, admin tooling) must use values from the agreed frontend list to avoid filter fragmentation. The seed script should document the canonical list.
+**Data integrity contract:** Any seed script, direct insert, or admin tooling must serialize the agreed IDs in canonical comma-delimited form.
 
 > If the team later decides the list is stable enough, a Postgres `CHECK` constraint or a lookup table can be added as a future migration without breaking existing data.
 
@@ -138,7 +138,7 @@ Core thesis record.
 | abstract | Required |
 | year | Required; derived from `publication_date`, stored separately, and indexed for filtering |
 | department | Stored as text for MVP; normalize to FK in future |
-| research_area | Optional free text; used for search and filter dropdowns via `DISTINCT research_area` |
+| research_area | Optional comma-delimited canonical IDs; used for exact taxonomy filtering |
 | recommendations | Optional free-form text; uploaders paste or type this section directly from their thesis |
 | lessons_learned | Optional free-form text; uploaders paste or type this section directly from their thesis |
 | publication_link | Optional external publication or repository link |
@@ -342,7 +342,7 @@ Minimum seed data for frontend/backend integration:
     - Accepted: `for_review`, `flagged`, `accepted`, `trashed`. Replaces `publication_status`. CHECK constraint required.
 
 11. Search and classification:
-    - Accepted: Search plus filters plus sort, newest thesis year first by default. `research_area` is free text on `theses`; tags are contributor-assigned hashtags.
+    - Accepted: Search plus filters plus sort, newest thesis year first by default. `research_area` stores canonical IDs on `theses`; tags are contributor-assigned keywords.
 
 ## Resolved Feature Decisions
 
@@ -361,7 +361,7 @@ These choices affect schema, storage policy, and backend API behavior.
    - Accepted: Both stored as rows in `thesis_authors` with `contribution_role = 'author'` or `'adviser'`. `user_id` is nullable; unregistered people are credited by `display_name` only.
 
 5. Research area:
-   - Accepted: Free text on `theses.research_area`. Filter dropdown is populated via `SELECT DISTINCT research_area FROM theses WHERE review_status = 'accepted'`.
+   - Accepted: Multi-select controlled taxonomy stored as comma-delimited canonical IDs on `theses.research_area`. Filters render the canonical labels and query the stable IDs.
 
 6. PDF file storage:
    - Accepted: PDFs stay in a private Supabase Storage bucket. The database

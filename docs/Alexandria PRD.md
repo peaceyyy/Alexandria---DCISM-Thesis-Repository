@@ -74,7 +74,7 @@ These decisions are accepted for the MVP and should guide database, backend, and
 | PDF versioning              | Archive old file metadata only                             | Replaced PDFs should preserve replacement history without full document version management       |
 | Search behavior             | Search plus filters plus sort                              | MVP discovery includes keyword search, filter controls, and sorting                              |
 | Default sort                | Newest thesis year first                                   | Repository browsing defaults to newest research first                                            |
-| Research area vs tags       | Free-text research area plus free hashtag-style tags       | `research_area` is a free-text field on each thesis; distinct values power filter dropdowns. Tags are contributor-driven narrow hashtags |
+| Research area vs tags       | Controlled research areas plus flexible tags                | `research_area` stores comma-delimited canonical IDs from the agreed taxonomy. Tags remain contributor-driven narrow keywords. |
 
 ## 6. Functional Requirements
 

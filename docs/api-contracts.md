@@ -133,7 +133,7 @@ Returns paginated thesis cards for repository browsing and keyword search.
   | `q`             | string | Search query (title, authors, tags, abstract) |
   | `year`          | int    | Filter by thesis year                         |
   | `department`    | string | Filter by `CS`, `IT`, or `IS`                 |
-  | `research_area` | string | Filter by research area                       |
+  | `research_area` | string | Filter by canonical research-area ID          |
   | `page`          | int    | Default `1`                                   |
   | `limit`         | int    | Default `20`                                  |
 
@@ -156,7 +156,7 @@ Returns paginated thesis cards for repository browsing and keyword search.
         "year": 2026,
         "abstract_preview": "First 200 characters of abstract...",
         "tags": ["#react", "#ai"],
-        "research_area": "Web Development"
+        "research_area": "web_development"
       }
     ],
     "meta": { "total_count": 84, "page": 1, "limit": 20 }
@@ -196,7 +196,7 @@ Returns the full detail payload for a single accepted thesis.
         }
       ],
       "department": "CS",
-      "research_area": "Web Development",
+      "research_area": "web_development",
       "tags": ["#react", "#ai", "#progressive-web-apps"],
       "publication_date": "2026-05-14",
       "publication_link": "https://...",
@@ -225,7 +225,7 @@ Returns the full detail payload for a single accepted thesis.
           "year": 2025,
           "abstract_preview": "Short related thesis abstract preview...",
           "tags": ["#react"],
-          "research_area": "Web Development"
+          "research_area": "web_development"
         }
       ]
     }
@@ -250,9 +250,9 @@ Returns controlled vocabulary values for filter dropdowns.
   {
     "data": {
       "research_areas": [
-        "Machine Learning",
-        "Web Development",
-        "Information Systems"
+        "machine_learning",
+        "web_development",
+        "algorithms"
       ],
       "departments": ["CS", "IT", "IS"],
       "years": [2026, 2025, 2024]
@@ -260,7 +260,7 @@ Returns controlled vocabulary values for filter dropdowns.
   }
   ```
 
-> **Note:** `research_areas` and `years` are derived from accepted theses. Departments are the controlled `CS`, `IT`, and `IS` vocabulary and are not derived from stored rows.
+> **Note:** `research_areas` uses the controlled canonical research-area IDs. Departments use the controlled `CS`, `IT`, and `IS` vocabulary. Neither list is derived from stored rows.
 
 ---
 
@@ -341,7 +341,7 @@ API is introduced later, its equivalent route is `POST /api/theses`.
     "title": "Thesis Title",
     "abstract": "...",
     "department": "CS",
-    "research_area": "Machine Learning",
+    "research_area": "machine_learning",
     "authors": [
       {
         "user_id": "uuid-or-null",
@@ -361,7 +361,7 @@ API is introduced later, its equivalent route is `POST /api/theses`.
         "contribution_role": "adviser",
         "sort_order": 1
       }
-    "research_area": "Machine Learning",
+    "research_area": "machine_learning",
     "authors": [
       {
         "user_id": "uuid-or-null",
