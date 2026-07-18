@@ -10,9 +10,10 @@ import {
 } from "./result";
 import type {
   AdminDashboardSnapshot,
-  DashboardActivityRow,
+  AdminActivityItem,
   DashboardUploadRow,
   DepartmentResearchCount,
+  ReviewAuditEventType,
   ServiceResult,
 } from "./types";
 
@@ -36,6 +37,18 @@ function isVisibleReviewStatus(
   return ["for_review", "flagged", "accepted"].includes(value);
 }
 
+function isReviewAuditEvent(value: string): value is ReviewAuditEventType {
+  return [
+    "submitted",
+    "comment_added",
+    "comment_addressed",
+    "status_changed",
+    "metadata_edited",
+    "pdf_replaced",
+    "resubmitted",
+  ].includes(value);
+}
+
 function mapUpload(value: unknown): DashboardUploadRow | null {
   if (!isRecord(value)) {
     return null;
@@ -55,16 +68,29 @@ function mapUpload(value: unknown): DashboardUploadRow | null {
   };
 }
 
-function mapActivity(value: unknown): DashboardActivityRow | null {
+function mapActivity(value: unknown): AdminActivityItem | null {
   if (!isRecord(value)) {
     return null;
   }
 
+  const thesisId = asNumber(value.thesis_id);
+  if (!Number.isInteger(thesisId) || thesisId < 1) {
+    return null;
+  }
+
+  const event = asString(value.event);
+
   return {
     id: asNumber(value.id),
-    thesis_id: asNumber(value.thesis_id),
-    text: asString(value.text),
-    occurred_at: asString(value.occurred_at),
+    thesisId,
+    thesisTitle: asString(value.thesis_title).trim() || "Untitled thesis",
+    actorName: asString(value.actor_name).trim() || "Unknown user",
+    event: isReviewAuditEvent(event) ? event : "status_changed",
+    description:
+      asString(value.description).trim()
+      || asString(value.text).trim()
+      || "Thesis activity recorded.",
+    occurredAt: asString(value.occurred_at),
   };
 }
 

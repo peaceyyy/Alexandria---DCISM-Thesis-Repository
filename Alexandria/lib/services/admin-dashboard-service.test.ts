@@ -44,7 +44,17 @@ describe("getAdminDashboardSnapshot", () => {
             review_status: "for_review",
           },
         ],
-        recent_activity: [],
+        recent_activity: [
+          {
+            id: 10,
+            thesis_id: 1,
+            thesis_title: "Thesis",
+            actor_name: "Alex Admin",
+            event: "status_changed",
+            description: "Thesis was approved.",
+            occurred_at: "2026-07-02T00:00:00.000Z",
+          },
+        ],
         research_by_department: [{ department: "CS", count: 12 }],
       },
       error: null,
@@ -57,6 +67,17 @@ describe("getAdminDashboardSnapshot", () => {
     expect(result.data?.viewer.profile_name).toBe("Alex Admin");
     expect(result.data?.research_by_department).toEqual([
       { department: "CS", count: 12 },
+    ]);
+    expect(result.data?.recent_activity).toEqual([
+      {
+        id: 10,
+        thesisId: 1,
+        thesisTitle: "Thesis",
+        actorName: "Alex Admin",
+        event: "status_changed",
+        description: "Thesis was approved.",
+        occurredAt: "2026-07-02T00:00:00.000Z",
+      },
     ]);
   });
 

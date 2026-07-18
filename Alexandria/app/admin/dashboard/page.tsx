@@ -2,6 +2,7 @@ import { AdminDashboardView } from "@/app/admin/_components/admin-dashboard-view
 import { AdminDataState } from "@/app/admin/_components/admin-data-state";
 import { DASHBOARD_QUEUE_PAGE_SIZE } from "@/app/admin/_components/dashboard-constants";
 import { getAdminDashboardSnapshot } from "@/lib/services/admin-dashboard-service";
+import { getCurrentUser } from "@/lib/services/auth-service";
 import { isDepartment, type Department } from "@/lib/domain/departments";
 import { isResearchAreaId, type ResearchAreaId } from "@/lib/domain/research-areas";
 import { listReviewSubmissions } from "@/lib/services/review-service";
@@ -56,7 +57,21 @@ export default async function AdminDashboardPage({
   }>;
 }) {
   const params = await searchParams;
-  const status = parseStatus(params.status);
+  const requestedStatus = parseStatus(params.status);
+  const currentUserResult = await getCurrentUser();
+  const viewer = currentUserResult.data;
+
+  if (!viewer) {
+    redirect("/login");
+  }
+  if (viewer.role !== "admin" && viewer.role !== "moderator") {
+    redirect("/home");
+  }
+  if (requestedStatus === "trashed" && viewer.role !== "admin") {
+    redirect("/admin/dashboard");
+  }
+
+  const status = requestedStatus;
   const department = parseDepartment(params.department);
   const query = firstValue(params.q)?.trim() ?? "";
   const searchScope = parseSearchScope(params.scope);
@@ -112,9 +127,10 @@ export default async function AdminDashboardPage({
         1,
         Math.ceil(
           (reviewQueueMeta?.total_count ?? 0) /
-            DASHBOARD_QUEUE_PAGE_SIZE,
+          DASHBOARD_QUEUE_PAGE_SIZE,
         ),
       )}
+      viewerRole={viewer.role}
     />
   );
 }

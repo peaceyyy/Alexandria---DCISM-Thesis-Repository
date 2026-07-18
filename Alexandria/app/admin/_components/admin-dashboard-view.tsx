@@ -16,6 +16,7 @@ import type {
   ReviewSearchScope,
   ReviewStatus,
   ReviewSubmissionListItem,
+  UserRole,
 } from "@/lib/services/types";
 
 const dateFormatter = new Intl.DateTimeFormat("en-PH", {
@@ -113,6 +114,7 @@ export function AdminDashboardView({
   searchScope,
   reviewQueuePage,
   reviewQueueTotalPages,
+  viewerRole,
 }: {
   snapshot: AdminDashboardSnapshot;
   reviewQueue: ReviewSubmissionListItem[];
@@ -124,6 +126,7 @@ export function AdminDashboardView({
   searchScope: ReviewSearchScope;
   reviewQueuePage: number;
   reviewQueueTotalPages: number;
+  viewerRole: Extract<UserRole, "admin" | "moderator">;
 }) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState(query);
@@ -131,6 +134,10 @@ export function AdminDashboardView({
   const lastSubmittedQueryRef = useRef(query);
   const largestDepartmentCount =
     snapshot.research_by_department[0]?.count ?? 0;
+  const visibleStatusFilters =
+    viewerRole === "admin"
+      ? STATUS_FILTERS
+      : STATUS_FILTERS.filter((filter) => filter.value !== "trashed");
 
   const buildDashboardUrl = useCallback((
     nextQuery: string,
@@ -344,7 +351,7 @@ export function AdminDashboardView({
                 onChange={(event) => handleStatusChange(event.target.value as DashboardStatusFilter)}
                 className="h-9 rounded-[6px] border border-[var(--color-separator)] bg-[var(--color-surface-alt)] px-2 text-[12px] font-semibold text-[var(--color-text-muted)] outline-none focus:border-[var(--color-brand-bright)]"
               >
-                {STATUS_FILTERS.map((filter) => (
+                {visibleStatusFilters.map((filter) => (
                   <option key={filter.value} value={filter.value}>
                     {filter.label}
                   </option>
@@ -373,19 +380,45 @@ export function AdminDashboardView({
           className="rounded-[10px] border border-[var(--color-separator)] bg-[var(--color-surface-alt)] p-5"
           aria-label="Recent Activity"
         >
-          <h2 className="mb-4 text-[15px] font-bold text-[var(--color-text)]">
-            Recent Activity
-          </h2>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="text-[15px] font-bold text-[var(--color-text)]">
+              Recent Activity
+            </h2>
+            <Link
+              href="/admin/activity"
+              className="text-[12px] font-semibold text-[var(--color-brand-bright)] transition hover:text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-bright)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface-alt)]"
+            >
+              View all activity
+            </Link>
+          </div>
           {snapshot.recent_activity.length === 0 ? (
             <p className="text-sm text-[var(--color-text-muted)] opacity-70">No audit activity yet.</p>
           ) : (
             <ul className="flex flex-col gap-3" role="list">
               {snapshot.recent_activity.map((item) => (
                 <li key={item.id}>
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-[var(--color-text-muted)] opacity-70">
-                    {formatDate(item.occurred_at, true)}
-                  </p>
-                  <p className="mt-0.5 text-sm text-[var(--color-text)]">{item.text}</p>
+                  <Link
+                    href={`/admin/review/${item.thesisId}`}
+                    className="block rounded-[6px] p-1.5 -m-1.5 transition hover:bg-[var(--color-text)]/5 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-bright)]"
+                    aria-label={`Open ${item.thesisTitle} review activity`}
+                  >
+                    <p className="text-sm text-[var(--color-text)]">
+                      {item.description}
+                    </p>
+                    <p className="mt-1 text-[12px] text-[var(--color-text-muted)] opacity-80">
+                      <span className="font-semibold text-[var(--color-text)]">
+                        {item.actorName}
+                      </span>
+                      <span aria-hidden> · </span>
+                      <span>{item.thesisTitle}</span>
+                    </p>
+                    <time
+                      dateTime={item.occurredAt}
+                      className="mt-1 block text-[11px] font-semibold uppercase tracking-widest text-[var(--color-text-muted)] opacity-70"
+                    >
+                      {formatDate(item.occurredAt, true)}
+                    </time>
+                  </Link>
                 </li>
               ))}
             </ul>
