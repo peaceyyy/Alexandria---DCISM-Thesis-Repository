@@ -953,8 +953,14 @@ export async function getReviewSubmission(
       return err(validationError);
     }
 
-    await requireRole(["admin", "moderator"]);
-    return ok(await loadReviewSubmission(thesisId));
+    const reviewer = await requireRole(["admin", "moderator"]);
+    const submission = await loadReviewSubmission(thesisId);
+
+    if (submission.reviewStatus === "trashed" && reviewer.role !== "admin") {
+      return err(makeError("FORBIDDEN", "Only administrators can view trashed submissions."));
+    }
+
+    return ok(submission);
   } catch (error) {
     return err(
       normalizeServiceError(error, "Review submission could not be loaded."),

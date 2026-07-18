@@ -308,6 +308,13 @@ BEGIN
       USING ERRCODE = '22023';
   END IF;
 
+  IF p_review_status = 'trashed'
+    AND NOT public.current_user_is_active(ARRAY['admin'])
+  THEN
+    RAISE EXCEPTION 'Only administrators can view trashed submissions'
+      USING ERRCODE = '42501';
+  END IF;
+
   IF p_department IS NOT NULL AND p_department NOT IN ('CS', 'IT', 'IS') THEN
     RAISE EXCEPTION 'Department must be CS, IT, or IS'
       USING ERRCODE = '22023';

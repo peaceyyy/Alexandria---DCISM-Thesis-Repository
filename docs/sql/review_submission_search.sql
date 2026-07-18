@@ -1,9 +1,9 @@
--- Alexandria staff review search extension.
--- Preflight confirmed on 2026-07-16:
---   public.theses(id, title, department, review_status, created_at)
---   public.thesis_authors(thesis_id, display_name)
---   public.thesis_tags(thesis_id, tag)
--- Apply after human review. This is additive and does not alter existing rows.
+-- SUPERSEDED: do not run this migration in a current environment.
+--
+-- The active implementation is installed by research_area_normalization.sql
+-- and hardened by review_staff_access_fix.sql. It supports author and
+-- research-area scopes, and restricts trashed-study discovery to admins.
+-- This older tag-search version is retained only as historical reference.
 
 BEGIN;
 

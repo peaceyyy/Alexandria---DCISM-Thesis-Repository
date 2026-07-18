@@ -1074,7 +1074,13 @@ CREATE POLICY active_users_read_visible_review_comments
       WHERE thesis.id = thesis_review_comments.thesis_id
         AND (
           thesis.submitted_by_user_id = auth.uid()
-          OR public.current_user_is_active(ARRAY['admin', 'moderator'])
+          OR (
+            public.current_user_is_active(ARRAY['admin', 'moderator'])
+            AND (
+              thesis.review_status <> 'trashed'
+              OR public.current_user_is_active(ARRAY['admin'])
+            )
+          )
         )
     )
   );

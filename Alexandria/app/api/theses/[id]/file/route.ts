@@ -86,15 +86,17 @@ export async function GET(
   const isActiveUser = Boolean(user);
   const isReviewer =
     user?.role === "admin" || user?.role === "moderator";
+  const isAdmin = user?.role === "admin";
   const isSubmitter = user?.id === thesis.submitted_by_user_id;
   const isAccepted = thesis.review_status === "accepted";
+  const isTrashed = thesis.review_status === "trashed";
   const isOwnerPreview =
     isSubmitter
     && ["for_review", "flagged"].includes(thesis.review_status);
-  const mayPreview = isAccepted || isReviewer || isOwnerPreview;
+  const mayPreview = isAccepted || (isReviewer && (!isTrashed || isAdmin)) || isOwnerPreview;
   const wantsDownload = request.nextUrl.searchParams.get("download") === "1";
   const mayDownload =
-    isActiveUser && (isAccepted || isReviewer);
+    isActiveUser && (isAccepted || (isReviewer && (!isTrashed || isAdmin)));
 
   if (!mayPreview || (wantsDownload && !mayDownload)) {
     return NextResponse.json(

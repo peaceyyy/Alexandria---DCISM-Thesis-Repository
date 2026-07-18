@@ -59,7 +59,11 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- theses: core thesis record.
--- review_status lifecycle: for_review -> flagged | accepted | trashed
+-- review_status lifecycle:
+--   for_review -> flagged | accepted | trashed (admin only for trash)
+--   flagged -> for_review only through member resubmission; staff may add feedback
+--   accepted -> for_review (staff correction) | trashed (admin only)
+--   trashed -> for_review (admin restore)
 -- Only accepted records are publicly visible.
 -- research_area is free text; frontend enforces a controlled dropdown list.
 -- Distinct values power the filter dropdown via SELECT DISTINCT research_area.
