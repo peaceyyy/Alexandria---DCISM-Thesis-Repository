@@ -1,8 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { createPortal } from "react-dom";
 import { CheckCircle2, Flag, RotateCcw, ShieldAlert, Pencil, Trash2, Clock } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type { ReviewStatus } from "@/lib/services/types";
 import type { UserRole } from "@/lib/services/types";
 import styles from "./review-decision-actions.module.css";
@@ -10,7 +17,7 @@ import styles from "./review-decision-actions.module.css";
 // ─── Allowed transitions (per handoff spec) ───────────────────────────────────
 //
 //   for_review → accepted | flagged | trashed (admin only)
-//   flagged    → for_review (reviewer adds more feedback) | trashed (admin only)
+//   flagged    → for_review (only by member resubmission) | trashed (admin only)
 //   accepted   → for_review (moderator correction when approved by mistake)
 //   trashed    → for_review (admin restore)
 //
@@ -28,10 +35,6 @@ function canTrash(status: ReviewStatus) {
 function canSendBackToReview(status: ReviewStatus) {
   return status === "accepted";
 }
-function canUnflag(status: ReviewStatus) {
-  return status === "flagged";
-}
-
 function getStatusSummary(status: ReviewStatus) {
   switch (status) {
     case "for_review":
@@ -76,7 +79,6 @@ const CONFIRM_COPY: Record<
     title: string;
     body: string;
     actionLabel: string;
-    titleId: string;
     actionClassName: string;
     icon: "approve" | "flag" | "review" | "trash";
   }
@@ -85,7 +87,6 @@ const CONFIRM_COPY: Record<
     title: "Approve this submission?",
     body: "This will publish the thesis to the accepted catalog and make it visible through approved-thesis surfaces.",
     actionLabel: "Approve",
-    titleId: "approve-confirm-title",
     actionClassName: styles.btnConfirmAccept,
     icon: "approve",
   },
@@ -93,7 +94,6 @@ const CONFIRM_COPY: Record<
     title: "Flag this submission for revision?",
     body: "The member will be asked to review the feedback, save any needed changes, and resubmit the study for another review.",
     actionLabel: "Flag for Revision",
-    titleId: "flag-confirm-title",
     actionClassName: styles.btnConfirmFlag,
     icon: "flag",
   },
@@ -101,7 +101,6 @@ const CONFIRM_COPY: Record<
     title: "Send back to review?",
     body: "This will remove the approval and return the submission to the pending review queue.",
     actionLabel: "Send Back to Review",
-    titleId: "send-back-confirm-title",
     actionClassName: styles.btnConfirmReview,
     icon: "review",
   },
@@ -109,7 +108,6 @@ const CONFIRM_COPY: Record<
     title: "Trash this submission?",
     body: "This will remove the submission from active queues and public browsing. Only an administrator can restore it later.",
     actionLabel: "Continue",
-    titleId: "trash-confirm-title",
     actionClassName: styles.btnConfirmTrash,
     icon: "trash",
   },
@@ -192,25 +190,16 @@ export function ReviewDecisionActions({
             title: "Restore this submission to review?",
             body: "This will return the submission to the pending review queue for a fresh moderator decision.",
             actionLabel: "Restore to Review",
-            titleId: "restore-confirm-title",
           }
-        : pendingDecision === "for_review" && status === "flagged"
-          ? {
-              ...CONFIRM_COPY.for_review,
-              title: "Return this submission to review?",
-              body: "The submitter will lose edit access while you add more feedback. Existing feedback will remain saved for the next flag.",
-              actionLabel: "Return to Review",
-              titleId: "unflag-confirm-title",
-            }
-          : CONFIRM_COPY[pendingDecision]
+        : CONFIRM_COPY[pendingDecision]
     : null;
   const confirmIcon = confirmCopy?.icon === "trash"
-    ? <Trash2 size={13} aria-hidden style={{ marginRight: 4 }} />
+    ? <Trash2 size={13} aria-hidden />
     : confirmCopy?.icon === "review"
-      ? <RotateCcw size={13} aria-hidden style={{ marginRight: 4 }} />
+      ? <RotateCcw size={13} aria-hidden />
       : confirmCopy?.icon === "flag"
-        ? <Flag size={13} aria-hidden style={{ marginRight: 4 }} />
-      : <CheckCircle2 size={13} aria-hidden style={{ marginRight: 4 }} />;
+        ? <Flag size={13} aria-hidden />
+        : <CheckCircle2 size={13} aria-hidden />;
   const alreadyDecided = status === "trashed";
 
   return (
@@ -264,21 +253,12 @@ export function ReviewDecisionActions({
               </button>
             )}
           </div>
-        ) : canUnflag(status) ? (
+        ) : status === "flagged" ? (
           <div className={styles.primaryActions}>
             <p className={styles.statusNote}>
-              This submission is flagged for member revision.
+              This submission is with the member for revision. You can add
+              further feedback without changing its status.
             </p>
-            <button
-              type="button"
-              className={styles.btnReview}
-              onClick={() => openConfirmation("for_review")}
-              disabled={isSubmitting}
-              aria-label="Return flagged submission to review"
-            >
-              <RotateCcw size={14} aria-hidden />
-              Return to Review
-            </button>
             {role === "admin" && (
               <button
                 type="button"
@@ -366,29 +346,34 @@ export function ReviewDecisionActions({
         )}
       </div>
 
-      {/* ── Decision Confirmation Modal (portaled to body to escape stacking context) ── */}
-      {confirmCopy &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <div
-            className={styles.confirmOverlay}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={confirmCopy.titleId}
-          >
-            <div className={styles.confirmDialog}>
-              <h2 id={confirmCopy.titleId} className={styles.confirmTitle}>
-                {confirmCopy.title}
-              </h2>
-              <p className={styles.confirmBody}>
-                {confirmCopy.body}
-              </p>
-              <div className={styles.confirmActions}>
+      <Dialog
+        open={Boolean(confirmCopy)}
+        onOpenChange={(open) => {
+          if (!open && !isSubmitting) {
+            handleConfirmCancel();
+          }
+        }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="border-[var(--color-separator)] bg-[var(--color-surface)] text-[var(--color-text)]"
+        >
+          {confirmCopy && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-[var(--color-text)]">
+                  {confirmCopy.title}
+                </DialogTitle>
+                <DialogDescription className="leading-6 text-[var(--color-text-muted)]">
+                  {confirmCopy.body}
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="border-[var(--color-separator)] bg-[var(--color-surface-alt)]">
                 <button
                   type="button"
                   className={styles.btnConfirmCancel}
                   onClick={handleConfirmCancel}
-                  autoFocus
+                  disabled={isSubmitting}
                 >
                   Cancel
                 </button>
@@ -396,15 +381,16 @@ export function ReviewDecisionActions({
                   type="button"
                   className={confirmCopy.actionClassName}
                   onClick={handleConfirmDecision}
+                  disabled={isSubmitting}
                 >
                   {confirmIcon}
                   {confirmCopy.actionLabel}
                 </button>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

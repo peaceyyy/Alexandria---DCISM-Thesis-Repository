@@ -90,26 +90,6 @@ describe("ReviewDecisionActions", () => {
     expect(onDecision).toHaveBeenCalledWith("for_review");
   });
 
-  it("lets reviewers return a flagged submission to review before adding more feedback", async () => {
-    const onDecision = vi.fn();
-    const user = userEvent.setup();
-
-    render(
-      <ReviewDecisionActions
-        status="flagged"
-        role="moderator"
-        onDecision={onDecision}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: /return flagged submission to review/i }));
-
-    const dialog = screen.getByRole("dialog", { name: /return this submission to review/i });
-    await user.click(within(dialog).getByRole("button", { name: /return to review/i }));
-
-    expect(onDecision).toHaveBeenCalledWith("for_review");
-  });
-
   it("requires two confirmations before an administrator trashes a submission", async () => {
     const onDecision = vi.fn();
     const user = userEvent.setup();

@@ -29,7 +29,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: #969696;
+  color: var(--color-text-muted);
   user-select: none;
   flex: 1;
 }
@@ -47,7 +47,7 @@
   border-radius: 5px;
   border: none;
   background: transparent;
-  color: #5a6070;
+  color: var(--color-text-muted);
   font-size: 12px;
   font-weight: 600;
   font-family: inherit;
@@ -73,16 +73,16 @@
 .commentTriggerActive {
   /* Always visible — has comments or is currently selected */
   opacity: 1 !important;
-  color: #1da0c9;
+  color: var(--color-brand-cyan);
 }
 
 .commentTrigger:hover {
-  background: rgba(29, 160, 201, 0.12);
-  color: #1da0c9;
+  background: color-mix(in oklch, var(--color-brand-cyan) 12%, transparent);
+  color: var(--color-brand-cyan);
 }
 
 .commentTrigger:focus-visible {
-  outline: 2px solid #368bfe;
+  outline: 2px solid var(--color-brand-bright);
   outline-offset: 2px;
   opacity: 1;
 }
@@ -99,7 +99,7 @@
   height: 14px;
   padding: 0 3px;
   border-radius: 7px;
-  background: #1da0c9;
+  background: var(--color-brand-cyan);
   color: #ffffff;
   font-size: 9px;
   font-weight: 700;
@@ -131,7 +131,7 @@
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
-  color: #368bfe;
+  color: var(--color-brand-bright);
   cursor: pointer;
   opacity: 0.75;
   transition: opacity 120ms ease, color 120ms ease;
@@ -139,11 +139,11 @@
 
 .expandToggle:hover {
   opacity: 1;
-  color: #8ec5ff;
+  color: color-mix(in oklch, var(--color-brand-bright) 62%, white);
 }
 
 .expandToggle:focus-visible {
-  outline: 2px solid #368bfe;
+  outline: 2px solid var(--color-brand-bright);
   outline-offset: 2px;
   border-radius: 3px;
   opacity: 1;

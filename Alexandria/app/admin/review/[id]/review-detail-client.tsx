@@ -517,10 +517,7 @@ export function ReviewDetailClient({
         </div>
 
         {/* ════════════════════════════════════════════════════════════════
-            RIGHT PANEL (Main Content) — scrollable field content
-            ════════════════════════════════════════════════════════════════ */}
-        {/* ════════════════════════════════════════════════════════════════
-            LEFT PANEL — scrollable field content
+            RIGHT PANEL — flat document, field order mirrors member page
             ════════════════════════════════════════════════════════════════ */}
         <div
           style={{
@@ -530,555 +527,413 @@ export function ReviewDetailClient({
             minWidth: 0,
           }}
         >
-          {/* ── Submission header ───────────────────────────────────────── */}
+          {/* ── Document: one flat card, field order matches member page ─── */}
           <div
             style={{
               borderRadius: 7,
-              border: "1px solid rgba(255,255,255,0.07)",
+              border: "1px solid var(--color-separator)",
               background: "var(--color-surface-alt)",
-              padding: "24px",
+              padding: "30px",
             }}
           >
+            {/* Header: eyebrow + title + quick meta */}
             <div
               style={{
-                display: "flex",
-                alignItems: "flex-start",
-                justifyContent: "space-between",
-                gap: 12,
-                marginBottom: 8,
+                paddingBottom: 24,
+                borderBottom: "1px solid var(--color-separator)",
+                marginBottom: 20,
               }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.15em",
-                    color: "var(--color-text-muted)",
-                  }}
-                >
-                  Study Review
-                </p>
-                <ReviewableField
-                  fieldKey="title"
-                  label="Title"
-                  comments={fieldComments("title")}
-                  isActive={activeCommentField === "title"}
-                  onCommentIconClick={handleCommentIconClick}
-                  className="min-w-0"
-                >
-                  <h1
-                    style={{
-                      margin: "6px 0 0",
-                      fontSize: 19,
-                      fontWeight: 700,
-                      color: "var(--color-text)",
-                      lineHeight: 1.35,
-                    }}
-                  >
-                    {submission.title}
-                  </h1>
-                </ReviewableField>
-              </div>
-            </div>
-
-            {/* Quick meta */}
-            <p
-              style={{
-                margin: 0,
-                fontSize: 12,
-                color: "var(--color-text-muted)",
-                lineHeight: 1.5,
-              }}
-            >
-              {submission.studyType === "thesis" ? "Thesis" : "Capstone"} ·{" "}
-              {submission.department} · Submitted{" "}
-              {formatDate(submission.submittedAt)}
-            </p>
-          </div>
-
-          {/* ── Reviewable fields ───────────────────────────────────────── */}
-          <div
-            style={{
-              borderRadius: 7,
-              border: "1px solid rgba(255,255,255,0.07)",
-              background: "var(--color-surface-alt)",
-              padding: "24px",
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-            }}
-          >
-            {/* Authors */}
-            <ReviewableField
-              fieldKey="authors"
-              label="Authors"
-              comments={fieldComments("authors")}
-              isActive={activeCommentField === "authors"}
-              onCommentIconClick={handleCommentIconClick}
-            >
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {submission.authors.map((a) => (
-                  <Chip key={a} label={a} />
-                ))}
-              </div>
-            </ReviewableField>
-
-            <FieldGroupDivider />
-
-            {/* Advisers */}
-            <ReviewableField
-              fieldKey="advisers"
-              label="Advisers"
-              comments={fieldComments("advisers")}
-              isActive={activeCommentField === "advisers"}
-              onCommentIconClick={handleCommentIconClick}
-            >
-              {submission.advisers.length > 0 ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {submission.advisers.map((a) => (
-                    <Chip key={a} label={a} />
-                  ))}
-                </div>
-              ) : (
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 13,
-                    color: "var(--color-text-muted)",
-                  }}
-                >
-                  —
-                </p>
-              )}
-            </ReviewableField>
-
-            <FieldGroupDivider />
-
-            {/* Metadata row */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-                gap: 12,
-              }}
-            >
-              <ReviewableField
-                fieldKey="department"
-                label="Department"
-                comments={fieldComments("department")}
-                isActive={activeCommentField === "department"}
-                onCommentIconClick={handleCommentIconClick}
-              >
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 14,
-                    fontWeight: 500,
-                    color: "var(--color-text)",
-                  }}
-                >
-                  {submission.department}
-                </p>
-              </ReviewableField>
-
-              <ReviewableField
-                fieldKey="study_type"
-                label="Study Type"
-                comments={fieldComments("study_type")}
-                isActive={activeCommentField === "study_type"}
-                onCommentIconClick={handleCommentIconClick}
-              >
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 14,
-                    fontWeight: 500,
-                    color: "var(--color-text)",
-                  }}
-                >
-                  {submission.studyType === "thesis" ? "Thesis" : "Capstone"}
-                </p>
-              </ReviewableField>
-
-              <ReviewableField
-                fieldKey="publication_date"
-                label="Publication Date"
-                comments={fieldComments("publication_date")}
-                isActive={activeCommentField === "publication_date"}
-                onCommentIconClick={handleCommentIconClick}
-              >
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 14,
-                    fontWeight: 500,
-                    color: "var(--color-text)",
-                  }}
-                >
-                  {submission.publicationDate}
-                </p>
-              </ReviewableField>
-
-              <ReviewableField
-                fieldKey="conference"
-                label="Conference"
-                comments={fieldComments("conference")}
-                isActive={activeCommentField === "conference"}
-                onCommentIconClick={handleCommentIconClick}
-              >
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 14,
-                    fontWeight: 500,
-                    color: "var(--color-text)",
-                  }}
-                >
-                  {submission.conference ?? "Not provided"}
-                </p>
-              </ReviewableField>
-            </div>
-
-            <FieldGroupDivider />
-
-            {/* Tags lead because they are the more specific, reviewer-facing metadata. */}
-            <ReviewableField
-              fieldKey="tags"
-              label="Tags"
-              comments={fieldComments("tags")}
-              isActive={activeCommentField === "tags"}
-              onCommentIconClick={handleCommentIconClick}
-            >
-              {submission.tags.length > 0 ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {submission.tags.map((tag) => (
-                    <Chip key={tag} label={tag} variant="tag" />
-                  ))}
-                </div>
-              ) : (
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 13,
-                    color: "var(--color-text-muted)",
-                  }}
-                >
-                  —
-                </p>
-              )}
-            </ReviewableField>
-
-            <FieldGroupDivider />
-
-            {/* Research areas are broad, controlled classifications—not one combined tag. */}
-            <ReviewableField
-              fieldKey="research_area"
-              label="Research Area"
-              comments={fieldComments("research_area")}
-              isActive={activeCommentField === "research_area"}
-              onCommentIconClick={handleCommentIconClick}
-            >
-              {parseResearchAreaIds(submission.researchArea).length > 0 ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {parseResearchAreaIds(submission.researchArea).map((area) => (
-                    <Chip
-                      key={area}
-                      label={getResearchAreaLabel(area)}
-                      variant="researchArea"
-                    />
-                  ))}
-                </div>
-              ) : (
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 13,
-                    color: "var(--color-text-muted)",
-                  }}
-                >
-                  —
-                </p>
-              )}
-            </ReviewableField>
-
-            <FieldGroupDivider />
-
-            {/* Publication link */}
-            <ReviewableField
-              fieldKey="publication_link"
-              label="Publication Link"
-              comments={fieldComments("publication_link")}
-              isActive={activeCommentField === "publication_link"}
-              onCommentIconClick={handleCommentIconClick}
-            >
-              {submission.publicationLink ? (
-                <a
-                  href={submission.publicationLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    fontSize: 13,
-                    color: "var(--color-brand-bright)",
-                    textDecoration: "none",
-                    wordBreak: "break-all",
-                  }}
-                >
-                  <ExternalLink size={12} aria-hidden />
-                  {submission.publicationLink}
-                </a>
-              ) : (
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 13,
-                    color: "var(--color-text-muted)",
-                  }}
-                >
-                  —
-                </p>
-              )}
-            </ReviewableField>
-          </div>
-          {/* ── Content fields ────────────────────────────────────────────── */}
-          <div
-            style={{
-              borderRadius: 7,
-              border: "1px solid rgba(255,255,255,0.07)",
-              background: "var(--color-surface-alt)",
-              padding: "24px",
-              display: "flex",
-              flexDirection: "column",
-              gap: 24,
-            }}
-          >
-            {/* Abstract */}
-            <ReviewableField
-              fieldKey="abstract"
-              label="Abstract"
-              comments={fieldComments("abstract")}
-              isActive={activeCommentField === "abstract"}
-              onCommentIconClick={handleCommentIconClick}
-              expandable
             >
               <p
                 style={{
-                  margin: 0,
-                  fontSize: 14,
-                  lineHeight: 1.7,
+                  margin: "0 0 2px",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.15em",
                   color: "var(--color-text-muted)",
                 }}
               >
-                {submission.abstract}
+                Study Review
               </p>
-            </ReviewableField>
-
-            <FieldGroupDivider />
-
-            {/* Recommendations */}
-            <ReviewableField
-              fieldKey="recommendations"
-              label="Recommendations"
-              comments={fieldComments("recommendations")}
-              isActive={activeCommentField === "recommendations"}
-              onCommentIconClick={handleCommentIconClick}
-              expandable
-            >
-              {submission.recommendations ? (
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 14,
-                    lineHeight: 1.7,
-                    color: "var(--color-text-muted)",
-                  }}
-                >
-                  {submission.recommendations}
-                </p>
-              ) : (
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 13,
-                    color: "var(--color-text-muted)",
-                  }}
-                >
-                  No recommendations provided.
-                </p>
-              )}
-            </ReviewableField>
-
-            <FieldGroupDivider />
-
-            {/* Lessons Learned */}
-            <ReviewableField
-              fieldKey="lessons_learned"
-              label="Lessons Learned"
-              comments={fieldComments("lessons_learned")}
-              isActive={activeCommentField === "lessons_learned"}
-              onCommentIconClick={handleCommentIconClick}
-              expandable
-            >
-              {submission.lessonsLearned ? (
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 14,
-                    lineHeight: 1.7,
-                    color: "var(--color-text-muted)",
-                  }}
-                >
-                  {submission.lessonsLearned}
-                </p>
-              ) : (
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 13,
-                    color: "var(--color-text-muted)",
-                  }}
-                >
-                  No lessons learned provided.
-                </p>
-              )}
-            </ReviewableField>
-
-            <FieldGroupDivider />
-
-            {/* PDF Section */}
-            {submission.primaryFile && (
               <ReviewableField
-                fieldKey="pdf_general"
-                label="PDF / Paper"
-                comments={fieldComments("pdf_general")}
-                isActive={activeCommentField === "pdf_general"}
+                fieldKey="title"
+                label="Title"
+                comments={fieldComments("title")}
+                isActive={activeCommentField === "title"}
+                onCommentIconClick={handleCommentIconClick}
+                className="min-w-0"
+              >
+                <h1
+                  style={{
+                    margin: "4px 0 8px",
+                    fontSize: 22,
+                    fontWeight: 700,
+                    color: "var(--color-text)",
+                    lineHeight: 1.35,
+                  }}
+                >
+                  {submission.title}
+                </h1>
+              </ReviewableField>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 12,
+                  color: "var(--color-text-muted)",
+                  lineHeight: 1.5,
+                }}
+              >
+                {submission.studyType === "thesis" ? "Thesis" : "Capstone"} ·{" "}
+                {submission.department} · Submitted{" "}
+                {formatDate(submission.submittedAt)}
+              </p>
+            </div>
+
+            {/* Fields — flat grid matching member page order */}
+            <div style={{ display: "grid", gap: 10 }}>
+
+              {/* Row 1: Department + Study Type */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                  gap: 10,
+                }}
+              >
+                <ReviewableField
+                  fieldKey="department"
+                  label="Department"
+                  comments={fieldComments("department")}
+                  isActive={activeCommentField === "department"}
+                  onCommentIconClick={handleCommentIconClick}
+                >
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>
+                    {submission.department}
+                  </p>
+                </ReviewableField>
+
+                <ReviewableField
+                  fieldKey="study_type"
+                  label="Study Type"
+                  comments={fieldComments("study_type")}
+                  isActive={activeCommentField === "study_type"}
+                  onCommentIconClick={handleCommentIconClick}
+                >
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>
+                    {submission.studyType === "thesis" ? "Thesis" : "Capstone"}
+                  </p>
+                </ReviewableField>
+              </div>
+
+              {/* Row 2: Publication Date + Conference */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                  gap: 10,
+                }}
+              >
+                <ReviewableField
+                  fieldKey="publication_date"
+                  label="Publication Date"
+                  comments={fieldComments("publication_date")}
+                  isActive={activeCommentField === "publication_date"}
+                  onCommentIconClick={handleCommentIconClick}
+                >
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>
+                    {submission.publicationDate}
+                  </p>
+                </ReviewableField>
+
+                <ReviewableField
+                  fieldKey="conference"
+                  label="Conference"
+                  comments={fieldComments("conference")}
+                  isActive={activeCommentField === "conference"}
+                  onCommentIconClick={handleCommentIconClick}
+                >
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>
+                    {submission.conference ?? "Not provided"}
+                  </p>
+                </ReviewableField>
+              </div>
+
+              {/* Publication link */}
+              <ReviewableField
+                fieldKey="publication_link"
+                label="Publication Link"
+                comments={fieldComments("publication_link")}
+                isActive={activeCommentField === "publication_link"}
                 onCommentIconClick={handleCommentIconClick}
               >
-                {/* File info row */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 12,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div
-                    style={{ display: "flex", alignItems: "center", gap: 10 }}
+                {submission.publicationLink ? (
+                  <a
+                    href={submission.publicationLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontSize: 13,
+                      color: "var(--color-brand-bright)",
+                      textDecoration: "none",
+                      wordBreak: "break-all",
+                    }}
                   >
-                    <span
-                      style={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: 7,
-                        background: "var(--color-chip-cyan-bg)",
-                        border: "1px solid rgba(54,139,254,0.15)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                      }}
-                    >
-                      <FileText size={16} color="#368bfe" aria-hidden />
-                    </span>
-                    <div>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: "var(--color-text)",
-                        }}
-                      >
-                        {submission.primaryFile.fileName}
-                      </p>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: 11,
-                          color: "var(--color-text-muted)",
-                        }}
-                      >
-                        {submission.primaryFile.fileSize}
-                      </p>
-                    </div>
-                  </div>
+                    <ExternalLink size={12} aria-hidden />
+                    {submission.publicationLink}
+                  </a>
+                ) : (
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--color-text-muted)" }}>—</p>
+                )}
+              </ReviewableField>
 
-                  {/* Action buttons */}
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <a
-                      href={submission.primaryFile.pdfUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 6,
-                        padding: "6px 12px",
-                        borderRadius: 6,
-                        border: "1px solid rgba(54,139,254,0.3)",
-                        background: "var(--color-chip-cyan-bg)",
-                        color: "var(--color-brand-bright)",
-                        fontSize: 12,
-                        fontWeight: 600,
-                        textDecoration: "none",
-                        transition: "background 150ms ease",
-                      }}
-                      onMouseEnter={(e) => {
-                        (
-                          e.currentTarget as HTMLAnchorElement
-                        ).style.background = "var(--color-brand-cyan)";
-                      }}
-                      onMouseLeave={(e) => {
-                        (
-                          e.currentTarget as HTMLAnchorElement
-                        ).style.background = "var(--color-chip-cyan-bg)";
-                      }}
-                    >
-                      <ExternalLink size={12} aria-hidden />
-                      Open PDF
-                    </a>
-                    <a
-                      href={submission.primaryFile.pdfUrl}
-                      download={submission.primaryFile.fileName}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 6,
-                        padding: "6px 12px",
-                        borderRadius: 6,
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        background: "var(--color-surface-alt)",
-                        color: "var(--color-text-muted)",
-                        fontSize: 12,
-                        fontWeight: 600,
-                        textDecoration: "none",
-                        transition: "background 150ms ease",
-                      }}
-                      onMouseEnter={(e) => {
-                        (
-                          e.currentTarget as HTMLAnchorElement
-                        ).style.background = "var(--color-separator)";
-                      }}
-                      onMouseLeave={(e) => {
-                        (
-                          e.currentTarget as HTMLAnchorElement
-                        ).style.background = "var(--color-surface-alt)";
-                      }}
-                    >
-                      <Download size={12} aria-hidden />
-                      Download
-                    </a>
-                  </div>
+              {/* Authors */}
+              <ReviewableField
+                fieldKey="authors"
+                label="Authors"
+                comments={fieldComments("authors")}
+                isActive={activeCommentField === "authors"}
+                onCommentIconClick={handleCommentIconClick}
+              >
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {submission.authors.map((a) => (
+                    <Chip key={a} label={a} />
+                  ))}
                 </div>
               </ReviewableField>
-            )}
+
+              {/* Advisers */}
+              <ReviewableField
+                fieldKey="advisers"
+                label="Advisers"
+                comments={fieldComments("advisers")}
+                isActive={activeCommentField === "advisers"}
+                onCommentIconClick={handleCommentIconClick}
+              >
+                {submission.advisers.length > 0 ? (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {submission.advisers.map((a) => (
+                      <Chip key={a} label={a} />
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--color-text-muted)" }}>—</p>
+                )}
+              </ReviewableField>
+
+              {/* Row 3: Research Area + Tags */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                  gap: 10,
+                }}
+              >
+                <ReviewableField
+                  fieldKey="research_area"
+                  label="Research Area"
+                  comments={fieldComments("research_area")}
+                  isActive={activeCommentField === "research_area"}
+                  onCommentIconClick={handleCommentIconClick}
+                >
+                  {parseResearchAreaIds(submission.researchArea).length > 0 ? (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {parseResearchAreaIds(submission.researchArea).map((area) => (
+                        <Chip
+                          key={area}
+                          label={getResearchAreaLabel(area)}
+                          variant="researchArea"
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ margin: 0, fontSize: 13, color: "var(--color-text-muted)" }}>—</p>
+                  )}
+                </ReviewableField>
+
+                <ReviewableField
+                  fieldKey="tags"
+                  label="Tags"
+                  comments={fieldComments("tags")}
+                  isActive={activeCommentField === "tags"}
+                  onCommentIconClick={handleCommentIconClick}
+                >
+                  {submission.tags.length > 0 ? (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {submission.tags.map((tag) => (
+                        <Chip key={tag} label={tag} variant="tag" />
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ margin: 0, fontSize: 13, color: "var(--color-text-muted)" }}>—</p>
+                  )}
+                </ReviewableField>
+              </div>
+
+              <FieldGroupDivider />
+
+              {/* Abstract */}
+              <ReviewableField
+                fieldKey="abstract"
+                label="Abstract"
+                comments={fieldComments("abstract")}
+                isActive={activeCommentField === "abstract"}
+                onCommentIconClick={handleCommentIconClick}
+                expandable
+              >
+                <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: "var(--color-text-muted)" }}>
+                  {submission.abstract}
+                </p>
+              </ReviewableField>
+
+              {/* Recommendations */}
+              <ReviewableField
+                fieldKey="recommendations"
+                label="Recommendations"
+                comments={fieldComments("recommendations")}
+                isActive={activeCommentField === "recommendations"}
+                onCommentIconClick={handleCommentIconClick}
+                expandable
+              >
+                {submission.recommendations ? (
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: "var(--color-text-muted)" }}>
+                    {submission.recommendations}
+                  </p>
+                ) : (
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--color-text-muted)" }}>
+                    No recommendations provided.
+                  </p>
+                )}
+              </ReviewableField>
+
+              {/* Lessons Learned */}
+              <ReviewableField
+                fieldKey="lessons_learned"
+                label="Lessons Learned"
+                comments={fieldComments("lessons_learned")}
+                isActive={activeCommentField === "lessons_learned"}
+                onCommentIconClick={handleCommentIconClick}
+                expandable
+              >
+                {submission.lessonsLearned ? (
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: "var(--color-text-muted)" }}>
+                    {submission.lessonsLearned}
+                  </p>
+                ) : (
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--color-text-muted)" }}>
+                    No lessons learned provided.
+                  </p>
+                )}
+              </ReviewableField>
+
+              {/* PDF Section */}
+              {submission.primaryFile && (
+                <ReviewableField
+                  fieldKey="pdf_general"
+                  label="PDF / Paper"
+                  comments={fieldComments("pdf_general")}
+                  isActive={activeCommentField === "pdf_general"}
+                  onCommentIconClick={handleCommentIconClick}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 12,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 7,
+                          background: "var(--color-chip-cyan-bg)",
+                          border: "1px solid rgba(54,139,254,0.15)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <FileText size={16} color="#368bfe" aria-hidden />
+                      </span>
+                      <div>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--color-text)" }}>
+                          {submission.primaryFile.fileName}
+                        </p>
+                        <p style={{ margin: 0, fontSize: 11, color: "var(--color-text-muted)" }}>
+                          {submission.primaryFile.fileSize}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <a
+                        href={submission.primaryFile.pdfUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          padding: "6px 12px",
+                          borderRadius: 6,
+                          border: "1px solid var(--color-chip-cyan-bd)",
+                          background: "var(--color-chip-cyan-bg)",
+                          color: "var(--color-brand-bright)",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          textDecoration: "none",
+                          transition: "background 150ms ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLAnchorElement).style.background = "var(--color-brand-cyan)";
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLAnchorElement).style.background = "var(--color-chip-cyan-bg)";
+                        }}
+                      >
+                        <ExternalLink size={12} aria-hidden />
+                        Open PDF
+                      </a>
+                      <a
+                        href={submission.primaryFile.pdfUrl}
+                        download={submission.primaryFile.fileName}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          padding: "6px 12px",
+                          borderRadius: 6,
+                          border: "1px solid var(--color-separator-mid)",
+                          background: "var(--color-surface-alt)",
+                          color: "var(--color-text-muted)",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          textDecoration: "none",
+                          transition: "background 150ms ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLAnchorElement).style.background = "var(--color-separator)";
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLAnchorElement).style.background = "var(--color-surface-alt)";
+                        }}
+                      >
+                        <Download size={12} aria-hidden />
+                        Download
+                      </a>
+                    </div>
+                  </div>
+                </ReviewableField>
+              )}
+            </div>
           </div>
         </div>
       </div>

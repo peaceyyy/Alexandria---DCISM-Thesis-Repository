@@ -46,7 +46,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: #5a6070;
+  color: var(--color-text-muted);
   margin-bottom: 2px;
 }
 
@@ -110,35 +110,6 @@
 }
 
 .btnFlag:disabled {
-  opacity: 0.38;
-  cursor: not-allowed;
-}
-
-/* Unflag — same shape, muted blue-gray to signal "undo" */
-.btnUnflag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 9px 16px;
-  border-radius: 7px;
-  border: 1px solid var(--color-chip-gray-bd);
-  background: var(--color-chip-gray-bg);
-  color: var(--color-chip-gray-text);
-  font-size: 13px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 150ms ease;
-}
-
-.btnUnflag:hover:not(:disabled) {
-  opacity: 0.88;
-}
-
-.btnUnflag:disabled {
   opacity: 0.38;
   cursor: not-allowed;
 }
@@ -254,60 +225,6 @@
 .btnAdminEdit:disabled {
   cursor: not-allowed;
   opacity: 0.45;
-}
-
-/* ─── Confirm Trash Dialog ───────────────────────────────────────────────── */
-
-.confirmOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(2px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: fadeIn 150ms ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-.confirmDialog {
-  width: 340px;
-  border-radius: 10px;
-  border: 1px solid var(--color-separator);
-  background: var(--color-surface);
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  animation: slideUp 180ms ease;
-}
-
-@keyframes slideUp {
-  from { transform: translateY(8px); opacity: 0; }
-  to   { transform: translateY(0);   opacity: 1; }
-}
-
-.confirmTitle {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-text);
-}
-
-.confirmBody {
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--color-text-muted);
-}
-
-.confirmActions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
 }
 
 .btnConfirmCancel {
