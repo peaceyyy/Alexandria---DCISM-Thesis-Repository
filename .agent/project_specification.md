@@ -22,12 +22,12 @@ As of 2026-06-26, the API contracts and Supabase SQL snapshot contain newer impl
 - System roles are now `admin`, `moderator`, and `member`.
 - USC identity is stored separately as `affiliation`: `student`, `alumni`, or `professor`.
 - User profile data lives in `public.users`, linked to `auth.users`, rather than the earlier `profiles` naming.
-- Thesis lifecycle uses `review_status`: `for_review`, `flagged`, and `accepted`; public discovery shows accepted records.
+- Thesis lifecycle uses `review_status`: `for_review`, `flagged`, `accepted`, and `trashed`; public discovery shows accepted records.
 - Any authenticated `member` can submit a thesis for review.
-- Only `admin` and `moderator` can approve/accept, flag, or trash submissions.
-- Members can edit their own submission only after it has been flagged.
+- Administrators and moderators can add feedback while a submission is pending or flagged, and can approve or flag only pending submissions.
+- Members can edit their own submission only after it has been flagged; only member resubmission returns it to pending review.
 - Members can attach/register their own thesis PDF or file URL.
-- Trashed submissions are not recoverable through the admin UI for MVP.
+- Only administrators can trash, restore, or view trashed submissions; moderators cannot retrieve trashed records.
 - `moderator` replaces the older Contributor role in implementation-facing work.
 - `member` replaces the narrower Student visitor role in implementation-facing work.
 - Use `accepted` internally if preserving the current SQL is preferred, but the UI may label that state as Approved.

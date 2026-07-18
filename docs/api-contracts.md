@@ -84,7 +84,7 @@ All service calls resolve to a consistent shape.
 - System role (`admin`, `moderator`, `member`) is stored in `users.role` and enforced by Supabase RLS policies.
 - USC identity (`student`, `alumni`, `professor`) is stored in `users.affiliation` — describes who they are at USC, not what they can do.
 - Any authenticated `member` can submit a thesis for review.
-- Administrators and moderators can approve, flag, and return submissions to review. Only administrators can trash or restore a submission.
+- Administrators and moderators can add feedback while a submission is pending or flagged, and can approve or flag a pending submission. Only a member resubmission moves a flagged submission back to pending review. Only administrators can trash, restore, or view trashed submissions.
 - Members can edit their own submission only after a moderator/admin flags it.
 - Members can attach/register their own thesis PDF or file URL.
 - The database value `accepted` may be displayed as `Approved` in the UI.
