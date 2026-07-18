@@ -6,7 +6,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   CheckCircle2,
+  Clock,
   FileUp,
+  Flag,
   LoaderCircle,
   Maximize2,
   Plus,
@@ -378,12 +380,21 @@ export function MemberCorrectionClient({
         </Link>
 
         <div className={styles.statusBlock}>
-          <p className={styles.eyebrow}>Correction status</p>
-          <strong
-            className={isLocked ? styles.pendingStatus : styles.flaggedStatus}
+          {/* Status chip — icon + label, same vocabulary as admin ReviewStatusIndicator */}
+          <div
+            className={
+              isLocked
+                ? styles.statusChipPending
+                : styles.statusChipFlagged
+            }
           >
-            {isLocked ? "Pending review" : "Flagged for correction"}
-          </strong>
+            {isLocked ? (
+              <Clock size={12} aria-hidden />
+            ) : (
+              <Flag size={12} aria-hidden />
+            )}
+            {isLocked ? "Back in review queue" : "Flagged for correction"}
+          </div>
           <p>
             {isLocked
               ? "Your submission is back for review. Our team will be on it and get back to you as soon as possible!"
