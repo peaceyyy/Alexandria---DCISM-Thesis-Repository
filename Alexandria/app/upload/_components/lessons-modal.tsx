@@ -18,16 +18,21 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { X, GripVertical, Plus, Lightbulb, Edit3, ListChecks } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LESSON_MAX_LENGTH } from "@/lib/domain/lessons";
 
 // ─── Single draggable lesson item ────────────────────────────────────────────
 
 function LessonItem({
   id,
   text,
+  readOnly,
+  onChange,
   onRemove,
 }: {
   id: string;
   text: string;
+  readOnly: boolean;
+  onChange: (text: string) => void;
   onRemove: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -53,15 +58,29 @@ function LessonItem({
       >
         <GripVertical size={13} aria-hidden />
       </button>
-      <span className="flex-1 text-sm leading-relaxed text-[var(--color-text)]">{text}</span>
-      <button
-        type="button"
-        onClick={onRemove}
-        className="flex-shrink-0 text-[var(--color-text-muted)] opacity-0 transition-all hover:text-[var(--color-danger)] group-hover:opacity-100"
-        aria-label="Remove this lesson"
-      >
-        <X size={12} strokeWidth={2.5} aria-hidden />
-      </button>
+      <div className="min-w-0 flex-1">
+        <input
+          value={text}
+          maxLength={LESSON_MAX_LENGTH}
+          readOnly={readOnly}
+          onChange={(event) => onChange(event.target.value)}
+          aria-label="Lesson learned"
+          className="w-full bg-transparent text-sm leading-relaxed text-[var(--color-text)] outline-none"
+        />
+        <p className="mt-1 text-[10px] tabular-nums text-[var(--color-text-muted)]">
+          {text.length} / {LESSON_MAX_LENGTH}
+        </p>
+      </div>
+      {!readOnly && (
+        <button
+          type="button"
+          onClick={onRemove}
+          className="flex-shrink-0 text-[var(--color-text-muted)] opacity-0 transition-all hover:text-[var(--color-danger)] group-hover:opacity-100"
+          aria-label="Remove this lesson"
+        >
+          <X size={12} strokeWidth={2.5} aria-hidden />
+        </button>
+      )}
     </div>
   );
 }
@@ -79,9 +98,15 @@ interface LessonsModalProps {
   value: string[];
   onChange: (lessons: string[]) => void;
   error?: string;
+  readOnly?: boolean;
 }
 
-export function LessonsModal({ value, onChange, error }: LessonsModalProps) {
+export function LessonsModal({
+  value,
+  onChange,
+  error,
+  readOnly = false,
+}: LessonsModalProps) {
   const [open, setOpen] = useState(false);
   const [entries, setEntries] = useState<LessonEntry[]>([]);
   const [input, setInput] = useState("");
@@ -146,6 +171,12 @@ export function LessonsModal({ value, onChange, error }: LessonsModalProps) {
     setEntries((prev) => prev.filter((e) => e.id !== id));
   }
 
+  function updateEntry(id: string, text: string) {
+    setEntries((prev) =>
+      prev.map((entry) => (entry.id === id ? { ...entry, text } : entry)),
+    );
+  }
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -178,7 +209,9 @@ export function LessonsModal({ value, onChange, error }: LessonsModalProps) {
           <div className="space-y-2">
             <p className="text-[10px] font-medium text-[var(--color-text-muted)]">
               {value.length} lesson{value.length > 1 ? "s" : ""} ·{" "}
-              <span className="text-[var(--color-brand-bright)]">click to edit</span>
+              <span className="text-[var(--color-brand-bright)]">
+                click to {readOnly ? "view" : "edit"}
+              </span>
             </p>
             <ul className="space-y-1">
               {value.slice(0, 3).map((lesson, i) => (
@@ -197,7 +230,7 @@ export function LessonsModal({ value, onChange, error }: LessonsModalProps) {
         ) : (
           <div className="flex items-center gap-2 text-[var(--color-placeholder)]">
             <Edit3 size={13} aria-hidden />
-            <span className="text-sm">Click to add lessons learned…</span>
+            <span className="text-sm">{readOnly ? "No lessons learned" : "Click to add lessons learned…"}</span>
           </div>
         )}
         <span className="absolute right-3.5 top-3.5 opacity-0 transition-opacity group-hover:opacity-50">
@@ -250,7 +283,7 @@ export function LessonsModal({ value, onChange, error }: LessonsModalProps) {
               />
               <p className="text-xs leading-relaxed text-[var(--color-text-muted)]">
                 One clear, actionable insight per entry. Think: what would you tell yourself before
-                starting? Keep it brief. Drag handle (
+                starting? Keep it brief and under {LESSON_MAX_LENGTH} characters. Drag handle (
                 <GripVertical size={10} className="inline" aria-hidden />
                 ) to reorder.
               </p>
@@ -277,6 +310,8 @@ export function LessonsModal({ value, onChange, error }: LessonsModalProps) {
                           key={entry.id}
                           id={entry.id}
                           text={entry.text}
+                          readOnly={readOnly}
+                          onChange={(text) => updateEntry(entry.id, text)}
                           onRemove={() => removeEntry(entry.id)}
                         />
                       ))}
@@ -286,7 +321,8 @@ export function LessonsModal({ value, onChange, error }: LessonsModalProps) {
               )}
 
               {/* Input row */}
-              <div className="flex items-center gap-2 rounded-lg border border-[var(--color-separator)] bg-[var(--color-bg)] px-3 py-2 outline-none transition-colors focus-within:border-[var(--color-brand-bright)]/30">
+              {!readOnly && (
+                <div className="flex items-center gap-2 rounded-lg border border-[var(--color-separator)] bg-[var(--color-bg)] px-3 py-2 outline-none transition-colors focus-within:border-[var(--color-brand-bright)]/30">
                 <Plus size={12} className="flex-shrink-0 text-[var(--color-text-muted)] opacity-50" aria-hidden />
                 <input
                   ref={inputRef}
@@ -295,9 +331,12 @@ export function LessonsModal({ value, onChange, error }: LessonsModalProps) {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleInputKeyDown}
                   placeholder="Type a lesson and press Enter to add…"
-                  maxLength={220}
+                  maxLength={LESSON_MAX_LENGTH}
                   className="flex-1 bg-transparent text-sm text-[var(--color-text)] placeholder-[var(--color-placeholder)] outline-none focus:outline-none"
                 />
+                <span className="text-[10px] tabular-nums text-[var(--color-text-muted)]">
+                  {input.length} / {LESSON_MAX_LENGTH}
+                </span>
                 {input.trim() && (
                   <button
                     type="button"
@@ -307,7 +346,8 @@ export function LessonsModal({ value, onChange, error }: LessonsModalProps) {
                     Add
                   </button>
                 )}
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Footer */}
@@ -321,11 +361,11 @@ export function LessonsModal({ value, onChange, error }: LessonsModalProps) {
               </button>
               <button
                 type="button"
-                onClick={handleSave}
-                disabled={entries.length === 0}
+                onClick={readOnly ? handleDiscard : handleSave}
+                disabled={!readOnly && entries.length === 0}
                 className="rounded-md bg-[var(--color-brand)] px-4 py-1.5 text-sm text-white transition-colors hover:bg-[var(--color-brand-bright)] disabled:cursor-not-allowed disabled:opacity-35"
               >
-                Save{entries.length > 0 ? ` (${entries.length})` : ""}
+                {readOnly ? "Done" : `Save${entries.length > 0 ? ` (${entries.length})` : ""}`}
               </button>
             </div>
           </div>

@@ -229,7 +229,7 @@ export function AdminMetadataEditorDialog({
         requestClose();
       }}
     >
-      <DialogContent className="relative max-h-[calc(100vh-2rem)] w-[calc(100%-2rem)] max-w-5xl gap-0 overflow-y-auto border-[var(--color-separator-mid)] bg-[var(--color-surface)] p-0 text-[var(--color-text)] shadow-xl">
+      <DialogContent className="relative max-h-[calc(100dvh_-_2rem)] w-[calc(100vw_-_2rem)] max-w-6xl gap-0 overflow-y-auto border-[var(--color-separator-mid)] bg-[var(--color-surface)] p-0 text-[var(--color-text)] shadow-xl">
         <DialogHeader className="gap-2 border-b border-[var(--color-separator)] px-5 py-5 sm:px-7">
           <DialogTitle className="text-lg font-semibold tracking-tight">Correct Study Metadata</DialogTitle>
           <DialogDescription className="max-w-2xl text-sm leading-6 text-[var(--color-text-muted)]">

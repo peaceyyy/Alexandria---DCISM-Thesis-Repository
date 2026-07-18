@@ -18,7 +18,12 @@ import {
   X,
 } from "lucide-react";
 import { CommentSidePanel } from "@/components/review/comment-side-panel";
+import { LessonsModal } from "@/app/upload/_components/lessons-modal";
 import { DEPARTMENTS } from "@/lib/domain/departments";
+import {
+  parseLessonEntries,
+  serializeLessonEntries,
+} from "@/lib/domain/lessons";
 import {
   parseResearchAreaIds,
   serializeResearchAreaIds,
@@ -28,6 +33,7 @@ import { ResearchAreaMultiSelect } from "@/components/research/research-area-mul
 import { ReviewAuditTimeline } from "@/components/review/review-audit-timeline";
 import { ReviewableField } from "@/components/review/reviewable-field";
 import type { ReviewFieldKey } from "@/components/review/types";
+import { useToast } from "@/components/ui/toast-provider";
 import {
   Dialog,
   DialogContent,
@@ -136,6 +142,7 @@ export function MemberCorrectionClient({
   initialSubmission: ReviewSubmission;
 }) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [submission, setSubmission] = useState(initialSubmission);
   const [form, setForm] = useState(() => createForm(initialSubmission));
   const [activeCommentField, setActiveCommentField] =
@@ -316,6 +323,11 @@ export function MemberCorrectionClient({
       } else {
         setError(errorMessage);
       }
+      showToast({
+        title: "Correction not saved",
+        description: errorMessage,
+        tone: "error",
+      });
       setIsSaving(false);
       return;
     }
@@ -347,10 +359,15 @@ export function MemberCorrectionClient({
     const result = await resubmitFlaggedSubmission(submission.id);
 
     if (result.error || !result.data) {
-      setError(
+      const errorMessage =
         result.error?.message ??
-          "Your submission could not be returned for review.",
-      );
+        "Your submission could not be returned for review.";
+      setError(errorMessage);
+      showToast({
+        title: "Submission not returned for review",
+        description: errorMessage,
+        tone: "error",
+      });
       setIsResubmitting(false);
       return;
     }
@@ -677,16 +694,21 @@ export function MemberCorrectionClient({
             disabled={isLocked}
             onChange={(value) => updateField("recommendations", value)}
           />
-          <LongTextEditor
+          <Field
             fieldKey="lessons_learned"
             label="Lessons learned"
             comments={commentsFor("lessons_learned")}
             activeField={activeCommentField}
             onCommentIconClick={handleCommentIconClick}
-            value={form.lessonsLearned}
-            disabled={isLocked}
-            onChange={(value) => updateField("lessonsLearned", value)}
-          />
+          >
+            <LessonsModal
+              value={parseLessonEntries(form.lessonsLearned)}
+              readOnly={isLocked}
+              onChange={(entries) =>
+                updateField("lessonsLearned", serializeLessonEntries(entries))
+              }
+            />
+          </Field>
 
           <Field
             fieldKey="pdf_general"

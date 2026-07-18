@@ -153,6 +153,8 @@
   font-size: 13px;
   line-height: 1.55;
   color: var(--color-text);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .correctionState {

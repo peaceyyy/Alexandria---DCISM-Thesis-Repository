@@ -23,6 +23,7 @@ import {
   getResearchAreaLabel,
   parseResearchAreaIds,
 } from "@/lib/domain/research-areas";
+import { parseLessonEntries } from "@/lib/domain/lessons";
 import type { ReviewFieldKey } from "@/components/review/types";
 import {
   addReviewComment,
@@ -235,7 +236,13 @@ export function ReviewDetailClient({
       showToast(getDecisionToast(nextStatus, submission.reviewStatus));
       setIsActionPending(false);
     },
-    [showToast, submission.id, submission.reviewStatus, viewerRole],
+    [
+      showToast,
+      submission.fieldComments,
+      submission.id,
+      submission.reviewStatus,
+      viewerRole,
+    ],
   );
 
   const handleAdminMetadataSave = useCallback(
@@ -819,9 +826,22 @@ export function ReviewDetailClient({
                 expandable
               >
                 {submission.lessonsLearned ? (
-                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: "var(--color-text-muted)" }}>
-                    {submission.lessonsLearned}
-                  </p>
+                  <ol
+                    style={{
+                      margin: 0,
+                      paddingLeft: 20,
+                      display: "grid",
+                      gap: 8,
+                      fontSize: 14,
+                      lineHeight: 1.7,
+                      color: "var(--color-text-muted)",
+                      overflowWrap: "anywhere",
+                    }}
+                  >
+                    {parseLessonEntries(submission.lessonsLearned).map(
+                      (lesson, index) => <li key={index}>{lesson}</li>,
+                    )}
+                  </ol>
                 ) : (
                   <p style={{ margin: 0, fontSize: 13, color: "var(--color-text-muted)" }}>
                     No lessons learned provided.

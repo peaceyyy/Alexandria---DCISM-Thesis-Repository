@@ -134,6 +134,7 @@ export type ThesisCard = {
   tags: string[];
   research_area: string | null;
   department: string;
+  study_type?: StudyType;
 };
 /** Used on the Thesis Detail page. Extends ThesisCard. */
 export type ThesisDetail = ThesisCard & {
@@ -145,6 +146,8 @@ export type ThesisDetail = ThesisCard & {
   conference: string | null;
   recommendations: string | null;
   lessons_learned: string | null;
+  reviewStatus: ReviewStatus;
+  submittedByUserId: string | null;
   file_access: {
     has_primary_file: boolean;
     preview_path: string | null;

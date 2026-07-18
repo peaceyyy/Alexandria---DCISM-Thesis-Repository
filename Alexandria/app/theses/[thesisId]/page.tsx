@@ -4,14 +4,27 @@ import { getThesisById } from "@/lib/services/thesis-service";
 import Link from "next/link";
 import DetailsSidebar from "@/components/layout/details-sidebar";
 import { RecommendationsPreview } from "@/components/layout/recommendations-preview";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, ArrowLeft } from "lucide-react";
+import { getResearchAreaLabel } from "@/lib/domain/research-areas";
+
+function splitList(value: string | null) {
+  return value
+    ? value
+        .split(/\n|,/)
+        .map((entry) => entry.trim())
+        .filter(Boolean)
+    : [];
+}
 
 export default async function ThesisDetails({
   params,
+  searchParams,
 }: {
   params: Promise<{ thesisId: string }>;
+  searchParams: Promise<{ mine?: string | string[] }>;
 }) {
   const { thesisId } = await params;
+  const query = await searchParams;
   const id = Number(thesisId);
 
   if (!Number.isInteger(id) || id <= 0) {
@@ -36,6 +49,16 @@ export default async function ThesisDetails({
   }
 
   const thesis = thesisResult.data;
+  const researchAreas = splitList(thesis.research_area);
+  const isMySubmissionView =
+    (Array.isArray(query.mine) ? query.mine[0] : query.mine) === "1";
+  const isOwnSubmission = thesis.submittedByUserId === userResult.data?.id;
+  const ownerStatus =
+    isMySubmissionView &&
+    isOwnSubmission &&
+    (thesis.reviewStatus === "for_review" || thesis.reviewStatus === "accepted")
+      ? thesis.reviewStatus
+      : null;
 
   return (
     <main className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] xl:h-screen xl:overflow-hidden">
@@ -46,15 +69,33 @@ export default async function ThesisDetails({
           {/* this section contains the back button, title, authors, abstract, keywords/tags, pdf viewer */}
 
           <Link
-            href="/home"
-            className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text)]"
+            href={isMySubmissionView ? "/home?mine=1" : "/home"}
+            className="mb-6 inline-flex h-9 items-center gap-2 rounded-full border border-[var(--color-separator-mid)] px-3 text-sm font-semibold text-[var(--color-text-muted)] transition-colors hover:border-[var(--color-brand-bright)]/35 hover:bg-[var(--color-text)]/5 hover:text-[var(--color-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-bright)]/30"
           >
-            ← Back
+            <ArrowLeft size={15} aria-hidden />
+            Back
           </Link>
 
-          <h1 className="max-w-7xl text-2xl font-extrabold leading-tight text-[var(--color-text)]">
-            {thesis.title}
-          </h1>
+          <div className="flex items-start gap-3">
+            <h1 className="max-w-7xl text-2xl font-extrabold leading-tight text-[var(--color-text)]">
+              {thesis.title}
+            </h1>
+            {thesis.publication_link && (
+              <a
+                href={
+                  thesis.publication_link.startsWith("http")
+                    ? thesis.publication_link
+                    : `https://${thesis.publication_link}`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View original publication"
+                className="mt-1 inline-flex items-center rounded p-1 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-alt)] hover:text-[var(--color-text)]"
+              >
+                <ExternalLink size={20} aria-hidden="true" />
+              </a>
+            )}
+          </div>
 
           <div className="mt-2 text-sm text-[var(--color-text-muted)]">
             {thesis.authors
@@ -62,8 +103,20 @@ export default async function ThesisDetails({
               .map((author) => author.display_name)
               .join(" • ")}{" "}
             | {thesis.year}
+            {thesis.conference && ` | ${thesis.conference}`}
           </div>
 
+          {ownerStatus && (
+            <p
+              className={
+                ownerStatus === "for_review"
+                  ? "mt-3 inline-flex rounded-full border border-[var(--color-chip-cyan-bd)] bg-[var(--color-chip-cyan-bg)] px-2.5 py-1 text-xs font-semibold text-[var(--color-chip-cyan-text)]"
+                  : "mt-3 inline-flex rounded-full border border-[var(--color-chip-green-bd)] bg-[var(--color-chip-green-bg)] px-2.5 py-1 text-xs font-semibold text-[var(--color-chip-green-text)]"
+              }
+            >
+              {ownerStatus === "for_review" ? "Under review" : "Published"}
+            </p>
+          )}
           <div className="mt-6">
             <h2 className="text-lg font-semibold text-[var(--color-text)]">
               Abstract
@@ -75,9 +128,6 @@ export default async function ThesisDetails({
 
           {thesis.recommendations && (
             <div className="mt-6">
-              <h2 className="text-lg font-semibold text-[var(--color-text)]">
-                Recommendations
-              </h2>
               <RecommendationsPreview
                 recommendations={thesis.recommendations}
               />
@@ -86,12 +136,26 @@ export default async function ThesisDetails({
 
           <div className="mt-6">
             <h2 className="text-lg font-semibold text-[var(--color-text)]">
-              Keywords
+              Research Area & Keywords
             </h2>
-            <p className="mt-2 max-w-7xl text-sm leading-6 text-[var(--color-text-muted)]">
-              {/* Tags are here */}
-              {thesis.tags.join(", ")}
-            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {researchAreas.map((area) => (
+                <span
+                  key={area}
+                  className="inline-flex items-center rounded-full border border-[var(--color-chip-cyan-bd)] bg-[var(--color-chip-cyan-bg)] px-3 py-1 text-xs text-[var(--color-chip-cyan-text)]"
+                >
+                  {getResearchAreaLabel(area)}
+                </span>
+              ))}
+              {thesis.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center rounded-full border border-[var(--color-separator-mid)] bg-[var(--color-surface-alt)] px-3 py-1 text-xs text-[var(--color-text-muted)]"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
           </div>
 
           <section className="mt-8">

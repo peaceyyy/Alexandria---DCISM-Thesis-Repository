@@ -227,6 +227,8 @@
   display: -webkit-box;
   margin: 0;
   overflow: hidden;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
   color: var(--color-text);
   font-size: 14px;
   line-height: 1.55;

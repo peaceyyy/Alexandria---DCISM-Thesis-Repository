@@ -38,6 +38,7 @@ function mapToThesisCard(row: any): ThesisCard {
     abstract_preview: row.abstract?.substring(0, 400) ?? "",
     research_area: row.research_area ?? null,
     department: row.department,
+    study_type: row.study_type,
     authors: (row.thesis_authors ?? []).map(mapAuthor),
     tags: (row.thesis_tags ?? []).map((t: { tag: string }) => t.tag),
   };
@@ -71,6 +72,7 @@ export async function getTheses(
         abstract,
         department,
         research_area,
+        study_type,
         thesis_authors (
           id,
           user_id,
@@ -262,6 +264,8 @@ export async function getThesisById(
       conference: data.conference ?? null,
       recommendations: data.recommendations ?? null,
       lessons_learned: data.lessons_learned ?? null,
+      reviewStatus: data.review_status as ThesisDetail["reviewStatus"],
+      submittedByUserId: data.submitted_by_user_id,
       authors: (data.thesis_authors ?? []).map(mapAuthor),
       tags,
       file_access: {
