@@ -11,10 +11,12 @@ export function AdminLayoutWrapper({
   children,
   role,
   email,
+  profileName,
 }: {
   children: React.ReactNode;
   role: UserRole;
   email: string;
+  profileName: string;
 }) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -87,6 +89,7 @@ export function AdminLayoutWrapper({
       <AdminSidebar
         role={role}
         email={email}
+        profileName={profileName}
         isCollapsed={isCollapsed}
         isMobileOpen={isMobileOpen}
         isNarrowViewport={isNarrowViewport}

@@ -8,7 +8,7 @@
   left: 0;
   height: 100svh;
   width: 240px;
-  background: var(--color-surface);
+  background: var(--color-surface-alt);
   border-right: 1px solid var(--color-separator);
   display: flex;
   flex-direction: column;
@@ -34,11 +34,12 @@
 }
 
 .brandText {
-  font-family: var(--font-khula), sans-serif;
+  font-family: var(--font-khula), var(--font-sans), sans-serif;
   font-weight: 800;
-  font-size: 17px;
-  letter-spacing: 0.04em;
-  color: var(--color-brand-bright);
+  font-size: 15px;
+  letter-spacing: -0.03em;
+  color: var(--color-text);
+  transform: translateY(1px);
 }
 
 .collapseButton,
@@ -62,7 +63,7 @@
   height: 28px;
   border-radius: 50%;
   border: 1px solid var(--color-separator);
-  background: var(--color-surface);
+  background: var(--color-surface-alt);
   color: var(--color-text-muted);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -86,8 +87,8 @@
 .collapseButton:focus-visible,
 .mobileCloseButton:focus-visible,
 .navLink:focus-visible,
-.viewSiteLink:focus-visible,
-.logoutBtn:focus-visible {
+.logoutBtn:focus-visible,
+.profileLink:focus-visible {
   outline: 2px solid var(--color-brand-bright);
   outline-offset: 2px;
 }
@@ -161,9 +162,7 @@
 
 .collapsed .brandText,
 .collapsed .navText,
-.collapsed .viewSiteText,
-.collapsed .logoutText,
-.collapsed .emailText {
+.collapsed .profileDetails {
   width: 0;
   opacity: 0;
   overflow: hidden;
@@ -175,7 +174,6 @@
 }
 
 .collapsed .navLink,
-.collapsed .viewSiteLink,
 .collapsed .logoutBtn {
   justify-content: center;
   padding-inline: 0;
@@ -185,132 +183,213 @@
   padding-inline: 10px;
 }
 
-/* Collapsed: hide email row entirely, keep icon row centred */
-.collapsed .emailRow {
-  display: none;
-}
-
-.collapsed .footerIconRow {
-  justify-content: center;
-}
-
-/* In collapsed mode, ThemeToggle + Logout both become 32px icon squares */
-.collapsed .logoutForm {
-  flex: 0;
-}
-
 .collapsed .logoutBtn {
-  flex: 0;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border-radius: 10px;
-  gap: 0;
-  overflow: hidden;
+  width: 36px;
 }
 
-.collapsed .viewSiteLink {
-  justify-content: center;
-  padding-inline: 0;
-  border-radius: 10px;
-}
-
-/* Browse Repository */
-.viewSiteLink {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-text-muted);
-  text-decoration: none;
-  border: 1px solid var(--color-separator-mid);
-  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-  margin-bottom: 10px;
-}
-
-.viewSiteLink:hover {
-  color: var(--color-text);
-  border-color: var(--color-separator-mid);
-  background: var(--color-text)/5;
-  background: color-mix(in oklch, var(--color-text) 5%, transparent);
-}
-
-/* Footer */
 .footer {
-  padding: 10px 12px 12px;
+  padding: 12px;
   border-top: 1px solid var(--color-separator);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
-/*
-  Icon row: ThemeToggle (fixed 32px) + Logout fills remaining space.
-  Mirrors the filter sidebar accountActions pattern.
-*/
-.footerIconRow {
+/* ── Footer action stack ── */
+.footerActions {
   display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Row 1: Contribute — full width, horizontal */
+.contributeStrip {
+  display: flex;
+  width: 100%;
+  height: 40px;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  margin-top: 4px;
+  border: 1px solid var(--color-separator-mid);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.contributeStrip:hover {
+  color: var(--color-text);
+  background: color-mix(in oklch, var(--color-text) 6%, transparent);
+}
+
+.contributeStrip:focus-visible {
+  outline: 2px solid var(--color-brand-bright);
+  outline-offset: 2px;
+}
+
+/* Row 2: Utility pair — Theme + contextual nav */
+.utilityRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.utilityTile {
+  display: inline-flex;
+  height: 36px;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-separator-mid);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.utilityTile:hover {
+  color: var(--color-text);
+  background: color-mix(in oklch, var(--color-text) 6%, transparent);
+}
+
+.utilityTile:focus-visible {
+  outline: 2px solid var(--color-brand-bright);
+  outline-offset: 2px;
+}
+
+.accountPill {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  border: 1px solid var(--color-separator);
+  border-radius: 7px;
+  overflow: hidden;
+  transition: filter 0.15s ease, background 0.15s ease;
+}
+
+.accountPill:hover {
+  filter: brightness(1.04);
 }
 
 .logoutForm {
-  flex: 1;
-  min-width: 0;
   display: flex;
+  flex: 0 0 auto;
 }
 
 .logoutBtn {
-  display: flex;
+  display: inline-flex;
+  width: 34px;
+  height: 100%;
   align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-  height: 32px;
-  padding: 0 10px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-text-muted);
+  justify-content: center;
+  padding: 0;
+  color: inherit;
+  opacity: 0.6;
   background: transparent;
-  border: 1px solid var(--color-separator-mid);
+  border: none;
+  border-left: 1px solid color-mix(in oklch, currentColor 20%, transparent);
   cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-  white-space: nowrap;
-  overflow: hidden;
+  transition: opacity 0.15s ease, background 0.15s ease;
 }
 
 .logoutBtn:hover {
-  color: var(--color-danger);
-  background: color-mix(in oklch, var(--color-danger) 8%, transparent);
-  border-color: color-mix(in oklch, var(--color-danger) 30%, transparent);
+  opacity: 1;
+  background: color-mix(in oklch, currentColor 10%, transparent);
 }
 
-/*
-  Email row — sits at the very bottom of the footer.
-  Mirrors AI Studio’s email label.
-*/
-.emailRow {
+.profileLink {
   display: flex;
+  flex: 1;
   align-items: center;
-  padding: 4px 4px 0;
+  gap: 7px;
   min-width: 0;
-  overflow: hidden;
+  padding: 3px 8px 3px 4px;
+  min-height: 34px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease;
 }
 
-.emailText {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: var(--color-text-muted);
+.profileLink:hover {
+  background: color-mix(in oklch, currentColor 5%, transparent);
+}
+
+.profileInitial {
+  display: grid;
+  flex: 0 0 auto;
+  min-width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.14);
+  color: currentColor;
+  padding: 0 4px;
+  font-size: 0.625rem;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+}
+
+.profileDetails {
+  display: flex;
   min-width: 0;
   flex: 1;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.profileName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 650;
+  opacity: 0.9;
+}
+
+.collapsed .footerActions {
+  align-items: center;
+}
+
+.collapsed .contributeStrip {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  justify-self: center;
+}
+
+.collapsed .contributeStrip span {
+  display: none;
+}
+
+.collapsed .utilityRow {
+  grid-template-columns: 1fr;
+  width: 36px;
+  justify-self: center;
+}
+
+.collapsed .accountPill {
+  flex-direction: column;
+}
+
+.collapsed .profileLink {
+  width: 34px;
+  flex: 0 0 34px;
+  justify-content: center;
+  padding: 3px;
+}
+
+.collapsed .logoutBtn {
+  width: 100%;
+  height: 34px;
+  border-left: none;
+  border-top: 1px solid color-mix(in oklch, currentColor 20%, transparent);
 }
 
 @media (max-width: 1023px) {
@@ -338,9 +417,7 @@
 
   .sidebar.collapsed .brandText,
   .sidebar.collapsed .navText,
-  .sidebar.collapsed .viewSiteText,
-  .sidebar.collapsed .logoutText,
-  .sidebar.collapsed .emailText {
+  .sidebar.collapsed .profileDetails {
     width: auto;
     opacity: 1;
     overflow: visible;
@@ -350,15 +427,51 @@
     padding-inline: 12px;
   }
 
-  .sidebar.collapsed .navLink,
-  .sidebar.collapsed .viewSiteLink,
-  .sidebar.collapsed .logoutBtn {
+  .sidebar.collapsed .navLink {
     justify-content: flex-start;
     padding-inline: 12px;
   }
 
   .sidebar.collapsed .footer {
     padding-inline: 12px;
+  }
+
+  .sidebar.collapsed .footerActions {
+    align-items: stretch;
+  }
+
+  .sidebar.collapsed .contributeStrip {
+    width: 100%;
+    height: 40px;
+    padding: 0 8px;
+    gap: 8px;
+  }
+
+  .sidebar.collapsed .contributeStrip span {
+    display: inline;
+  }
+
+  .sidebar.collapsed .utilityRow {
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .sidebar.collapsed .accountPill {
+    flex-direction: row;
+  }
+
+  .sidebar.collapsed .profileLink {
+    width: auto;
+    flex: 1;
+    justify-content: flex-start;
+    padding: 8px;
+  }
+
+  .sidebar.collapsed .logoutBtn {
+    width: 34px;
+    height: 100%;
+    border-top: none;
+    border-left: 1px solid color-mix(in oklch, currentColor 20%, transparent);
   }
 
   .collapseButton {

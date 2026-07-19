@@ -12,6 +12,7 @@ import {
   ChevronDown,
   FileText,
   LayoutDashboard,
+  LogOut,
   PanelLeftClose,
   PanelLeftOpen,
   Search,
@@ -22,6 +23,7 @@ import Link from "next/link";
 import type { UserRole } from "@/lib/auth/auth-contract";
 import { getPostAuthDestination } from "@/lib/auth/auth-routing";
 import { getRoleDisplay } from "@/lib/auth/role-display";
+import { logoutAction } from "@/lib/auth/actions";
 import { AuthInterceptModal } from "@/app/(auth)/_components/auth-intercept-modal";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import styles from "./filter-sidebar.module.css";
@@ -190,17 +192,6 @@ export default function FilterSidebar({
             )}
           </button>
         )}
-        {isPrivileged && (
-          <Link
-            href={getPostAuthDestination(role ?? undefined)}
-            className={styles.workspaceAction}
-            aria-label="Open dashboard"
-            title="Dashboard"
-          >
-            <LayoutDashboard size={15} aria-hidden />
-            <span className={styles.workspaceLabel}>Dashboard</span>
-          </Link>
-        )}
       </nav>
 
       <div className={styles.body} aria-hidden={isCollapsed ? true : undefined}>
@@ -232,7 +223,7 @@ export default function FilterSidebar({
 
           <div>
             <label className={styles.filterHeading} htmlFor="academic-unit">
-              School
+              Department
             </label>
             <select
               id="academic-unit"
@@ -347,14 +338,40 @@ export default function FilterSidebar({
       </div>
 
       <footer className={styles.accountArea}>
-        <div className={styles.accountActions}>
-          <ThemeToggle />
-          {!role ? (
+        {isPrivileged ? (
+          <div className={styles.staffFooterActions}>
+            {/* Row 1: Contribute — full width */}
+            <Link
+              href="/upload"
+              className={styles.contributeStrip}
+              aria-label="Contribute a thesis"
+              title="Contribute"
+            >
+              <Upload size={16} aria-hidden />
+              <span>Contribute</span>
+            </Link>
+            {/* Row 2: Theme toggle + Dashboard nav */}
+            <div className={styles.utilityRow}>
+              <ThemeToggle presentation="strip" />
+              <Link
+                href={getPostAuthDestination(role ?? undefined)}
+                className={styles.utilityTile}
+                aria-label="Open dashboard"
+                title="Dashboard"
+              >
+                <LayoutDashboard size={16} aria-hidden />
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.accountActions}>
+            <ThemeToggle />
+            {!role ? (
             <AuthInterceptModal
               iconOnly={isCollapsed}
               triggerClassName={styles.contributeButton}
             />
-          ) : !isPrivileged ? (
+            ) : (
             <Link
               href="/upload"
               className={
@@ -368,20 +385,47 @@ export default function FilterSidebar({
               <Upload size={14} aria-hidden />
               {!isCollapsed && <span>Contribute</span>}
             </Link>
-          ) : null}
-        </div>
+            )}
+          </div>
+        )}
 
-        <Link
-          href={role ? "/profile" : "/login"}
-          className={cn(styles.accountLink, display.className)}
-          aria-label={role ? `Open profile for ${accountName}` : "Sign in"}
-          title={accountName}
-        >
-          <span className={styles.roleMarker} aria-hidden>
-            {display.abbreviation}
-          </span>
-          <span className={styles.accountName}>{accountName}</span>
-        </Link>
+        {role ? (
+          <div className={cn(styles.accountPill, display.className)}>
+            <Link
+              href="/profile"
+              className={styles.accountLink}
+              aria-label={`Open profile for ${accountName}`}
+              title={accountName}
+            >
+              <span className={styles.roleMarker} aria-hidden>
+                {display.abbreviation}
+              </span>
+              <span className={styles.accountName}>{accountName}</span>
+            </Link>
+            <form action={logoutAction} className={styles.logoutForm}>
+              <button
+                type="submit"
+                className={styles.logoutBtn}
+                aria-label="Log out"
+                title="Log Out"
+              >
+                <LogOut size={14} aria-hidden />
+              </button>
+            </form>
+          </div>
+        ) : (
+          <Link
+            href="/login"
+            className={cn(styles.accountPill, styles.accountLink, display.className)}
+            aria-label="Sign in"
+            title="Sign In"
+          >
+            <span className={styles.roleMarker} aria-hidden>
+              {display.abbreviation}
+            </span>
+            <span className={styles.accountName}>{accountName}</span>
+          </Link>
+        )}
       </footer>
     </aside>
   );

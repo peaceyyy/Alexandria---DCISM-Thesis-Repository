@@ -7,14 +7,14 @@
  * Right cluster behaviour by role:
  *   • Guest   → role pill (→ /login)  |  separator  |  "Sign In" (intercept modal)
  *   • Member  → role pill (→ /profile) |  separator  |  "Contribute" (→ /upload)
- *   • Mod     → role pill  +  "Dashboard →"  (no Contribute — mods don't submit)
- *   • Admin   → role pill  +  "Dashboard →"  (no Contribute — admins don't submit)
+ *   • Mod     → role pill + "Dashboard →" | "Contribute"
+ *   • Admin   → role pill + "Dashboard →" | "Contribute"
  *
  * The home search is submitted through the existing server-side repository query.
  */
 import Image from "next/image";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { FilePlus2, Search } from "lucide-react";
 import type { UserRole } from "@/lib/auth/auth-contract";
 import { AuthInterceptModal } from "@/app/(auth)/_components/auth-intercept-modal";
 import { RoleIndicator } from "@/app/(auth)/_components/role-indicator";
@@ -32,8 +32,6 @@ export function AppHeader({
   isMySubmissions = false,
 }: AppHeaderProps) {
   const isGuest = !role;
-  const isPrivileged = role === "admin" || role === "moderator";
-
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b border-[var(--color-separator)] bg-[var(--color-bg)]/95 px-6 backdrop-blur-md sm:px-10">
 
@@ -88,22 +86,22 @@ export function AppHeader({
         <RoleIndicator role={role} />
 
         {/* Separator — only between role chip and a CTA pill */}
-        {!isPrivileged && (
+        {role && (
           <span className="h-5 w-px bg-[var(--color-separator)]" aria-hidden="true" />
         )}
 
         {/* Primary CTA — contextual by role */}
         {isGuest && <AuthInterceptModal />}
 
-        {!isGuest && !isPrivileged && (
+        {!isGuest && (
           <Link
             href="/upload"
-            className="inline-flex h-9 items-center justify-center rounded-full bg-[#368bfe] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#2f78ff] active:bg-[#1752f0]"
+            className="inline-flex h-9 items-center gap-2 justify-center rounded-full bg-[#368bfe] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#2f78ff] active:bg-[#1752f0]"
           >
+            <FilePlus2 size={15} aria-hidden />
             Contribute
           </Link>
         )}
-        {/* Privileged users: Dashboard → is already rendered inside RoleIndicator */}
 
         {/* Theme toggle — always last in the right cluster */}
         <ThemeToggle />

@@ -6,6 +6,7 @@ import {
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
+  Upload,
   X,
   Users,
   type LucideIcon,
@@ -17,6 +18,8 @@ import styles from "./admin-sidebar.module.css";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { logoutAction } from "@/lib/auth/actions";
 import type { UserRole } from "@/lib/auth/auth-contract";
+import { getRoleDisplay } from "@/lib/auth/role-display";
+import { cn } from "@/lib/utils";
 
 type NavLink = {
   href: string;
@@ -43,6 +46,7 @@ const NAV_LINKS: NavLink[] = [
 export function AdminSidebar({
   role,
   email,
+  profileName,
   isCollapsed,
   isMobileOpen,
   isNarrowViewport,
@@ -52,6 +56,7 @@ export function AdminSidebar({
 }: {
   role: UserRole;
   email: string;
+  profileName: string;
   isCollapsed: boolean;
   isMobileOpen: boolean;
   isNarrowViewport: boolean;
@@ -60,6 +65,7 @@ export function AdminSidebar({
   onNavigate: () => void;
 }) {
   const pathname = usePathname();
+  const display = getRoleDisplay(role);
 
   return (
     <aside
@@ -87,6 +93,7 @@ export function AdminSidebar({
         />
         <span className={styles.brandText}>ALEXANDRIA</span>
       </Link>
+
       <button
         type="button"
         className={styles.collapseButton}
@@ -102,6 +109,7 @@ export function AdminSidebar({
           <PanelLeftClose size={17} aria-hidden />
         )}
       </button>
+
       <button
         type="button"
         className={styles.mobileCloseButton}
@@ -138,23 +146,51 @@ export function AdminSidebar({
         </ul>
       </nav>
 
-      {/* ── Footer: icon row + email (AI Studio pattern) ── */}
+      {/* ── Footer: contribute + utility strip + account identity ── */}
       <div className={styles.footer}>
-        {/* Browse Repository */}
-        <Link
-          href="/home"
-          className={styles.viewSiteLink}
-          aria-label="Browse the public thesis repository"
-          title={isCollapsed ? "Browse Repository" : undefined}
-          onClick={onNavigate}
-        >
-          <Book size={14} aria-hidden />
-          <span className={styles.viewSiteText}>Browse Repository</span>
-        </Link>
+        <div className={styles.footerActions}>
+          {/* Row 1: Contribute — full width */}
+          <Link
+            href="/upload"
+            className={styles.contributeStrip}
+            aria-label="Contribute a thesis"
+            title="Contribute"
+            onClick={onNavigate}
+          >
+            <Upload size={16} aria-hidden />
+            <span>Contribute</span>
+          </Link>
 
-        {/* Icon row: ThemeToggle + Logout */}
-        <div className={styles.footerIconRow}>
-          <ThemeToggle />
+          {/* Row 2: Theme toggle + Browse nav */}
+          <div className={styles.utilityRow}>
+            <ThemeToggle presentation="strip" />
+            <Link
+              href="/home"
+              className={styles.utilityTile}
+              aria-label="Browse repository"
+              title="Browse repository"
+              onClick={onNavigate}
+            >
+              <Book size={16} aria-hidden />
+            </Link>
+          </div>
+        </div>
+
+        <div className={cn(styles.accountPill, display.className)}>
+          <Link
+            href="/profile"
+            className={styles.profileLink}
+            aria-label="Open your profile"
+            title="Open profile"
+            onClick={onNavigate}
+          >
+            <span className={styles.profileInitial} aria-hidden>
+              {display.abbreviation}
+            </span>
+            <span className={styles.profileDetails}>
+              <span className={styles.profileName}>{profileName}</span>
+            </span>
+          </Link>
           <form action={logoutAction} className={styles.logoutForm}>
             <button
               type="submit"
@@ -162,15 +198,9 @@ export function AdminSidebar({
               aria-label="Log out"
               title="Log Out"
             >
-              <LogOut size={15} aria-hidden />
-              <span className={styles.logoutText}>Log Out</span>
+              <LogOut size={16} aria-hidden />
             </button>
           </form>
-        </div>
-
-        {/* Email row — always at very bottom, mirrors AI Studio */}
-        <div className={styles.emailRow}>
-          <span className={styles.emailText}>{email}</span>
         </div>
       </div>
     </aside>
