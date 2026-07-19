@@ -532,7 +532,10 @@ async function loadUserNames(userIds: string[]) {
   );
 }
 
-async function loadThesisBundle(thesisId: number): Promise<{
+async function loadThesisBundle(
+  thesisId: number,
+  expectedOwnerId?: string,
+): Promise<{
   thesis: ThesisRow;
   authors: AuthorRow[];
   tags: TagRow[];
@@ -541,7 +544,7 @@ async function loadThesisBundle(thesisId: number): Promise<{
   audits: AuditRow[];
 }> {
   const supabase = await createClient();
-  const { data: thesis, error: thesisError } = await supabase
+  const thesisQuery = supabase
     .from("theses")
     .select(`
       id,
@@ -561,8 +564,12 @@ async function loadThesisBundle(thesisId: number): Promise<{
       updated_at,
       study_type
     `)
-    .eq("id", thesisId)
-    .single();
+    .eq("id", thesisId);
+  const { data: thesis, error: thesisError } = expectedOwnerId
+    ? await thesisQuery
+        .eq("submitted_by_user_id", expectedOwnerId)
+        .single()
+    : await thesisQuery.single();
 
   if (thesisError || !thesis) {
     throw makeError("NOT_FOUND", "Thesis not found.");
@@ -573,6 +580,7 @@ async function loadThesisBundle(thesisId: number): Promise<{
     tagsResult,
     filesResult,
     commentsResult,
+    initialAuditsResult,
   ] = await Promise.all([
     supabase
       .from("thesis_authors")
@@ -608,14 +616,15 @@ async function loadThesisBundle(thesisId: number): Promise<{
       .eq("thesis_id", thesisId)
       .order("created_at", { ascending: true })
       .order("id", { ascending: true }),
+    supabase
+      .from("thesis_audits")
+      .select("id, thesis_id, changed_by_user_id, event, change_description, updated_at")
+      .eq("thesis_id", thesisId)
+      .order("updated_at", { ascending: false })
+      .order("id", { ascending: false }),
   ]);
 
-  let auditsResult = await supabase
-    .from("thesis_audits")
-    .select("id, thesis_id, changed_by_user_id, event, change_description, updated_at")
-    .eq("thesis_id", thesisId)
-    .order("updated_at", { ascending: false })
-    .order("id", { ascending: false });
+  let auditsResult = initialAuditsResult;
 
   if (isMissingAuditEventColumn(auditsResult.error)) {
     const fallbackAuditsResult = await supabase
@@ -662,8 +671,11 @@ async function loadThesisBundle(thesisId: number): Promise<{
   };
 }
 
-async function loadReviewSubmission(thesisId: number): Promise<ReviewSubmission> {
-  const bundle = await loadThesisBundle(thesisId);
+async function loadReviewSubmission(
+  thesisId: number,
+  expectedOwnerId?: string,
+): Promise<ReviewSubmission> {
+  const bundle = await loadThesisBundle(thesisId, expectedOwnerId);
   const userNames = await loadUserNames([
     ...bundle.comments.map((comment) => comment.created_by_user_id),
     ...bundle.audits.map((audit) => audit.changed_by_user_id),
@@ -1192,9 +1204,7 @@ export async function getOwnSubmissionForCorrection(
     if (user.role !== "member") {
       return err(makeError("FORBIDDEN", "An active member account is required."));
     }
-    await requireOwnership(thesisId, user.id);
-
-    return ok(await loadReviewSubmission(thesisId));
+    return ok(await loadReviewSubmission(thesisId, user.id));
   } catch (error) {
     return err(
       normalizeServiceError(error, "Your submission could not be loaded."),

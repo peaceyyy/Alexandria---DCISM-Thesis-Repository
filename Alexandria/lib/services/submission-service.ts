@@ -149,7 +149,8 @@ export async function getOwnSubmissions(): Promise<ServiceResult<ThesisDetail[]>
 
 /**
  * Server action: submitThesis(FormData)
- * Creates a new thesis record with review_status = 'for_review'.
+ * Creates a member thesis record with review_status = 'for_review', or lets
+ * active staff publish the same validated packet directly as accepted.
  * Authenticates before uploading and submits metadata plus file as one packet.
  * Removes the uploaded storage object if the database RPC fails.
  * Inserts authors and advisers into thesis_authors.
@@ -157,7 +158,7 @@ export async function getOwnSubmissions(): Promise<ServiceResult<ThesisDetail[]>
  */
 export async function submitThesis(
   submissionPacket: FormData,
-): Promise<ServiceResult<{ id: number }>> {
+): Promise<ServiceResult<{ id: number; reviewStatus: "for_review" | "accepted" }>> {
   try {
     const user = await requireSession();
     const supabase = await createClient();
@@ -255,9 +256,14 @@ export async function submitThesis(
       file_type: THESIS_PDF_MIME_TYPE,
     };
 
-    // The related database inserts remain atomic inside the RPC.
+    const isStaffPublisher = user.role === "admin" || user.role === "moderator";
+
+    // The related database inserts remain atomic inside the RPC. Members retain
+    // the existing review path; staff use the dedicated direct-publish wrapper.
     const { data: thesisId, error: rpcError } = await supabase.rpc(
-      "submit_thesis_transaction",
+      isStaffPublisher
+        ? "publish_staff_thesis_transaction"
+        : "submit_thesis_transaction",
       {
         payload,
       }
@@ -274,7 +280,10 @@ export async function submitThesis(
       );
     }
 
-    return ok({ id: thesisId });
+    return ok({
+      id: Number(thesisId),
+      reviewStatus: isStaffPublisher ? "accepted" : "for_review",
+    });
   } catch (e: any) {
     return err(e);
   }

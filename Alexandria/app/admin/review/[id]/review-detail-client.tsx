@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
 import {
   ArrowLeft,
@@ -9,8 +10,10 @@ import {
   Download,
   ExternalLink,
   FileText,
+  LoaderCircle,
+  Save,
 } from "lucide-react";
-import { AdminMetadataEditorDialog } from "@/components/review/admin-metadata-editor-dialog";
+import { DEPARTMENTS } from "@/lib/domain/departments";
 import { ReviewableField } from "@/components/review/reviewable-field";
 import {
   ReviewDecisionActions,
@@ -22,8 +25,10 @@ import { useToast } from "@/components/ui/toast-provider";
 import {
   getResearchAreaLabel,
   parseResearchAreaIds,
+  serializeResearchAreaIds,
+  type ResearchAreaId,
 } from "@/lib/domain/research-areas";
-import { parseLessonEntries } from "@/lib/domain/lessons";
+import { parseLessonEntries, serializeLessonEntries } from "@/lib/domain/lessons";
 import type { ReviewFieldKey } from "@/components/review/types";
 import {
   addReviewComment,
@@ -38,6 +43,43 @@ import type {
   UserRole,
 } from "@/lib/services/types";
 
+const DatePicker = dynamic(
+  () => import("@/app/upload/_components/date-picker").then((module) => module.DatePicker),
+  {
+    ssr: false,
+    loading: () => <DirectEditorLoading label="date picker" />,
+  },
+);
+const LessonsModal = dynamic(
+  () => import("@/app/upload/_components/lessons-modal").then((module) => module.LessonsModal),
+  {
+    ssr: false,
+    loading: () => <DirectEditorLoading label="lessons editor" />,
+  },
+);
+const ModalEditor = dynamic(
+  () => import("@/app/upload/_components/modal-editor").then((module) => module.ModalEditor),
+  {
+    ssr: false,
+    loading: () => <DirectEditorLoading label="text editor" />,
+  },
+);
+const ResearchAreaMultiSelect = dynamic(
+  () => import("@/components/research/research-area-multi-select").then((module) => module.ResearchAreaMultiSelect),
+  {
+    ssr: false,
+    loading: () => <DirectEditorLoading label="research-area selector" />,
+  },
+);
+
+function DirectEditorLoading({ label }: { label: string }) {
+  return (
+    <div className="flex min-h-[42px] items-center rounded-md border border-[var(--color-separator)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-muted)]">
+      Loading {label}…
+    </div>
+  );
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatDate(iso: string): string {
@@ -46,6 +88,57 @@ function formatDate(iso: string): string {
     day: "numeric",
     year: "numeric",
   });
+}
+
+type AdminMetadataDraft = {
+  title: string;
+  department: string;
+  studyType: "thesis" | "capstone";
+  publicationDate: string;
+  publicationLink: string;
+  conference: string;
+  researchAreaIds: ResearchAreaId[];
+  tags: string;
+  abstract: string;
+  recommendations: string;
+  lessonsLearned: string;
+};
+
+function createAdminMetadataDraft(
+  submission: ReviewSubmission,
+): AdminMetadataDraft {
+  return {
+    title: submission.title,
+    department: submission.department,
+    studyType: submission.studyType,
+    publicationDate: submission.publicationDate,
+    publicationLink: submission.publicationLink ?? "",
+    conference: submission.conference ?? "",
+    researchAreaIds: parseResearchAreaIds(submission.researchArea),
+    tags: submission.tags.join(", "),
+    abstract: submission.abstract,
+    recommendations: submission.recommendations ?? "",
+    lessonsLearned: submission.lessonsLearned ?? "",
+  };
+}
+
+function toAdminMetadataValues(draft: AdminMetadataDraft): Partial<SubmitThesisInput> {
+  return {
+    title: draft.title.trim(),
+    department: draft.department,
+    study_type: draft.studyType,
+    publication_date: draft.publicationDate,
+    publication_link: draft.publicationLink.trim(),
+    conference: draft.conference.trim(),
+    research_area: serializeResearchAreaIds(draft.researchAreaIds),
+    tags: draft.tags
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter(Boolean),
+    abstract: draft.abstract.trim(),
+    recommendations: draft.recommendations.trim(),
+    lessons_learned: draft.lessonsLearned.trim(),
+  };
 }
 
 function getDecisionToast(
@@ -155,8 +248,12 @@ export function ReviewDetailClient({
   const [activeCommentField, setActiveCommentField] =
     useState<ReviewFieldKey | null>(null);
   const [commentAnchorY, setCommentAnchorY] = useState(120);
-  const [isAdminMetadataEditorOpen, setIsAdminMetadataEditorOpen] =
-    useState(false);
+  const [isAdminDirectEditing, setIsAdminDirectEditing] = useState(false);
+  const [adminDraft, setAdminDraft] = useState(() =>
+    createAdminMetadataDraft(initialSubmission),
+  );
+  const [adminCorrectionReason, setAdminCorrectionReason] = useState("");
+  const [showDiscardDirectEdit, setShowDiscardDirectEdit] = useState(false);
 
   const handleAddComment = useCallback(
     async (fieldKey: ReviewFieldKey, comment: string) => {
@@ -281,6 +378,77 @@ export function ReviewDetailClient({
     [showToast, submission.id],
   );
 
+  const updateAdminDraft = <Key extends keyof AdminMetadataDraft>(
+    key: Key,
+    value: AdminMetadataDraft[Key],
+  ) => {
+    setAdminDraft((current) => ({ ...current, [key]: value }));
+  };
+
+  const beginAdminDirectEdit = () => {
+    if (viewerRole !== "admin" || submission.reviewStatus === "trashed") return;
+
+    setAdminDraft(createAdminMetadataDraft(submission));
+    setAdminCorrectionReason("");
+    setShowDiscardDirectEdit(false);
+    setActionError(null);
+    setIsAdminDirectEditing(true);
+  };
+
+  const hasAdminDraftChanges =
+    JSON.stringify(adminDraft) !==
+      JSON.stringify(createAdminMetadataDraft(submission)) ||
+    adminCorrectionReason.trim().length > 0;
+
+  const requestExitAdminDirectEdit = () => {
+    if (hasAdminDraftChanges) {
+      setShowDiscardDirectEdit(true);
+      return;
+    }
+
+    setIsAdminDirectEditing(false);
+  };
+
+  const discardAdminDirectEdit = () => {
+    setAdminDraft(createAdminMetadataDraft(submission));
+    setAdminCorrectionReason("");
+    setShowDiscardDirectEdit(false);
+    setIsAdminDirectEditing(false);
+  };
+
+  const handleAdminDirectSave = async () => {
+    const values = toAdminMetadataValues(adminDraft);
+
+    if (!values.title?.trim() || !values.abstract?.trim()) {
+      setActionError("Title and abstract are required before saving.");
+      return;
+    }
+
+    if (!values.tags?.length) {
+      setActionError("Add at least one tag before saving.");
+      return;
+    }
+
+    if (!adminCorrectionReason.trim()) {
+      setActionError("Add a correction reason for the audit trail.");
+      return;
+    }
+
+    const saveError = await handleAdminMetadataSave({
+      values,
+      correctionReason: adminCorrectionReason,
+    });
+
+    if (saveError) {
+      setActionError(saveError);
+      return;
+    }
+
+    setAdminCorrectionReason("");
+    setShowDiscardDirectEdit(false);
+    setIsAdminDirectEditing(false);
+  };
+
   // ── Helper: get comments for a specific field ────────────────────────────────
   const fieldComments = useCallback(
     (key: ReviewFieldKey) =>
@@ -315,15 +483,6 @@ export function ReviewDetailClient({
         padding: "32px 32px 64px",
       }}
     >
-      {viewerRole === "admin" && (
-        <AdminMetadataEditorDialog
-          submission={submission}
-          open={isAdminMetadataEditorOpen}
-          onOpenChange={setIsAdminMetadataEditorOpen}
-          onSave={handleAdminMetadataSave}
-        />
-      )}
-
       {/* ── Two-column layout ─────────────────────────────────────────────── */}
       {actionError && (
         <div
@@ -452,7 +611,13 @@ export function ReviewDetailClient({
                 role={viewerRole}
                 onDecision={handleDecision}
                 isSubmitting={isActionPending}
-                onAdminEdit={() => setIsAdminMetadataEditorOpen(true)}
+                onAdminDirectEdit={
+                  isAdminDirectEditing
+                    ? requestExitAdminDirectEdit
+                    : beginAdminDirectEdit
+                }
+                isAdminDirectEditing={isAdminDirectEditing}
+                isMetadataEditActive={isAdminDirectEditing}
               />
 
               <div
@@ -571,17 +736,26 @@ export function ReviewDetailClient({
                 onCommentIconClick={handleCommentIconClick}
                 className="min-w-0"
               >
-                <h1
-                  style={{
-                    margin: "4px 0 8px",
-                    fontSize: 22,
-                    fontWeight: 700,
-                    color: "var(--color-text)",
-                    lineHeight: 1.35,
-                  }}
-                >
-                  {submission.title}
-                </h1>
+                {isAdminDirectEditing ? (
+                  <input
+                    value={adminDraft.title}
+                    onChange={(event) => updateAdminDraft("title", event.target.value)}
+                    aria-label="Title"
+                    className="mt-1 w-full rounded-md border border-[var(--color-separator-mid)] bg-[var(--color-surface)] px-3 py-2 text-[22px] font-bold leading-[1.35] text-[var(--color-text)] outline-none transition-colors focus:border-[var(--color-brand-bright)]/60"
+                  />
+                ) : (
+                  <h1
+                    style={{
+                      margin: "4px 0 8px",
+                      fontSize: 22,
+                      fontWeight: 700,
+                      color: "var(--color-text)",
+                      lineHeight: 1.35,
+                    }}
+                  >
+                    {submission.title}
+                  </h1>
+                )}
               </ReviewableField>
               <p
                 style={{
@@ -591,11 +765,80 @@ export function ReviewDetailClient({
                   lineHeight: 1.5,
                 }}
               >
-                {submission.studyType === "thesis" ? "Thesis" : "Capstone"} ·{" "}
-                {submission.department} · Submitted{" "}
+                {(isAdminDirectEditing ? adminDraft.studyType : submission.studyType) === "thesis" ? "Thesis" : "Capstone"} ·{" "}
+                {isAdminDirectEditing ? adminDraft.department : submission.department} · Submitted{" "}
                 {formatDate(submission.submittedAt)}
               </p>
             </div>
+
+            {isAdminDirectEditing && (
+              <section
+                aria-label="Direct metadata editing controls"
+                className="mb-5 grid gap-4 rounded-md border border-[var(--color-brand-bright)]/25 bg-[var(--color-brand)]/5 p-4"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--color-text)]">Direct edit mode</p>
+                    <p className="mt-1 text-sm leading-6 text-[var(--color-text-muted)]">
+                      You are editing the submission in place. Saving keeps its current review status and records a before-and-after audit entry.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={requestExitAdminDirectEdit}
+                      disabled={isActionPending}
+                      className="min-h-10 rounded-md border border-[var(--color-separator-mid)] bg-[var(--color-surface)] px-4 text-sm font-semibold text-[var(--color-text)] transition-colors hover:bg-[var(--color-bg)] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAdminDirectSave}
+                      disabled={isActionPending}
+                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[var(--color-brand)] px-4 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-brand-bright)] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {isActionPending ? <LoaderCircle className="animate-spin" size={14} aria-hidden /> : <Save size={14} aria-hidden />}
+                      Save Metadata
+                    </button>
+                  </div>
+                </div>
+
+                <label className="grid gap-2 text-sm font-medium text-[var(--color-text)]">
+                  Audit reason
+                  <textarea
+                    value={adminCorrectionReason}
+                    onChange={(event) => setAdminCorrectionReason(event.target.value)}
+                    maxLength={500}
+                    rows={3}
+                    placeholder="Explain why this direct correction is needed. This will appear in the activity history."
+                    className="w-full resize-y rounded-md border border-[var(--color-separator-mid)] bg-[var(--color-surface)] px-3 py-2 text-sm leading-6 text-[var(--color-text)] outline-none transition-colors placeholder:text-[var(--color-placeholder)] focus:border-[var(--color-brand-bright)]/60"
+                  />
+                </label>
+
+                {showDiscardDirectEdit && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[var(--color-chip-red-bd)] bg-[var(--color-chip-red-bg)] px-3 py-2.5">
+                    <p className="text-sm text-[var(--color-chip-red-text)]">Discard your unsaved metadata edits?</p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowDiscardDirectEdit(false)}
+                        className="rounded-md border border-[var(--color-separator-mid)] bg-[var(--color-surface)] px-3 py-1.5 text-sm font-semibold text-[var(--color-text)]"
+                      >
+                        Keep editing
+                      </button>
+                      <button
+                        type="button"
+                        onClick={discardAdminDirectEdit}
+                        className="rounded-md border border-[var(--color-chip-red-bd)] px-3 py-1.5 text-sm font-semibold text-[var(--color-chip-red-text)]"
+                      >
+                        Discard changes
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
 
             {/* Fields — flat grid matching member page order */}
             <div style={{ display: "grid", gap: 10 }}>
@@ -615,9 +858,17 @@ export function ReviewDetailClient({
                   isActive={activeCommentField === "department"}
                   onCommentIconClick={handleCommentIconClick}
                 >
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>
-                    {submission.department}
-                  </p>
+                  {isAdminDirectEditing ? (
+                    <select
+                      value={adminDraft.department}
+                      onChange={(event) => updateAdminDraft("department", event.target.value)}
+                      className="min-h-[42px] w-full rounded-md border border-[var(--color-separator-mid)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] outline-none focus:border-[var(--color-brand-bright)]/60"
+                    >
+                      {DEPARTMENTS.map((department) => <option key={department} value={department}>{department}</option>)}
+                    </select>
+                  ) : (
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>{submission.department}</p>
+                  )}
                 </ReviewableField>
 
                 <ReviewableField
@@ -627,9 +878,18 @@ export function ReviewDetailClient({
                   isActive={activeCommentField === "study_type"}
                   onCommentIconClick={handleCommentIconClick}
                 >
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>
-                    {submission.studyType === "thesis" ? "Thesis" : "Capstone"}
-                  </p>
+                  {isAdminDirectEditing ? (
+                    <select
+                      value={adminDraft.studyType}
+                      onChange={(event) => updateAdminDraft("studyType", event.target.value as AdminMetadataDraft["studyType"])}
+                      className="min-h-[42px] w-full rounded-md border border-[var(--color-separator-mid)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] outline-none focus:border-[var(--color-brand-bright)]/60"
+                    >
+                      <option value="thesis">Thesis</option>
+                      <option value="capstone">Capstone</option>
+                    </select>
+                  ) : (
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>{submission.studyType === "thesis" ? "Thesis" : "Capstone"}</p>
+                  )}
                 </ReviewableField>
               </div>
 
@@ -648,9 +908,14 @@ export function ReviewDetailClient({
                   isActive={activeCommentField === "publication_date"}
                   onCommentIconClick={handleCommentIconClick}
                 >
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>
-                    {submission.publicationDate}
-                  </p>
+                  {isAdminDirectEditing ? (
+                    <DatePicker
+                      value={adminDraft.publicationDate}
+                      onChange={(value) => updateAdminDraft("publicationDate", value)}
+                    />
+                  ) : (
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>{submission.publicationDate}</p>
+                  )}
                 </ReviewableField>
 
                 <ReviewableField
@@ -660,9 +925,15 @@ export function ReviewDetailClient({
                   isActive={activeCommentField === "conference"}
                   onCommentIconClick={handleCommentIconClick}
                 >
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>
-                    {submission.conference ?? "Not provided"}
-                  </p>
+                  {isAdminDirectEditing ? (
+                    <input
+                      value={adminDraft.conference}
+                      onChange={(event) => updateAdminDraft("conference", event.target.value)}
+                      className="min-h-[42px] w-full rounded-md border border-[var(--color-separator-mid)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] outline-none focus:border-[var(--color-brand-bright)]/60"
+                    />
+                  ) : (
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--color-text)" }}>{submission.conference ?? "Not provided"}</p>
+                  )}
                 </ReviewableField>
               </div>
 
@@ -674,7 +945,15 @@ export function ReviewDetailClient({
                 isActive={activeCommentField === "publication_link"}
                 onCommentIconClick={handleCommentIconClick}
               >
-                {submission.publicationLink ? (
+                {isAdminDirectEditing ? (
+                  <input
+                    type="url"
+                    value={adminDraft.publicationLink}
+                    onChange={(event) => updateAdminDraft("publicationLink", event.target.value)}
+                    placeholder="https://"
+                    className="min-h-[42px] w-full rounded-md border border-[var(--color-separator-mid)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-placeholder)] focus:border-[var(--color-brand-bright)]/60"
+                  />
+                ) : submission.publicationLink ? (
                   <a
                     href={submission.publicationLink}
                     target="_blank"
@@ -745,8 +1024,13 @@ export function ReviewDetailClient({
                   comments={fieldComments("research_area")}
                   isActive={activeCommentField === "research_area"}
                   onCommentIconClick={handleCommentIconClick}
-                >
-                  {parseResearchAreaIds(submission.researchArea).length > 0 ? (
+              >
+                  {isAdminDirectEditing ? (
+                    <ResearchAreaMultiSelect
+                      value={adminDraft.researchAreaIds}
+                      onChange={(value) => updateAdminDraft("researchAreaIds", value)}
+                    />
+                  ) : parseResearchAreaIds(submission.researchArea).length > 0 ? (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                       {parseResearchAreaIds(submission.researchArea).map((area) => (
                         <Chip
@@ -767,8 +1051,15 @@ export function ReviewDetailClient({
                   comments={fieldComments("tags")}
                   isActive={activeCommentField === "tags"}
                   onCommentIconClick={handleCommentIconClick}
-                >
-                  {submission.tags.length > 0 ? (
+              >
+                  {isAdminDirectEditing ? (
+                    <input
+                      value={adminDraft.tags}
+                      onChange={(event) => updateAdminDraft("tags", event.target.value)}
+                      placeholder="Comma-separated tags"
+                      className="min-h-[42px] w-full rounded-md border border-[var(--color-separator-mid)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-placeholder)] focus:border-[var(--color-brand-bright)]/60"
+                    />
+                  ) : submission.tags.length > 0 ? (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                       {submission.tags.map((tag) => (
                         <Chip key={tag} label={tag} variant="tag" />
@@ -789,11 +1080,20 @@ export function ReviewDetailClient({
                 comments={fieldComments("abstract")}
                 isActive={activeCommentField === "abstract"}
                 onCommentIconClick={handleCommentIconClick}
-                expandable
+                expandable={!isAdminDirectEditing}
               >
-                <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: "var(--color-text-muted)" }}>
-                  {submission.abstract}
-                </p>
+                {isAdminDirectEditing ? (
+                  <ModalEditor
+                    label="Abstract"
+                    value={adminDraft.abstract}
+                    onChange={(value) => updateAdminDraft("abstract", value)}
+                    placeholder="Write the study abstract..."
+                  />
+                ) : (
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: "var(--color-text-muted)" }}>
+                    {submission.abstract}
+                  </p>
+                )}
               </ReviewableField>
 
               {/* Recommendations */}
@@ -803,9 +1103,16 @@ export function ReviewDetailClient({
                 comments={fieldComments("recommendations")}
                 isActive={activeCommentField === "recommendations"}
                 onCommentIconClick={handleCommentIconClick}
-                expandable
+                expandable={!isAdminDirectEditing}
               >
-                {submission.recommendations ? (
+                {isAdminDirectEditing ? (
+                  <ModalEditor
+                    label="Recommendations"
+                    value={adminDraft.recommendations}
+                    onChange={(value) => updateAdminDraft("recommendations", value)}
+                    placeholder="Write recommendations for future researchers..."
+                  />
+                ) : submission.recommendations ? (
                   <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: "var(--color-text-muted)" }}>
                     {submission.recommendations}
                   </p>
@@ -823,9 +1130,16 @@ export function ReviewDetailClient({
                 comments={fieldComments("lessons_learned")}
                 isActive={activeCommentField === "lessons_learned"}
                 onCommentIconClick={handleCommentIconClick}
-                expandable
+                expandable={!isAdminDirectEditing}
               >
-                {submission.lessonsLearned ? (
+                {isAdminDirectEditing ? (
+                  <LessonsModal
+                    value={parseLessonEntries(adminDraft.lessonsLearned)}
+                    onChange={(entries) =>
+                      updateAdminDraft("lessonsLearned", serializeLessonEntries(entries))
+                    }
+                  />
+                ) : submission.lessonsLearned ? (
                   <ol
                     style={{
                       margin: 0,

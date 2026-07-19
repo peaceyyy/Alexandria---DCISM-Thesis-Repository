@@ -124,8 +124,12 @@ interface ReviewDecisionActionsProps {
   onDecision: (nextStatus: ReviewStatus) => void;
   /** Shown in a disabled state when an async action is in progress. */
   isSubmitting?: boolean;
-  /** Opens the admin-only metadata correction workspace. */
-  onAdminEdit?: () => void;
+  /** Toggles the administrator-only in-place metadata editor. */
+  onAdminDirectEdit?: () => void;
+  /** Whether the in-place metadata editor is currently active. */
+  isAdminDirectEditing?: boolean;
+  /** Prevents review-status changes while an in-place metadata draft is open. */
+  isMetadataEditActive?: boolean;
 }
 
 export function ReviewStatusIndicator({ status }: { status: ReviewStatus }) {
@@ -147,7 +151,9 @@ export function ReviewDecisionActions({
   role,
   onDecision,
   isSubmitting = false,
-  onAdminEdit,
+  onAdminDirectEdit,
+  isAdminDirectEditing = false,
+  isMetadataEditActive = false,
 }: ReviewDecisionActionsProps) {
   const [pendingDecision, setPendingDecision] = useState<ConfirmDecision | null>(null);
   const [trashConfirmationStep, setTrashConfirmationStep] = useState(1);
@@ -201,6 +207,7 @@ export function ReviewDecisionActions({
         ? <Flag size={13} aria-hidden />
         : <CheckCircle2 size={13} aria-hidden />;
   const alreadyDecided = status === "trashed";
+  const decisionDisabled = isSubmitting || isMetadataEditActive;
 
   return (
     <>
@@ -216,7 +223,7 @@ export function ReviewDecisionActions({
               type="button"
               className={styles.btnReview}
               onClick={() => openConfirmation("for_review")}
-              disabled={isSubmitting}
+              disabled={decisionDisabled}
               aria-label="Send submission back to review"
             >
               <RotateCcw size={14} aria-hidden />
@@ -227,7 +234,7 @@ export function ReviewDecisionActions({
                 type="button"
                 className={styles.btnTrash}
                 onClick={() => openConfirmation("trashed")}
-                disabled={isSubmitting}
+                disabled={decisionDisabled}
                 aria-label="Move submission to trash"
               >
                 <Trash2 size={14} aria-hidden />
@@ -245,7 +252,7 @@ export function ReviewDecisionActions({
                 type="button"
                 className={styles.btnReview}
                 onClick={() => openConfirmation("for_review")}
-                disabled={isSubmitting}
+                disabled={decisionDisabled}
                 aria-label="Restore submission to review"
               >
                 <RotateCcw size={14} aria-hidden />
@@ -264,7 +271,7 @@ export function ReviewDecisionActions({
                 type="button"
                 className={styles.btnTrash}
                 onClick={() => openConfirmation("trashed")}
-                disabled={isSubmitting}
+                disabled={decisionDisabled}
                 aria-label="Move submission to trash"
               >
                 <Trash2 size={14} aria-hidden />
@@ -279,7 +286,7 @@ export function ReviewDecisionActions({
               type="button"
               className={styles.btnAccept}
               onClick={() => openConfirmation("accepted")}
-              disabled={isSubmitting || !canAccept(status)}
+              disabled={decisionDisabled || !canAccept(status)}
               aria-label="Approve this submission"
             >
               <CheckCircle2 size={15} aria-hidden />
@@ -291,7 +298,7 @@ export function ReviewDecisionActions({
               type="button"
               className={styles.btnFlag}
               onClick={() => openConfirmation("flagged")}
-              disabled={isSubmitting || !canFlag(status)}
+              disabled={decisionDisabled || !canFlag(status)}
               aria-label="Flag submission for member revision"
             >
               <Flag size={14} aria-hidden />
@@ -304,7 +311,7 @@ export function ReviewDecisionActions({
                 type="button"
                 className={styles.btnTrash}
                 onClick={() => openConfirmation("trashed")}
-                disabled={isSubmitting || !canTrash(status)}
+                disabled={decisionDisabled || !canTrash(status)}
                 aria-label="Move submission to trash"
               >
                 <Trash2 size={14} aria-hidden />
@@ -314,32 +321,35 @@ export function ReviewDecisionActions({
           </div>
         )}
 
-        {/* ── Admin-only controls ─────────────────────────────────────────── */}
+        {/* ── Staff controls ──────────────────────────────────────────────── */}
         {role === "admin" && (
           <>
             <div className={styles.adminDivider} role="separator" />
             <div className={styles.adminSection}>
               <p className={styles.adminLabel}>
                 <ShieldAlert size={12} aria-hidden />
-                Admin Controls
+                Staff Controls
               </p>
               <button
                 type="button"
                 className={styles.btnAdminEdit}
-                onClick={onAdminEdit}
-                disabled={isSubmitting || status === "trashed" || !onAdminEdit}
+                onClick={onAdminDirectEdit}
+                disabled={isSubmitting || status === "trashed" || !onAdminDirectEdit}
                 title={
                   status === "trashed"
                     ? "Restore the submission before correcting metadata"
-                    : "Correct submission metadata"
+                    : isAdminDirectEditing
+                      ? "Exit direct metadata edit mode"
+                      : "Edit submission metadata in place"
                 }
-                aria-label="Correct submission metadata"
+                aria-label={isAdminDirectEditing ? "Exit direct metadata edit mode" : "Edit submission metadata in place"}
+                aria-pressed={isAdminDirectEditing}
               >
                 <Pencil size={13} aria-hidden />
-                Correct Metadata
+                {isAdminDirectEditing ? "Exit Edit Mode" : "Edit Metadata"}
               </button>
               <p className={styles.adminNote}>
-                Corrections keep the current review status and require an audit reason.
+                Direct edits keep the current review status and require an audit reason.
               </p>
             </div>
           </>

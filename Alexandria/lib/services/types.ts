@@ -103,6 +103,7 @@ export type DbThesisAudit = {
   changed_by_user_id: string;
   event: ReviewAuditEventType | null;
   change_description: string | null;
+  change_details: Record<string, unknown> | null;
   updated_at: string;
 };
 export type DbThesisReviewComment = {
