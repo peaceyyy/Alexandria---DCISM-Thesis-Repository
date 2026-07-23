@@ -42,10 +42,10 @@ import type { ReviewStatus } from "@/lib/services/types";
 
 /** Maps backend status value → friendly UI label. Never store UI labels. */
 export const REVIEW_STATUS_LABEL: Record<ReviewStatus, string> = {
-  for_review: "Pending",
-  flagged: "Flagged",
-  accepted: "Approved",
-  trashed: "Trashed",
+  for_review: "Under review",
+  flagged: "Needs revision",
+  accepted: "Published",
+  trashed: "Archived",
 };
 
 /** Maps each reviewable field key → human-readable section label. */

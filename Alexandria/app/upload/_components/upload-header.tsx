@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { AlexandriaBrandLockup } from "@/components/ui/alexandria-brand-lockup";
 
 interface UploadHeaderProps {
   onLogoClick: () => void;
@@ -17,17 +17,11 @@ export function UploadHeader({ onLogoClick }: UploadHeaderProps) {
         className="flex h-10 items-center gap-2.5 text-[var(--color-text)] transition-opacity hover:opacity-75"
         aria-label="Return to Alexandria repository"
       >
-        <Image
-          src="/brand/alexandria-mark.svg"
-          width={28}
-          height={28}
-          alt=""
+        <AlexandriaBrandLockup
+          markSize={28}
+          wordmarkClassName="text-[20px] font-black"
           priority
-          className="theme-invert"
         />
-        <span className="font-[var(--font-khula)] text-[20px] font-black leading-none tracking-tight">
-          ALEXANDRIA
-        </span>
       </button>
 
       {/* Theme */}

@@ -1,0 +1,53 @@
+.status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  border: 1px solid var(--status-border);
+  border-radius: 5px;
+  background: var(--status-background);
+  color: var(--status-text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.compact {
+  min-height: 22px;
+  padding: 3px 7px;
+  font-size: 10px;
+}
+
+.quiet {
+  min-height: auto;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  font-weight: 650;
+}
+
+.review {
+  --status-background: var(--color-chip-cyan-bg);
+  --status-border: var(--color-chip-cyan-bd);
+  --status-text: var(--color-chip-cyan-text);
+}
+
+.published {
+  --status-background: var(--color-chip-green-bg);
+  --status-border: var(--color-chip-green-bd);
+  --status-text: var(--color-chip-green-text);
+}
+
+.revision {
+  --status-background: var(--color-chip-red-bg);
+  --status-border: var(--color-chip-red-bd);
+  --status-text: var(--color-chip-red-text);
+}
+
+.archived {
+  --status-background: var(--color-chip-gray-bg);
+  --status-border: var(--color-chip-gray-bd);
+  --status-text: var(--color-chip-gray-text);
+}

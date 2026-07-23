@@ -49,11 +49,13 @@ const STATUS_FILTERS: Array<{
   label: string;
 }> = [
   { value: "all", label: "All" },
-  { value: "for_review", label: "Pending" },
-  { value: "flagged", label: "Flagged" },
-  { value: "accepted", label: "Approved" },
-  { value: "trashed", label: "Trashed" },
+  { value: "for_review", label: "Under review" },
+  { value: "flagged", label: "Needs revision" },
+  { value: "accepted", label: "Published" },
+  { value: "trashed", label: "Archived" },
 ];
+
+const REVIEW_QUEUE_COLUMN_WIDTHS = ["31%", "27%", "12%", "11%", "9%", "10%"];
 
 function formatDate(value: string, includeTime = false) {
   const date = new Date(value);
@@ -88,7 +90,7 @@ const reviewQueueColumns: Column<ReviewSubmissionListItem>[] = [
   {
     key: "reviewStatus",
     header: "Status",
-    render: (row) => <StatusBadge status={row.reviewStatus} />,
+    render: (row) => <StatusBadge status={row.reviewStatus} quietSettled />,
   },
   {
     key: "commentCount",
@@ -269,6 +271,7 @@ export function AdminDashboardView({
         columns={reviewQueueColumns}
         data={reviewQueue}
         pageSize={DASHBOARD_QUEUE_PAGE_SIZE}
+        columnWidths={REVIEW_QUEUE_COLUMN_WIDTHS}
         page={reviewQueuePage}
         totalPages={reviewQueueTotalPages}
         onPageChange={handleQueuePageChange}
@@ -393,7 +396,7 @@ export function AdminDashboardView({
                     event.target.value as DashboardStatusFilter,
                   )
                 }
-                className="h-9 rounded-[6px] border border-[var(--color-separator)] bg-[var(--color-surface-alt)] px-2 text-[12px] font-semibold text-[var(--color-text-muted)] outline-none focus:border-[var(--color-brand-bright)]"
+                className="h-9 w-36 rounded-[6px] border border-[var(--color-separator)] bg-[var(--color-surface-alt)] px-2 text-[12px] font-semibold text-[var(--color-text-muted)] outline-none focus:border-[var(--color-brand-bright)]"
               >
                 {visibleStatusFilters.map((filter) => (
                   <option key={filter.value} value={filter.value}>

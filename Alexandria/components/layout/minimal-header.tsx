@@ -5,9 +5,9 @@
  * No auth chrome, no role indicator, no CTA. The landing page's
  * sole job is to introduce Alexandria and point to /home.
  */
-import Image from "next/image";
 import { GitFork } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { AlexandriaBrandLockup } from "@/components/ui/alexandria-brand-lockup";
 
 export function MinimalHeader() {
   return (
@@ -15,20 +15,13 @@ export function MinimalHeader() {
       {/* Brand */}
       <a
         href="/home"
-        className="flex items-center gap-2.5 text-[var(--color-text)] no-underline"
+        className="text-[var(--color-text)] no-underline"
         aria-label="Alexandria — go to repository"
       >
-        <Image
-          src="/brand/alexandria-mark.svg"
-          width={28}
-          height={28}
-          alt=""
-          className="theme-invert"
+        <AlexandriaBrandLockup
+          wordmarkClassName="text-[20px] font-black"
           priority
         />
-        <span className="font-[var(--font-khula)] text-[20px] font-black tracking-tight">
-          ALEXANDRIA
-        </span>
       </a>
 
       {/* Actions */}

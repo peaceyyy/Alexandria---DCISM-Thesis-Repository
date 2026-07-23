@@ -18,7 +18,6 @@ import {
   Search,
   Upload,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import type { UserRole } from "@/lib/auth/auth-contract";
 import { getPostAuthDestination } from "@/lib/auth/auth-routing";
@@ -26,6 +25,7 @@ import { getRoleDisplay } from "@/lib/auth/role-display";
 import { logoutAction } from "@/lib/auth/actions";
 import { AuthInterceptModal } from "@/app/(auth)/_components/auth-intercept-modal";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { AlexandriaBrandLockup } from "@/components/ui/alexandria-brand-lockup";
 import styles from "./filter-sidebar.module.css";
 
 type FilterSidebarProps = {
@@ -127,14 +127,7 @@ export default function FilterSidebar({
             className={styles.brand}
             aria-label="Alexandria repository home"
           >
-            <Image
-              src="/brand/alexandria-mark.svg"
-              width={28}
-              height={28}
-              alt=""
-              className="theme-invert"
-            />
-            <span className={styles.brandName}>ALEXANDRIA</span>
+            <AlexandriaBrandLockup wordmarkClassName={styles.brandName} />
           </Link>
         )}
         {onToggleCollapse && (
@@ -393,6 +386,8 @@ export default function FilterSidebar({
           <div className={cn(styles.accountPill, display.className)}>
             <Link
               href="/profile"
+              draggable={false}
+              onDragStart={(event) => event.preventDefault()}
               className={styles.accountLink}
               aria-label={`Open profile for ${accountName}`}
               title={accountName}
@@ -416,6 +411,8 @@ export default function FilterSidebar({
         ) : (
           <Link
             href="/login"
+            draggable={false}
+            onDragStart={(event) => event.preventDefault()}
             className={cn(styles.accountPill, styles.accountLink, display.className)}
             aria-label="Sign in"
             title="Sign In"

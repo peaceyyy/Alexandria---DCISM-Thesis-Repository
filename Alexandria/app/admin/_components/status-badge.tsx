@@ -1,3 +1,5 @@
+import type { ReviewStatus } from "@/lib/services/types";
+import { WorkflowStatus } from "@/components/ui/workflow-status";
 import styles from "./status-badge.module.css";
 
 export type AdminStatus =
@@ -9,17 +11,30 @@ export type AdminStatus =
   | "deactivated"
   | "protected";
 
-const STATUS_MAP: Record<AdminStatus, { label: string; className: string }> = {
-  for_review: { label: "Pending", className: styles.pending },
-  accepted: { label: "Approved", className: styles.approved },
-  flagged: { label: "Flagged", className: styles.flagged },
-  trashed: { label: "Trashed", className: styles.trashed },
+const ACCOUNT_STATUS_MAP: Record<
+  Exclude<AdminStatus, ReviewStatus>,
+  { label: string; className: string }
+> = {
   active: { label: "Active", className: styles.approved },
   deactivated: { label: "Deactivated", className: styles.deactivated },
   protected: { label: "Protected", className: styles.protected },
 };
 
-export function StatusBadge({ status }: { status: AdminStatus }) {
-  const { label, className } = STATUS_MAP[status];
+function isWorkflowStatus(status: AdminStatus): status is ReviewStatus {
+  return status === "for_review" || status === "accepted" || status === "flagged" || status === "trashed";
+}
+
+export function StatusBadge({
+  status,
+  quietSettled = false,
+}: {
+  status: AdminStatus;
+  quietSettled?: boolean;
+}) {
+  if (isWorkflowStatus(status)) {
+    return <WorkflowStatus status={status} emphasis={quietSettled ? "quiet" : "standard"} />;
+  }
+
+  const { label, className } = ACCOUNT_STATUS_MAP[status];
   return <span className={`${styles.badge} ${className}`}>{label}</span>;
 }

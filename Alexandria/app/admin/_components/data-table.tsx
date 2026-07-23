@@ -19,6 +19,8 @@ interface DataTableProps<T> {
   pageSize?: number;
   /** Optional right-side header element (e.g. an "Add" button) */
   headerAction?: ReactNode;
+  /** Locks only this table's columns so row content cannot shift the layout. */
+  columnWidths?: string[];
   /** Unique key identifier for each row */
   rowKey: keyof T;
   /** Controlled page number for server-paginated data. */
@@ -35,6 +37,7 @@ export function DataTable<T extends object>({
   data,
   pageSize = 5,
   headerAction,
+  columnWidths,
   rowKey,
   page: controlledPage,
   totalPages: controlledTotalPages,
@@ -70,7 +73,18 @@ export function DataTable<T extends object>({
 
       {/* Scrollable table area */}
       <div className={styles.tableScroll}>
-        <table className={styles.table} aria-label={title}>
+        <table
+          className={styles.table}
+          aria-label={title}
+          style={columnWidths ? { tableLayout: "fixed" } : undefined}
+        >
+          {columnWidths && (
+            <colgroup>
+              {columns.map((column, index) => (
+                <col key={String(column.key)} style={{ width: columnWidths[index] }} />
+              ))}
+            </colgroup>
+          )}
           <thead>
             <tr>
               {columns.map((col) => (

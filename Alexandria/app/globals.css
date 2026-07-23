@@ -8,55 +8,89 @@
   color-scheme: dark;
 
   /* ─── App Surface ───────────────────────────────── */
-  --color-bg:             oklch(0.17 0.009 264);   /* #1e2328 — page bg (charcoal, not pure black) */
-  --color-surface:        oklch(0.20 0.008 264);   /* card / panel */
-  --color-surface-alt:    oklch(0.18 0.009 264);   /* nested surface */
+  --color-bg: oklch(
+    0.17 0.009 264
+  ); /* #1e2328 — page bg (charcoal, not pure black) */
+  --color-surface: oklch(0.2 0.008 264); /* card / panel */
+  --color-surface-alt: oklch(0.18 0.009 264); /* nested surface */
 
   /* ─── Text ──────────────────────────────────────── */
-  --color-text:           oklch(1 0 0);            /* #ffffff — primary text */
-  --color-text-muted:     oklch(0.62 0.005 264);   /* #969696 — secondary text */
-  --color-placeholder:    oklch(0.73 0.004 264);   /* #b3b3b3 — input placeholder */
+  --color-text: oklch(1 0 0); /* #ffffff — primary text */
+  --color-text-muted: oklch(0.62 0.005 264); /* #969696 — secondary text */
+  --color-placeholder: oklch(0.73 0.004 264); /* #b3b3b3 — input placeholder */
 
   /* ─── Separators / Borders ──────────────────────── */
   /* Use --color-separator for structural dividers, not brand. */
-  --color-separator:      oklch(1 0 0 / 6%);       /* replaces old border-subtle */
-  --color-separator-mid:  oklch(1 0 0 / 10%);      /* slightly more visible */
+  --color-separator: oklch(1 0 0 / 6%); /* replaces old border-subtle */
+  --color-separator-mid: oklch(1 0 0 / 10%); /* slightly more visible */
 
   /* ─── Brand ─────────────────────────────────────── */
-  --color-brand:          oklch(0.47 0.22 264);    /* #1752f0 — primary brand */
-  --color-brand-bright:   oklch(0.60 0.20 264);    /* #368bfe — hover/CTA bright */
-  --color-brand-cyan:     oklch(0.63 0.12 220);    /* #1da0c9 — chip accent */
+  --color-brand: oklch(0.47 0.22 264); /* #1752f0 — primary brand */
+  --color-brand-bright: oklch(0.6 0.2 264); /* #368bfe — hover/CTA bright */
+  --color-brand-cyan: oklch(0.63 0.12 220); /* #1da0c9 — chip accent */
 
   /* ─── Chip colors (theme-aware pairs) ───────────── */
   /* Cyan chip: research area tags */
-  --color-chip-cyan-bg:   oklch(0.63 0.12 220 / 12%); /* subtle wash */
-  --color-chip-cyan-bd:   oklch(0.63 0.12 220 / 45%); /* stroke */
-  --color-chip-cyan-text: oklch(0.85 0.08 210);    /* #9ddff2 — readable on dark */
+  --color-chip-cyan-bg: oklch(0.63 0.12 220 / 12%); /* subtle wash */
+  --color-chip-cyan-bd: oklch(0.63 0.12 220 / 45%); /* stroke */
+  --color-chip-cyan-text: oklch(0.85 0.08 210); /* #9ddff2 — readable on dark */
 
   /* Red chip: flagged / danger */
-  --color-chip-red-bg:    oklch(0.65 0.22 27 / 10%);
-  --color-chip-red-bd:    oklch(0.65 0.22 27 / 35%);
-  --color-chip-red-text:  oklch(0.80 0.12 27);     /* #ff9b9b */
+  --color-chip-red-bg: oklch(37.156% 0.14164 27.712 / 0.065);
+  --color-chip-red-bd: oklch(0.6 0.16 27 / 35%);
+  --color-chip-red-text: oklch(0.8 0.12 27); /* #ff9b9b */
 
   /* Green chip: accepted / success */
-  --color-chip-green-bg:  oklch(0.72 0.17 150 / 10%);
-  --color-chip-green-bd:  oklch(0.72 0.17 150 / 35%);
-  --color-chip-green-text:oklch(0.82 0.12 150);    /* #8ee1ae */
+  --color-chip-green-bg: oklch(0.72 0.17 150 / 10%);
+  --color-chip-green-bd: oklch(0.72 0.17 150 / 35%);
+  --color-chip-green-text: oklch(0.82 0.12 150); /* #8ee1ae */
 
   /* Yellow chip: pending / warning */
   --color-chip-yellow-bg: oklch(0.88 0.17 90 / 10%);
   --color-chip-yellow-bd: oklch(0.88 0.17 90 / 35%);
-  --color-chip-yellow-text:oklch(0.88 0.17 90);    /* #ffd900 */
+  --color-chip-yellow-text: oklch(0.88 0.17 90); /* #ffd900 */
 
   /* Gray chip: deactivated / trashed */
-  --color-chip-gray-bg:   oklch(0.70 0 0 / 10%);
-  --color-chip-gray-bd:   oklch(0.70 0 0 / 35%);
-  --color-chip-gray-text: oklch(0.80 0 0);         /* #b8b8b8 */
+  --color-chip-gray-bg: oklch(0.7 0 0 / 10%);
+  --color-chip-gray-bd: oklch(0.7 0 0 / 35%);
+  --color-chip-gray-text: oklch(0.8 0 0); /* #b8b8b8 */
+
+  /* ─── Research-area chips (display taxonomy, not status) ── */
+  --color-research-cyan-bg: var(--color-chip-cyan-bg);
+  --color-research-cyan-bd: var(--color-chip-cyan-bd);
+  --color-research-cyan-text: var(--color-chip-cyan-text);
+  --color-research-blue-bg: oklch(0.65 0.1 255 / 12%);
+  --color-research-blue-bd: oklch(0.65 0.1 255 / 42%);
+  --color-research-blue-text: oklch(0.84 0.07 250);
+  --color-research-teal-bg: oklch(0.68 0.09 185 / 11%);
+  --color-research-teal-bd: oklch(0.68 0.09 185 / 38%);
+  --color-research-teal-text: oklch(0.84 0.06 185);
+  --color-research-indigo-bg: oklch(0.68 0.07 285 / 11%);
+  --color-research-indigo-bd: oklch(0.68 0.07 285 / 38%);
+  --color-research-indigo-text: oklch(0.84 0.05 285);
+  --color-research-amber-bg: oklch(0.78 0.1 85 / 10%);
+  --color-research-amber-bd: oklch(0.78 0.1 85 / 35%);
+  --color-research-amber-text: oklch(0.9 0.08 85);
+  --color-research-green-bg: oklch(0.7 0.09 150 / 11%);
+  --color-research-green-bd: oklch(0.7 0.09 150 / 38%);
+  --color-research-green-text: oklch(0.84 0.06 150);
+  --color-research-yellow-bg: oklch(0.78 0.1 95 / 10%);
+  --color-research-yellow-bd: oklch(0.78 0.1 95 / 35%);
+  --color-research-yellow-text: oklch(0.9 0.07 95);
+  --color-research-purple-bg: oklch(0.7 0.07 310 / 11%);
+  --color-research-purple-bd: oklch(0.7 0.07 310 / 38%);
+  --color-research-purple-text: oklch(0.85 0.05 310);
+  --color-research-pink-bg: oklch(0.72 0.09 350 / 11%);
+  --color-research-pink-bd: oklch(0.72 0.09 350 / 38%);
+  --color-research-pink-text: oklch(0.87 0.06 350);
+  --color-research-orange-bg: oklch(0.76 0.1 55 / 10%);
+  --color-research-orange-bd: oklch(0.76 0.1 55 / 35%);
+  --color-research-orange-text: oklch(0.9 0.08 55);
 
   /* ─── Semantic States ───────────────────────────── */
-  --color-danger:         oklch(0.65 0.22 27);     /* #ff6b6b */
-  --color-success:        oklch(0.72 0.17 150);    /* #59c987 */
-  --color-pronunciation:  oklch(0.88 0.17 90);     /* #ffd900 */
+  --color-danger: oklch(0.6 0.16 27); /* #ff6b6b (toned down) */
+  --color-success: oklch(0.72 0.17 150); /* #59c987 */
+  --color-pronunciation: oklch(0.88 0.17 90); /* #ffd900 */
 
   /* ─── Shadcn primitives (dark) ──────────────────── */
   --background: oklch(0.145 0 0);
@@ -92,39 +126,39 @@
   color-scheme: light;
 
   /* ─── App Surface ───────────────────────────────── */
-  --color-bg:             oklch(0.97 0.005 264);   /* #f5f7fa — light page bg */
-  --color-surface:        oklch(1 0 0);             /* #ffffff — card / panel */
-  --color-surface-alt:    oklch(0.95 0.005 264);   /* #f0f2f5 — nested surface */
+  --color-bg: oklch(0.97 0.005 264); /* #f5f7fa — light page bg */
+  --color-surface: oklch(1 0 0); /* #ffffff — card / panel */
+  --color-surface-alt: oklch(0.95 0.005 264); /* #f0f2f5 — nested surface */
 
   /* ─── Text ──────────────────────────────────────── */
-  --color-text:           oklch(0.14 0.009 264);   /* #14181c — primary text */
-  --color-text-muted:     oklch(0.44 0.01 264);    /* #59616a — secondary text */
-  --color-placeholder:    oklch(0.50 0.01 264);    /* #6d747c — input placeholder */
+  --color-text: oklch(0.14 0.009 264); /* #14181c — primary text */
+  --color-text-muted: oklch(0.44 0.01 264); /* #59616a — secondary text */
+  --color-placeholder: oklch(0.5 0.01 264); /* #6d747c — input placeholder */
 
   /* ─── Separators ────────────────────────────────── */
-  --color-separator:      oklch(0 0 0 / 6%);       /* dark-on-light equivalent */
-  --color-separator-mid:  oklch(0 0 0 / 10%);
+  --color-separator: oklch(0 0 0 / 6%); /* dark-on-light equivalent */
+  --color-separator-mid: oklch(0 0 0 / 10%);
 
   /* ─── Brand (unchanged across themes) ──────────── */
-  --color-brand:          oklch(0.47 0.22 264);    /* #1752f0 */
-  --color-brand-bright:   oklch(0.60 0.20 264);    /* #368bfe */
-  --color-brand-cyan:     oklch(0.63 0.12 220);    /* #1da0c9 */
+  --color-brand: oklch(0.47 0.22 264); /* #1752f0 */
+  --color-brand-bright: oklch(0.6 0.2 264); /* #368bfe */
+  --color-brand-cyan: oklch(0.63 0.12 220); /* #1da0c9 */
 
   /* ─── Chip colors (light-adjusted) ─────────────── */
   /* Cyan chip on light */
-  --color-chip-cyan-bg:   oklch(0.63 0.12 220 / 12%);
-  --color-chip-cyan-bd:   oklch(0.63 0.12 220 / 30%);
-  --color-chip-cyan-text: oklch(0.40 0.12 220);
+  --color-chip-cyan-bg: oklch(0.63 0.12 220 / 12%);
+  --color-chip-cyan-bd: oklch(0.63 0.12 220 / 30%);
+  --color-chip-cyan-text: oklch(0.4 0.12 220);
 
   /* Red chip on light */
-  --color-chip-red-bg:    oklch(0.65 0.22 27 / 12%);
-  --color-chip-red-bd:    oklch(0.65 0.22 27 / 30%);
-  --color-chip-red-text:  oklch(0.45 0.20 27);
+  --color-chip-red-bg: oklch(0.6 0.16 27 / 12%);
+  --color-chip-red-bd: oklch(0.6 0.16 27 / 30%);
+  --color-chip-red-text: oklch(0.45 0.16 27);
 
   /* Green chip on light */
-  --color-chip-green-bg:  oklch(0.72 0.17 150 / 12%);
-  --color-chip-green-bd:  oklch(0.72 0.17 150 / 30%);
-  --color-chip-green-text:oklch(0.45 0.16 150);
+  --color-chip-green-bg: oklch(0.72 0.17 150 / 12%);
+  --color-chip-green-bd: oklch(0.72 0.17 150 / 30%);
+  --color-chip-green-text: oklch(0.45 0.16 150);
 
   /* Yellow chip on light */
   --color-chip-yellow-bg: oklch(0.88 0.17 90 / 25%);
@@ -132,14 +166,46 @@
   --color-chip-yellow-text: oklch(0.45 0.17 80);
 
   /* Gray chip on light */
-  --color-chip-gray-bg:   oklch(0.55 0 0 / 10%);
-  --color-chip-gray-bd:   oklch(0.55 0 0 / 25%);
-  --color-chip-gray-text: oklch(0.40 0 0);
+  --color-chip-gray-bg: oklch(0.55 0 0 / 10%);
+  --color-chip-gray-bd: oklch(0.55 0 0 / 25%);
+  --color-chip-gray-text: oklch(0.4 0 0);
+
+  /* ─── Research-area chips (light-adjusted) ───────── */
+  --color-research-cyan-bg: var(--color-chip-cyan-bg);
+  --color-research-cyan-bd: var(--color-chip-cyan-bd);
+  --color-research-cyan-text: var(--color-chip-cyan-text);
+  --color-research-blue-bg: oklch(0.65 0.1 255 / 10%);
+  --color-research-blue-bd: oklch(0.65 0.1 255 / 28%);
+  --color-research-blue-text: oklch(0.4 0.11 255);
+  --color-research-teal-bg: oklch(0.68 0.09 185 / 11%);
+  --color-research-teal-bd: oklch(0.68 0.09 185 / 30%);
+  --color-research-teal-text: oklch(0.38 0.09 185);
+  --color-research-indigo-bg: oklch(0.68 0.07 285 / 10%);
+  --color-research-indigo-bd: oklch(0.68 0.07 285 / 28%);
+  --color-research-indigo-text: oklch(0.39 0.08 285);
+  --color-research-amber-bg: oklch(0.78 0.1 85 / 16%);
+  --color-research-amber-bd: oklch(0.78 0.1 85 / 36%);
+  --color-research-amber-text: oklch(0.43 0.11 85);
+  --color-research-green-bg: oklch(0.7 0.09 150 / 11%);
+  --color-research-green-bd: oklch(0.7 0.09 150 / 30%);
+  --color-research-green-text: oklch(0.38 0.09 150);
+  --color-research-yellow-bg: oklch(0.78 0.1 95 / 16%);
+  --color-research-yellow-bd: oklch(0.78 0.1 95 / 36%);
+  --color-research-yellow-text: oklch(0.43 0.1 95);
+  --color-research-purple-bg: oklch(0.7 0.07 310 / 10%);
+  --color-research-purple-bd: oklch(0.7 0.07 310 / 28%);
+  --color-research-purple-text: oklch(0.4 0.08 310);
+  --color-research-pink-bg: oklch(0.72 0.09 350 / 10%);
+  --color-research-pink-bd: oklch(0.72 0.09 350 / 28%);
+  --color-research-pink-text: oklch(0.42 0.1 350);
+  --color-research-orange-bg: oklch(0.76 0.1 55 / 14%);
+  --color-research-orange-bd: oklch(0.76 0.1 55 / 34%);
+  --color-research-orange-text: oklch(0.44 0.1 55);
 
   /* ─── Semantic States ───────────────────────────── */
-  --color-danger:         oklch(0.45 0.20 27);     /* #d63031 */
-  --color-success:        oklch(0.45 0.16 150);    /* #27ae60 */
-  --color-pronunciation:  oklch(0.45 0.17 80);     /* darker amber for light mode */
+  --color-danger: oklch(0.45 0.16 27); /* #d63031 (toned down) */
+  --color-success: oklch(0.45 0.16 150); /* #27ae60 */
+  --color-pronunciation: oklch(0.45 0.17 80); /* darker amber for light mode */
 
   /* ─── Shadcn overrides (light) ──────────────────── */
   --background: oklch(0.98 0 0);
@@ -232,7 +298,8 @@ select {
 
 :focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px color-mix(in oklch, var(--color-brand-bright) 25%, transparent);
+  box-shadow: 0 0 0 2px
+    color-mix(in oklch, var(--color-brand-bright) 25%, transparent);
 }
 
 .dark {

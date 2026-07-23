@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { AlexandriaBrandLockup } from "@/components/ui/alexandria-brand-lockup";
+import { BackLink } from "@/components/ui/back-link";
 
 /** A deliberately narrow header for task flows that should not expose browse controls. */
 export function TaskHeader({
@@ -16,21 +16,19 @@ export function TaskHeader({
       <div className="flex min-w-0 items-center gap-4">
         <Link
           href="/home"
-          className="flex shrink-0 items-center gap-2 text-[var(--color-text)]"
+          className="shrink-0 text-[var(--color-text)]"
           aria-label="Alexandria repository home"
         >
-          <Image src="/brand/alexandria-mark.svg" width={26} height={26} alt="" className="theme-invert" />
-          <span className="hidden font-[var(--font-khula)] text-[18px] font-black tracking-tight sm:inline">
-            ALEXANDRIA
-          </span>
+          <AlexandriaBrandLockup
+            markSize={26}
+            wordmarkClassName="hidden text-[18px] font-black sm:inline"
+          />
         </Link>
-        <Link
+        <BackLink
           href={backHref}
-          className="inline-flex min-w-0 items-center gap-1.5 text-sm font-semibold text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text)]"
-        >
-          <ArrowLeft size={15} aria-hidden />
-          <span className="truncate">{backLabel}</span>
-        </Link>
+          label={backLabel}
+          className="min-w-0"
+        />
       </div>
       <ThemeToggle />
     </header>

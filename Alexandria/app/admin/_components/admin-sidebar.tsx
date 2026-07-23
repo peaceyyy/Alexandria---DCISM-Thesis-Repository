@@ -11,11 +11,11 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./admin-sidebar.module.css";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { AlexandriaBrandLockup } from "@/components/ui/alexandria-brand-lockup";
 import { logoutAction } from "@/lib/auth/actions";
 import type { UserRole } from "@/lib/auth/auth-contract";
 import { getRoleDisplay } from "@/lib/auth/role-display";
@@ -83,15 +83,11 @@ export function AdminSidebar({
         aria-label="Alexandria Admin Home"
         onClick={onNavigate}
       >
-        <Image
-          src="/brand/alexandria-mark.svg"
-          width={36}
-          height={36}
-          alt=""
-          className="theme-invert"
+        <AlexandriaBrandLockup
+          markSize={36}
+          wordmarkClassName={styles.brandText}
           priority
         />
-        <span className={styles.brandText}>ALEXANDRIA</span>
       </Link>
 
       <button

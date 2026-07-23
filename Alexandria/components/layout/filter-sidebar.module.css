@@ -29,12 +29,7 @@
 
 .brandName {
   overflow: hidden;
-  font-family: var(--font-khula), var(--font-sans), sans-serif;
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
   white-space: nowrap;
-  transform: translateY(1px);
 }
 
 .collapseButton {
@@ -296,6 +291,7 @@
   padding: 3px 8px 3px 4px;
   font-size: 0.75rem;
   font-weight: 650;
+  -webkit-user-drag: none;
   text-decoration: none;
   color: inherit;
   transition: background 0.15s ease;

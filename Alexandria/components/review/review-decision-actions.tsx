@@ -1,17 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Flag, RotateCcw, ShieldAlert, Pencil, Trash2, Clock } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { CheckCircle2, Flag, RotateCcw, ShieldAlert, Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog, type ConfirmDialogIntent } from "@/components/ui/confirm-dialog";
 import type { ReviewStatus } from "@/lib/services/types";
 import type { UserRole } from "@/lib/services/types";
+import { WorkflowStatus } from "@/components/ui/workflow-status";
 import styles from "./review-decision-actions.module.css";
 
 // ─── Allowed transitions (per handoff spec) ───────────────────────────────────
@@ -35,39 +30,6 @@ function canTrash(status: ReviewStatus) {
 function canSendBackToReview(status: ReviewStatus) {
   return status === "accepted";
 }
-function getStatusSummary(status: ReviewStatus) {
-  switch (status) {
-    case "for_review":
-      return "Pending";
-    case "accepted":
-      return "Approved";
-    case "flagged":
-      return "Flagged";
-    case "trashed":
-      return "Trashed";
-  }
-}
-
-function getStatusIcon(status: ReviewStatus, size = 14) {
-  switch (status) {
-    case "for_review":
-      return <Clock size={size} aria-hidden />;
-    case "accepted":
-      return <CheckCircle2 size={size} aria-hidden />;
-    case "flagged":
-      return <Flag size={size} aria-hidden />;
-    case "trashed":
-      return <Trash2 size={size} aria-hidden />;
-  }
-}
-
-const STATUS_SUMMARY_CLASS: Record<ReviewStatus, string> = {
-  for_review: styles.statusPending,
-  accepted: styles.statusApproved,
-  flagged: styles.statusFlagged,
-  trashed: styles.statusTrashed,
-};
-
 type ConfirmDecision = Extract<
   ReviewStatus,
   "accepted" | "flagged" | "for_review" | "trashed"
@@ -79,7 +41,7 @@ const CONFIRM_COPY: Record<
     title: string;
     body: string;
     actionLabel: string;
-    actionClassName: string;
+    confirmIntent: ConfirmDialogIntent;
     icon: "approve" | "flag" | "review" | "trash";
   }
 > = {
@@ -87,28 +49,28 @@ const CONFIRM_COPY: Record<
     title: "Approve this submission?",
     body: "This will publish the thesis to the accepted catalog and make it visible through approved-thesis surfaces.",
     actionLabel: "Approve",
-    actionClassName: styles.btnConfirmAccept,
+    confirmIntent: "default",
     icon: "approve",
   },
   flagged: {
     title: "Flag this submission for revision?",
     body: "The member will be asked to review the feedback, save any needed changes, and resubmit the study for another review.",
     actionLabel: "Flag for Revision",
-    actionClassName: styles.btnConfirmFlag,
+    confirmIntent: "outline",
     icon: "flag",
   },
   for_review: {
     title: "Send back to review?",
     body: "This will remove the approval and return the submission to the pending review queue.",
     actionLabel: "Send Back to Review",
-    actionClassName: styles.btnConfirmReview,
+    confirmIntent: "secondary",
     icon: "review",
   },
   trashed: {
     title: "Trash this submission?",
     body: "This will remove the submission from active queues and public browsing. Only an administrator can restore it later.",
     actionLabel: "Continue",
-    actionClassName: styles.btnConfirmTrash,
+    confirmIntent: "destructive",
     icon: "trash",
   },
 };
@@ -133,15 +95,7 @@ interface ReviewDecisionActionsProps {
 }
 
 export function ReviewStatusIndicator({ status }: { status: ReviewStatus }) {
-  return (
-    <div
-      className={`${styles.statusSummary} ${STATUS_SUMMARY_CLASS[status]}`}
-      data-status={status}
-      title={getStatusSummary(status)}
-    >
-      {getStatusIcon(status)}
-    </div>
-  );
+  return <WorkflowStatus status={status} size="compact" />;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -219,27 +173,31 @@ export function ReviewDecisionActions({
             <p className={styles.statusNote}>
               This submission has been approved.
             </p>
-            <button
+            <Button
               type="button"
-              className={styles.btnReview}
+              variant="secondary"
+              size="lg"
+              className="w-full"
               onClick={() => openConfirmation("for_review")}
               disabled={decisionDisabled}
               aria-label="Send submission back to review"
             >
               <RotateCcw size={14} aria-hidden />
               Send Back to Review
-            </button>
+            </Button>
             {role === "admin" && (
-              <button
+              <Button
                 type="button"
-                className={styles.btnTrash}
+                variant="destructive"
+                size="lg"
+                className="w-full"
                 onClick={() => openConfirmation("trashed")}
                 disabled={decisionDisabled}
                 aria-label="Move submission to trash"
               >
                 <Trash2 size={14} aria-hidden />
                 Trash
-              </button>
+              </Button>
             )}
           </div>
         ) : alreadyDecided ? (
@@ -248,16 +206,18 @@ export function ReviewDecisionActions({
               This submission has been trashed.
             </p>
             {role === "admin" && (
-              <button
+              <Button
                 type="button"
-                className={styles.btnReview}
+                variant="secondary"
+                size="lg"
+                className="w-full"
                 onClick={() => openConfirmation("for_review")}
                 disabled={decisionDisabled}
                 aria-label="Restore submission to review"
               >
                 <RotateCcw size={14} aria-hidden />
                 Restore to Review
-              </button>
+              </Button>
             )}
           </div>
         ) : status === "flagged" ? (
@@ -267,56 +227,64 @@ export function ReviewDecisionActions({
               further feedback without changing its status.
             </p>
             {role === "admin" && (
-              <button
+              <Button
                 type="button"
-                className={styles.btnTrash}
+                variant="destructive"
+                size="lg"
+                className="w-full"
                 onClick={() => openConfirmation("trashed")}
                 disabled={decisionDisabled}
                 aria-label="Move submission to trash"
               >
                 <Trash2 size={14} aria-hidden />
                 Trash
-              </button>
+              </Button>
             )}
           </div>
         ) : (
           <div className={styles.primaryActions}>
             {/* Accept */}
-            <button
+            <Button
               type="button"
-              className={styles.btnAccept}
+              variant="default"
+              size="lg"
+              className="w-full"
               onClick={() => openConfirmation("accepted")}
               disabled={decisionDisabled || !canAccept(status)}
               aria-label="Approve this submission"
             >
               <CheckCircle2 size={15} aria-hidden />
               Approve
-            </button>
+            </Button>
 
             {/* Flag for member-side revision. Members return it to pending by resubmitting. */}
-            <button
+            <Button
               type="button"
-              className={styles.btnFlag}
+              variant="outline"
+              size="lg"
+              className="w-full"
               onClick={() => openConfirmation("flagged")}
               disabled={decisionDisabled || !canFlag(status)}
               aria-label="Flag submission for member revision"
             >
               <Flag size={14} aria-hidden />
               Flag for Revision
-            </button>
+            </Button>
 
             {/* Trash — soft destructive, requires confirm */}
             {role === "admin" && (
-              <button
+              <Button
                 type="button"
-                className={styles.btnTrash}
+                variant="destructive"
+                size="lg"
+                className="w-full"
                 onClick={() => openConfirmation("trashed")}
                 disabled={decisionDisabled || !canTrash(status)}
                 aria-label="Move submission to trash"
               >
                 <Trash2 size={14} aria-hidden />
                 Trash
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -330,9 +298,11 @@ export function ReviewDecisionActions({
                 <ShieldAlert size={12} aria-hidden />
                 Staff Controls
               </p>
-              <button
+              <Button
                 type="button"
-                className={styles.btnAdminEdit}
+                variant="outline"
+                size="lg"
+                className="w-full justify-start border-[var(--color-chip-cyan-bd)] bg-[var(--color-chip-cyan-bg)] text-[var(--color-chip-cyan-text)] hover:bg-[var(--color-chip-cyan-bg)]/80"
                 onClick={onAdminDirectEdit}
                 disabled={isSubmitting || status === "trashed" || !onAdminDirectEdit}
                 title={
@@ -347,7 +317,7 @@ export function ReviewDecisionActions({
               >
                 <Pencil size={13} aria-hidden />
                 {isAdminDirectEditing ? "Exit Edit Mode" : "Edit Metadata"}
-              </button>
+              </Button>
               <p className={styles.adminNote}>
                 Direct edits keep the current review status and require an audit reason.
               </p>
@@ -356,51 +326,19 @@ export function ReviewDecisionActions({
         )}
       </div>
 
-      <Dialog
-        open={Boolean(confirmCopy)}
-        onOpenChange={(open) => {
-          if (!open && !isSubmitting) {
-            handleConfirmCancel();
-          }
-        }}
-      >
-        <DialogContent
-          showCloseButton={false}
-          className="border-[var(--color-separator)] bg-[var(--color-surface)] text-[var(--color-text)]"
-        >
-          {confirmCopy && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="text-[var(--color-text)]">
-                  {confirmCopy.title}
-                </DialogTitle>
-                <DialogDescription className="leading-6 text-[var(--color-text-muted)]">
-                  {confirmCopy.body}
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter className="border-[var(--color-separator)] bg-[var(--color-surface-alt)]">
-                <button
-                  type="button"
-                  className={styles.btnConfirmCancel}
-                  onClick={handleConfirmCancel}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className={confirmCopy.actionClassName}
-                  onClick={handleConfirmDecision}
-                  disabled={isSubmitting}
-                >
-                  {confirmIcon}
-                  {confirmCopy.actionLabel}
-                </button>
-              </DialogFooter>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      {confirmCopy && (
+        <ConfirmDialog
+          open
+          title={confirmCopy.title}
+          description={confirmCopy.body}
+          confirmLabel={confirmCopy.actionLabel}
+          confirmIntent={confirmCopy.confirmIntent}
+          confirmIcon={confirmIcon}
+          isSubmitting={isSubmitting}
+          onCancel={handleConfirmCancel}
+          onConfirm={handleConfirmDecision}
+        />
+      )}
     </>
   );
 }

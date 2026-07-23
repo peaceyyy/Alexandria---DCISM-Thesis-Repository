@@ -4,7 +4,6 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
 import {
-  ArrowLeft,
   ChevronLeft,
   ChevronRight,
   Download,
@@ -22,6 +21,7 @@ import {
 import { ReviewAuditTimeline } from "@/components/review/review-audit-timeline";
 import { CommentSidePanel } from "@/components/review/comment-side-panel";
 import { useToast } from "@/components/ui/toast-provider";
+import { BackLink } from "@/components/ui/back-link";
 import {
   getResearchAreaLabel,
   parseResearchAreaIds,
@@ -601,7 +601,11 @@ export function ReviewDetailClient({
                   gap: 8,
                 }}
               >
-                <BackLink />
+                <BackLink
+                  href="/admin/dashboard?status=for_review"
+                  label="Back to dashboard"
+                  className="h-8 min-h-8 border border-[var(--color-separator-mid)] bg-[var(--color-surface-alt)] px-3"
+                />
                 <ReviewStatusIndicator status={submission.reviewStatus} />
               </div>
 
@@ -647,7 +651,12 @@ export function ReviewDetailClient({
                 overflow: "hidden",
               }}
             >
-              <BackLink collapsed />
+              <BackLink
+                href="/admin/dashboard?status=for_review"
+                label="Back to dashboard"
+                compact
+                className="border border-[var(--color-separator-mid)] bg-[var(--color-surface-alt)]"
+              />
 
               {/* Compact status dot */}
               <span
@@ -1282,44 +1291,5 @@ export function ReviewDetailClient({
         onClose={() => setActiveCommentField(null)}
       />
     </div>
-  );
-}
-
-// ─── Back Link ────────────────────────────────────────────────────────────────
-
-function BackLink({ collapsed }: { collapsed?: boolean }) {
-  return (
-    <Link
-      href="/admin/dashboard?status=for_review"
-      title={collapsed ? "Back to Dashboard" : undefined}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 7,
-        width: collapsed ? 32 : "fit-content",
-        height: 32,
-        padding: collapsed ? 0 : "0 12px",
-        borderRadius: 7,
-        border: "1px solid rgba(255,255,255,0.1)",
-        background: "var(--color-surface-alt)",
-        color: "var(--color-text-muted)",
-        fontSize: 13,
-        fontWeight: 600,
-        textDecoration: "none",
-        transition: "background 150ms ease",
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.background =
-          "var(--color-separator)";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.background =
-          "var(--color-surface-alt)";
-      }}
-    >
-      <ArrowLeft size={14} aria-hidden />
-      {!collapsed && "Back to Dashboard"}
-    </Link>
   );
 }

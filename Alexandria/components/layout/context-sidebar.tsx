@@ -1,11 +1,18 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, LayoutDashboard, LibraryBig, LogOut, UserRound } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeftClose, PanelLeftOpen, Search, FileText, Upload } from "lucide-react";
 import type { UserRole } from "@/lib/auth/auth-contract";
 import { getPostAuthDestination } from "@/lib/auth/auth-routing";
 import { logoutAction } from "@/lib/auth/actions";
 import { getRoleDisplay } from "@/lib/auth/role-display";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { AlexandriaBrandLockup } from "@/components/ui/alexandria-brand-lockup";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
+import styles from "./filter-sidebar.module.css";
+import { AuthInterceptModal } from "@/app/(auth)/_components/auth-intercept-modal";
 
 type ContextSidebarProps = {
   role: UserRole | null;
@@ -15,165 +22,227 @@ type ContextSidebarProps = {
   returnLabel?: string;
 };
 
-/**
- * Navigation for contextual public-app pages. Unlike RepositorySidebar, this
- * deliberately contains no search or filters: readers should not be asked to
- * operate browse controls while they are reading one thesis or managing an account.
- */
-export function ContextSidebar({
+function SidebarContent({
   role,
   profileName,
-  active,
-  returnHref,
-  returnLabel = "Back to results",
-}: ContextSidebarProps) {
+  isCollapsed = false,
+  onToggleCollapse,
+  className,
+}: ContextSidebarProps & {
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+  className?: string;
+}) {
   const display = getRoleDisplay(role);
   const isStaff = role === "admin" || role === "moderator";
   const accountName = profileName?.trim() || display.label;
 
   return (
     <aside
-      className="hidden h-full flex-col border-r border-[var(--color-separator)] bg-[var(--color-surface-alt)] px-3 py-4 xl:flex"
-      aria-label="Alexandria navigation"
+      className={cn(
+        styles.sidebar,
+        isCollapsed && styles.collapsed,
+        "flex h-full flex-col px-3 py-4",
+        className
+      )}
+      aria-label="Context navigation"
     >
-      <Link
-        href="/home"
-        className="inline-flex min-h-9 items-center gap-2.5 px-1 text-[var(--color-text)] no-underline"
-        aria-label="Alexandria repository home"
-      >
-        <Image
-          src="/brand/alexandria-mark.svg"
-          width={28}
-          height={28}
-          alt=""
-          className="theme-invert"
-        />
-        <span className="font-[var(--font-khula)] text-[15px] font-extrabold tracking-tight">
-          ALEXANDRIA
-        </span>
-      </Link>
-
-      <nav className="mt-5 grid gap-1 border-b border-[var(--color-separator)] pb-4" aria-label="Context navigation">
-        {returnHref ? (
+      <div className={styles.brandRow}>
+        {!isCollapsed && (
           <Link
-            href={returnHref}
-            className="inline-flex min-h-9 items-center gap-2 rounded-md px-2 text-sm font-semibold text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-text)]/[0.06] hover:text-[var(--color-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-bright)]/30"
+            href="/home"
+            className={styles.brand}
+            aria-label="Alexandria repository home"
           >
-            <ArrowLeft size={15} aria-hidden />
-            {returnLabel}
+            <AlexandriaBrandLockup wordmarkClassName={styles.brandName} />
           </Link>
-        ) : null}
+        )}
+        {onToggleCollapse && (
+          <button
+            type="button"
+            className={styles.collapseButton}
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-expanded={!isCollapsed}
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            onClick={onToggleCollapse}
+          >
+            {isCollapsed ? (
+              <PanelLeftOpen size={14} aria-hidden />
+            ) : (
+              <PanelLeftClose size={14} aria-hidden />
+            )}
+          </button>
+        )}
+      </div>
+
+      <form action="/home" method="get" className={styles.searchForm}>
+        <label className={styles.searchLabel}>
+          <span className="sr-only">Search Alexandria</span>
+          <Search size={15} aria-hidden />
+          <input
+            type="search"
+            name="q"
+            placeholder="Search research…"
+          />
+        </label>
+      </form>
+
+      <nav className={styles.workspaceNav} aria-label="Context workspace">
         <Link
-          href="/home"
-          className="inline-flex min-h-9 items-center gap-2 rounded-md px-2 text-sm font-semibold text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-text)]/[0.06] hover:text-[var(--color-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-bright)]/30"
+          href="/home?mine=1"
+          className={styles.workspaceAction}
+          aria-label="My submissions"
+          title="My submissions"
         >
-          <LibraryBig size={15} aria-hidden />
-          Browse repository
-        </Link>
-        <Link
-          href={role ? "/profile" : "/login"}
-          aria-current={active === "profile" ? "page" : undefined}
-          className={`inline-flex min-h-9 items-center gap-2 rounded-md px-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-bright)]/30 ${
-            active === "profile"
-              ? "bg-[var(--color-text)]/[0.08] text-[var(--color-text)]"
-              : "text-[var(--color-text-muted)] hover:bg-[var(--color-text)]/[0.06] hover:text-[var(--color-text)]"
-          }`}
-        >
-          <UserRound size={15} aria-hidden />
-          {role ? "Account" : "Sign in"}
+          <FileText size={15} aria-hidden />
+          <span className={styles.workspaceLabel}>My submissions</span>
         </Link>
       </nav>
 
-      <div className="mt-auto border-t border-[var(--color-separator)] pt-3">
-        {isStaff ? (
-          <Link
-            href={getPostAuthDestination(role)}
-            className="mb-2 inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-[var(--color-brand-bright)]/30 bg-[var(--color-brand-bright)]/10 px-3 text-sm font-semibold text-[var(--color-brand-bright)] transition-colors hover:bg-[var(--color-brand-bright)]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-bright)]/30"
-          >
-            <LayoutDashboard size={15} aria-hidden />
-            Dashboard
-          </Link>
-        ) : null}
+      <div className={styles.body} aria-hidden={isCollapsed ? true : undefined}>
+        {/* Intentionally left blank. The ContextSidebar mirrors FilterSidebar but removes the filters. */}
+      </div>
 
-        <div className="mb-2 grid grid-cols-[1fr_auto] items-center gap-2">
-          <span className="px-1 text-xs font-medium text-[var(--color-text-muted)]">Theme</span>
-          <ThemeToggle />
-        </div>
+      <footer className={styles.accountArea}>
+        {isStaff ? (
+          <div className={styles.staffFooterActions}>
+            <Link
+              href="/upload"
+              className={styles.contributeStrip}
+              aria-label="Contribute a thesis"
+              title="Contribute"
+            >
+              <Upload size={16} aria-hidden />
+              <span>Contribute</span>
+            </Link>
+            <div className={styles.utilityRow}>
+              <ThemeToggle presentation="strip" />
+              <Link
+                href={getPostAuthDestination(role ?? undefined)}
+                className={styles.utilityTile}
+                aria-label="Open dashboard"
+                title="Dashboard"
+              >
+                <LayoutDashboard size={16} aria-hidden />
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.accountActions}>
+            <ThemeToggle />
+            {!role ? (
+              <AuthInterceptModal
+                iconOnly={isCollapsed}
+                triggerClassName={styles.contributeButton}
+              />
+            ) : (
+              <Link
+                href="/upload"
+                className={
+                  isCollapsed
+                    ? styles.contributeLinkIcon
+                    : styles.contributeButton
+                }
+                aria-label="Contribute a thesis"
+                title="Contribute"
+              >
+                <Upload size={14} aria-hidden />
+                {!isCollapsed && <span>Contribute</span>}
+              </Link>
+            )}
+          </div>
+        )}
 
         {role ? (
-          <div className={`flex min-w-0 items-center overflow-hidden rounded-lg border ${display.className}`}>
+          <div className={cn(styles.accountPill, display.className)}>
             <Link
               href="/profile"
-              className="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5 text-xs font-semibold"
+              draggable={false}
+              className={styles.accountLink}
+              aria-label={`Open profile for ${accountName}`}
               title={accountName}
             >
-              <span aria-hidden className="grid size-6 shrink-0 place-items-center rounded-full bg-black/15 px-1 text-[10px] font-black">
+              <span className={styles.roleMarker} aria-hidden>
                 {display.abbreviation}
               </span>
-              <span className="truncate">{accountName}</span>
+              <span className={styles.accountName}>{accountName}</span>
             </Link>
-            <form action={logoutAction} className="flex shrink-0 border-l border-current/20">
+            <form action={logoutAction} className={styles.logoutForm}>
               <button
                 type="submit"
-                className="inline-flex size-9 items-center justify-center opacity-70 transition hover:bg-black/10 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-bright)]/30"
+                className={styles.logoutBtn}
                 aria-label="Log out"
-                title="Log out"
+                title="Log Out"
               >
-                <LogOut size={15} aria-hidden />
+                <LogOut size={14} aria-hidden />
               </button>
             </form>
           </div>
-        ) : null}
-      </div>
+        ) : (
+          <Link
+            href="/login"
+            draggable={false}
+            className={cn(styles.accountPill, styles.accountLink, display.className)}
+            aria-label="Sign in"
+            title="Sign In"
+          >
+            <span className={styles.roleMarker} aria-hidden>
+              {display.abbreviation}
+            </span>
+            <span className={styles.accountName}>{accountName}</span>
+          </Link>
+        )}
+      </footer>
     </aside>
   );
 }
 
-/** Mobile equivalent of ContextSidebar. The full rail is intentionally desktop-only. */
-export function ContextHeader({
-  role,
-  active,
-  returnHref,
-  returnLabel = "Back",
-}: Omit<ContextSidebarProps, "profileName">) {
-  const isStaff = role === "admin" || role === "moderator";
+export function ContextSidebar(props: ContextSidebarProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("alex:filter-sidebar-collapsed");
+    if (stored === "1") setIsCollapsed(true);
+  }, []);
+
+  const toggleSidebarCollapse = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem("alex:filter-sidebar-collapsed", next ? "1" : "0");
+      return next;
+    });
+  };
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-[var(--color-separator)] bg-[var(--color-bg)]/95 px-4 backdrop-blur-md xl:hidden">
-      <Link href="/home" className="shrink-0" aria-label="Alexandria repository home">
-        <Image src="/brand/alexandria-mark.svg" width={26} height={26} alt="" className="theme-invert" />
-      </Link>
-      {returnHref ? (
-        <Link
-          href={returnHref}
-          className="inline-flex min-w-0 flex-1 items-center gap-1.5 text-sm font-semibold text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text)]"
+    <>
+      {/* Desktop sidebar */}
+      <SidebarContent
+        {...props}
+        className="hidden xl:flex xl:flex-col"
+        isCollapsed={isCollapsed}
+        onToggleCollapse={toggleSidebarCollapse}
+      />
+
+      {/* Mobile workspace drawer */}
+      <Dialog open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <DialogContent
+          className="!left-0 !top-0 h-dvh w-[min(22rem,calc(100%-2rem))] !max-w-none !translate-x-0 !translate-y-0 gap-0 overflow-y-auto rounded-none border-r border-[var(--color-separator)] bg-[var(--color-bg)] p-0 text-[var(--color-text)]"
         >
-          <ArrowLeft size={15} aria-hidden />
-          <span className="truncate">{returnLabel}</span>
-        </Link>
-      ) : (
-        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--color-text)]">
-          {active === "profile" ? "Account" : "Thesis details"}
-        </span>
-      )}
-      {isStaff ? (
-        <Link
-          href={getPostAuthDestination(role)}
-          className="inline-flex size-8 items-center justify-center rounded-full border border-[var(--color-brand-bright)]/30 text-[var(--color-brand-bright)]"
-          aria-label="Open dashboard"
-          title="Dashboard"
-        >
-          <LayoutDashboard size={15} aria-hidden />
-        </Link>
-      ) : null}
-      <Link
-        href={role ? "/profile" : "/login"}
-        className="inline-flex size-8 items-center justify-center rounded-full border border-[var(--color-separator-mid)] text-[var(--color-text-muted)]"
-        aria-label={role ? "Open account" : "Sign in"}
+          <SidebarContent {...props} className="border-0 px-5 pt-3 pb-5" />
+        </DialogContent>
+      </Dialog>
+
+      {/* Floating workspace tab for mobile */}
+      <button
+        type="button"
+        onClick={() => setDrawerOpen(true)}
+        className="fixed left-0 top-4 z-30 xl:hidden inline-flex h-8 w-8 items-center justify-center rounded-r-md border border-l-0 border-[var(--color-separator-mid)] bg-[var(--color-surface)] text-[var(--color-text-muted)] transition-colors duration-150 hover:border-[var(--color-brand-bright)]/30 hover:bg-[var(--color-surface-alt)] hover:text-[var(--color-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-bright)]/30"
+        aria-label="Open navigation"
+        title="Open navigation"
       >
-        <UserRound size={15} aria-hidden />
-      </Link>
-      <ThemeToggle />
-    </header>
+        <PanelLeftOpen size={14} aria-hidden />
+      </button>
+    </>
   );
 }

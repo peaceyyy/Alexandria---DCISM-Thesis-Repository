@@ -23,6 +23,8 @@ export function RoleIndicator({
     return (
       <Link
         href={role ? "/profile" : "/login"}
+        draggable={false}
+        onDragStart={(event) => event.preventDefault()}
         aria-label={`Current access role: ${display.label}`}
         title={display.label}
         className={`inline-flex h-8 w-8 items-center justify-center rounded-full border ${display.className} transition-colors hover:brightness-125`}
@@ -42,6 +44,8 @@ export function RoleIndicator({
       {/* Role pill → links to profile */}
       <Link
         href={role ? "/profile" : "/login"}
+        draggable={false}
+        onDragStart={(event) => event.preventDefault()}
         aria-label={`Current access role: ${display.label}`}
         title={`Current access role: ${display.label}`}
         className={cn(

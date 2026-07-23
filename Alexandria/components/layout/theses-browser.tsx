@@ -10,7 +10,9 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ReviewStatus, ThesisCard } from "@/lib/services/types";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { getResearchAreaLabel } from "@/lib/domain/research-areas";
+import { Button } from "@/components/ui/button";
+import { WorkflowStatus } from "@/components/ui/workflow-status";
+import { ResearchAreaChip } from "@/components/ui/research-area-chip";
 import type { UserRole } from "@/lib/auth/auth-contract";
 
 export type BrowseThesisItem = ThesisCard & {
@@ -26,25 +28,6 @@ type ThesesBrowserProps = {
   showMySubmissions: boolean;
   isMySubmissions: boolean;
   flaggedSubmissionCount: number;
-};
-
-const REVIEW_STATUS_META: Record<ReviewStatus, { label: string; className: string }> = {
-  for_review: {
-    label: "Under review",
-    className: "border-[var(--color-chip-cyan-bd)] bg-[var(--color-chip-cyan-bg)] text-[var(--color-chip-cyan-text)]",
-  },
-  flagged: {
-    label: "Needs revision",
-    className: "border-[var(--color-chip-red-bd)] bg-[var(--color-chip-red-bg)] text-[var(--color-chip-red-text)]",
-  },
-  accepted: {
-    label: "Published",
-    className: "border-[var(--color-chip-green-bd)] bg-[var(--color-chip-green-bg)] text-[var(--color-chip-green-text)]",
-  },
-  trashed: {
-    label: "Archived",
-    className: "border-[var(--color-separator)] bg-[var(--color-text)]/[0.04] text-[var(--color-text-muted)]",
-  },
 };
 
 const FILTER_STORAGE_KEY = "alex:thesis-browser-filters";
@@ -269,30 +252,32 @@ export default function ThesesBrowser({
                 const label = mode === "comfortable" ? "Comfortable card view" : "Compact list view";
                 const Icon = mode === "comfortable" ? LayoutGrid : List;
                 return (
-                  <button
+                  <Button
                     key={mode}
                     type="button"
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => setViewMode(mode)}
                     aria-pressed={active}
                     aria-label={label}
                     title={label}
-                    className={`inline-flex size-7 items-center justify-center rounded text-[var(--color-text-muted)] transition-colors ${
+                    className={`rounded text-[var(--color-text-muted)] ${
                       active
                         ? "bg-[var(--color-text)]/10 text-[var(--color-text)]"
                         : "hover:text-[var(--color-text)]"
                     }`}
                   >
                     <Icon size={15} strokeWidth={1.8} aria-hidden />
-                  </button>
+                  </Button>
                 );
               })}
             </div>
           </div>
 
-        <div className={viewMode === "comfortable" ? "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3" : "divide-y divide-[var(--color-separator)] border-y border-[var(--color-separator)]"}>
+        <div className={viewMode === "comfortable" ? "grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3" : "divide-y divide-[var(--color-separator)] border-y border-[var(--color-separator)]"}>
           {filteredItems.map((item) => {
-            const statusMeta = isMySubmissions && item.reviewStatus
-              ? REVIEW_STATUS_META[item.reviewStatus]
+            const workflowStatus = isMySubmissions && item.reviewStatus
+              ? item.reviewStatus
               : null;
             const researchAreas = splitResearchAreas(item.research_area);
             const visibleTags = item.tags.slice(0, viewMode === "compact" ? 2 : 3);
@@ -303,18 +288,17 @@ export default function ThesesBrowser({
                 viewMode === "compact" ? "mt-3" : "mt-auto pt-4"
               }`}>
                 {researchAreas[0] && (
-                  <span
-                    title={getResearchAreaLabel(researchAreas[0])}
-                    className="flex-shrink-0 max-w-[9rem] truncate rounded-full border border-[var(--color-chip-cyan-bd)] bg-[var(--color-chip-cyan-bg)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-chip-cyan-text)]"
-                  >
-                    {getResearchAreaLabel(researchAreas[0])}
-                  </span>
+                  <ResearchAreaChip
+                    area={researchAreas[0]}
+                    size="compact"
+                    className="flex-shrink-0 truncate"
+                  />
                 )}
                 {remainingResearchAreas > 0 && (
                   <span
                     title={`${remainingResearchAreas} more research area${remainingResearchAreas === 1 ? "" : "s"}`}
                     aria-label={`${remainingResearchAreas} more research area${remainingResearchAreas === 1 ? "" : "s"}`}
-                    className="flex-shrink-0 inline-flex size-5 items-center justify-center rounded-full border border-[var(--color-chip-cyan-bd)] bg-[var(--color-chip-cyan-bg)] text-[10px] font-semibold text-[var(--color-chip-cyan-text)]"
+                    className="flex-shrink-0 inline-flex size-5 items-center justify-center rounded-full border border-[var(--color-separator)] bg-[var(--color-text)]/[0.04] text-[10px] font-semibold text-[var(--color-text-muted)]"
                   >
                     +{remainingResearchAreas}
                   </span>
@@ -356,10 +340,8 @@ export default function ThesesBrowser({
                     <p className="truncate">{item.authors.map((author) => author.display_name).join(" • ")}</p>
                     <p className="mt-1 font-semibold text-[var(--color-text)]">{item.year}</p>
                   </div>
-                  {statusMeta && (
-                    <span className={`flex-shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusMeta.className}`}>
-                      {statusMeta.label}
-                    </span>
+                  {workflowStatus && (
+                    <WorkflowStatus status={workflowStatus} size="compact" emphasis="quiet" />
                   )}
                 </div>
                 <h2 className="mb-3 flex-shrink-0 line-clamp-2 text-[17px] font-extrabold leading-tight text-[var(--color-text)]">
@@ -396,10 +378,8 @@ export default function ThesesBrowser({
                       {item.year}
                     </p>
                       </div>
-                      {statusMeta && (
-                        <span className={`flex-shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusMeta.className}`}>
-                          {statusMeta.label}
-                        </span>
+                      {workflowStatus && (
+                        <WorkflowStatus status={workflowStatus} size="compact" emphasis="quiet" />
                       )}
                     </div>
 

@@ -1,6 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { logoutAction } from "@/lib/auth/actions";
 import {
   formatMemberSince,
@@ -9,7 +7,8 @@ import {
 } from "@/lib/auth/profile-display";
 import { getRoleDisplay } from "@/lib/auth/role-display";
 import type { CurrentUser } from "@/lib/services/types";
-import { ContextHeader, ContextSidebar } from "@/components/layout/context-sidebar";
+import { ContextSidebar } from "@/components/layout/context-sidebar";
+import { BackLink } from "@/components/ui/back-link";
 
 export function ProfilePage({
   user,
@@ -26,9 +25,8 @@ export function ProfilePage({
 
   return (
     <div className={`min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] ${
-      isStaffWorkspace ? "" : "xl:grid xl:grid-cols-[240px_minmax(0,1fr)]"
+      isStaffWorkspace ? "" : "xl:grid xl:grid-cols-[auto_minmax(0,1fr)] motion-safe:xl:transition-[grid-template-columns] motion-safe:xl:duration-200"
     }`}>
-      {!isStaffWorkspace ? <ContextHeader role={user.role} active="profile" /> : null}
       {!isStaffWorkspace ? (
         <ContextSidebar
           role={user.role}
@@ -54,13 +52,10 @@ export function ProfilePage({
                 Profile
               </h1>
             </div>
-            <Link
+            <BackLink
               href={isStaffWorkspace ? "/admin/dashboard" : "/home"}
-              className="inline-flex h-9 items-center gap-2 rounded-full border border-[var(--color-separator-mid)] px-3 text-sm font-semibold text-[var(--color-text-muted)] transition-colors hover:border-[var(--color-brand-bright)]/35 hover:bg-[var(--color-text)]/5 hover:text-[var(--color-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-bright)]/30"
-            >
-              <ArrowLeft size={15} aria-hidden />
-              {isStaffWorkspace ? "Dashboard" : "Back"}
-            </Link>
+              label={isStaffWorkspace ? "Back to dashboard" : "Back to repository"}
+            />
           </div>
 
           {logoutError ? (

@@ -1,0 +1,82 @@
+.chip {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  border: 1px solid var(--research-area-border);
+  border-radius: 999px;
+  background: var(--research-area-background);
+  color: var(--research-area-text);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.compact {
+  max-width: 9rem;
+  padding: 0.125rem 0.5rem;
+  font-size: 11px;
+}
+
+.default {
+  padding: 0.25rem 0.75rem;
+  font-size: 12px;
+}
+
+.cyan {
+  --research-area-background: var(--color-research-cyan-bg);
+  --research-area-border: var(--color-research-cyan-bd);
+  --research-area-text: var(--color-research-cyan-text);
+}
+
+.blue {
+  --research-area-background: var(--color-research-blue-bg);
+  --research-area-border: var(--color-research-blue-bd);
+  --research-area-text: var(--color-research-blue-text);
+}
+
+.teal {
+  --research-area-background: var(--color-research-teal-bg);
+  --research-area-border: var(--color-research-teal-bd);
+  --research-area-text: var(--color-research-teal-text);
+}
+
+.indigo {
+  --research-area-background: var(--color-research-indigo-bg);
+  --research-area-border: var(--color-research-indigo-bd);
+  --research-area-text: var(--color-research-indigo-text);
+}
+
+.amber {
+  --research-area-background: var(--color-research-amber-bg);
+  --research-area-border: var(--color-research-amber-bd);
+  --research-area-text: var(--color-research-amber-text);
+}
+
+.green {
+  --research-area-background: var(--color-research-green-bg);
+  --research-area-border: var(--color-research-green-bd);
+  --research-area-text: var(--color-research-green-text);
+}
+
+.yellow {
+  --research-area-background: var(--color-research-yellow-bg);
+  --research-area-border: var(--color-research-yellow-bd);
+  --research-area-text: var(--color-research-yellow-text);
+}
+
+.purple {
+  --research-area-background: var(--color-research-purple-bg);
+  --research-area-border: var(--color-research-purple-bd);
+  --research-area-text: var(--color-research-purple-text);
+}
+
+.pink {
+  --research-area-background: var(--color-research-pink-bg);
+  --research-area-border: var(--color-research-pink-bd);
+  --research-area-text: var(--color-research-pink-text);
+}
+
+.orange {
+  --research-area-background: var(--color-research-orange-bg);
+  --research-area-border: var(--color-research-orange-bd);
+  --research-area-text: var(--color-research-orange-text);
+}

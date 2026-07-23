@@ -10,12 +10,12 @@ import {
 } from "./review-decision-actions";
 
 describe("ReviewDecisionActions", () => {
-  it("uses the compact flagged status treatment in the review panel", () => {
+  it("uses the compact revision status treatment in the review panel", () => {
     render(
       <ReviewStatusIndicator status="flagged" />,
     );
 
-    expect(screen.getByText("Flagged")).toHaveAttribute(
+    expect(screen.getByText("Needs revision")).toHaveAttribute(
       "data-status",
       "flagged",
     );

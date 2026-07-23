@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import { CheckCircle2, CircleAlert, Info, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type ToastTone = "success" | "error" | "info";
 
@@ -132,14 +133,16 @@ function FeedbackToast({
             </p>
           ) : null}
         </div>
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={() => onDismiss(toast.id)}
           aria-label="Dismiss notification"
           className="-mr-1 -mt-1 inline-flex size-8 shrink-0 items-center justify-center rounded-[6px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-alt)] hover:text-[var(--color-text)] focus-visible:outline-none"
         >
           <X size={16} aria-hidden />
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -12,21 +12,33 @@ export const RESEARCH_AREA_IDS = [
 ] as const;
 
 export type ResearchAreaId = (typeof RESEARCH_AREA_IDS)[number];
+export type ResearchAreaTone =
+  | "cyan"
+  | "blue"
+  | "teal"
+  | "indigo"
+  | "amber"
+  | "green"
+  | "yellow"
+  | "purple"
+  | "pink"
+  | "orange";
 
 export const RESEARCH_AREAS: ReadonlyArray<{
   id: ResearchAreaId;
   label: string;
+  tone: ResearchAreaTone;
 }> = [
-  { id: "ai_engineering", label: "AI Engineering" },
-  { id: "machine_learning", label: "Machine Learning" },
-  { id: "web_development", label: "Web Development" },
-  { id: "mobile_development", label: "Mobile Development" },
-  { id: "cybersecurity", label: "Cybersecurity" },
-  { id: "iot", label: "IoT" },
-  { id: "data_science", label: "Data Science" },
-  { id: "networking", label: "Networking" },
-  { id: "algorithms", label: "Algorithms" },
-  { id: "mathematics", label: "Mathematics" },
+  { id: "ai_engineering", label: "AI Engineering", tone: "cyan" },
+  { id: "machine_learning", label: "Machine Learning", tone: "indigo" },
+  { id: "web_development", label: "Web Development", tone: "blue" },
+  { id: "mobile_development", label: "Mobile Development", tone: "yellow" },
+  { id: "cybersecurity", label: "Cybersecurity", tone: "purple" },
+  { id: "iot", label: "IoT", tone: "orange" },
+  { id: "data_science", label: "Data Science", tone: "green" },
+  { id: "networking", label: "Networking", tone: "teal" },
+  { id: "algorithms", label: "Algorithms", tone: "pink" },
+  { id: "mathematics", label: "Mathematics", tone: "amber" },
 ] as const;
 
 const LEGACY_RESEARCH_AREA_IDS: Record<string, ResearchAreaId> = {
@@ -51,6 +63,11 @@ export function isResearchAreaId(value: unknown): value is ResearchAreaId {
 
 export function getResearchAreaLabel(value: string): string {
   return RESEARCH_AREAS.find((area) => area.id === value)?.label ?? value;
+}
+
+export function getResearchAreaTone(value: string): ResearchAreaTone {
+  const normalizedValue = LEGACY_RESEARCH_AREA_IDS[value] ?? value;
+  return RESEARCH_AREAS.find((area) => area.id === normalizedValue)?.tone ?? "cyan";
 }
 
 export function formatResearchAreaLabels(value: string | null | undefined): string {

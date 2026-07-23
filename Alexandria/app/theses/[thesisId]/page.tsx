@@ -4,8 +4,8 @@ import Link from "next/link";
 import DetailsSidebar from "@/components/layout/details-sidebar";
 import { RecommendationsPreview } from "@/components/layout/recommendations-preview";
 import { ExternalLink, ArrowLeft } from "lucide-react";
-import { getResearchAreaLabel } from "@/lib/domain/research-areas";
-import { ContextHeader, ContextSidebar } from "@/components/layout/context-sidebar";
+import { ResearchAreaChip } from "@/components/ui/research-area-chip";
+import { ContextSidebar } from "@/components/layout/context-sidebar";
 
 function splitList(value: string | null) {
   return value
@@ -62,13 +62,7 @@ export default async function ThesisDetails({
 
   return (
     <main className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] xl:h-screen xl:overflow-hidden">
-      <ContextHeader
-        role={role}
-        active="detail"
-        returnHref={isMySubmissionView ? "/home?mine=1" : "/home"}
-        returnLabel="Back to results"
-      />
-      <div className="grid grid-cols-1 xl:h-screen xl:grid-cols-[240px_minmax(0,1fr)_320px]">
+      <div className="grid grid-cols-1 xl:h-screen xl:grid-cols-[auto_minmax(0,1fr)_320px] motion-safe:xl:transition-[grid-template-columns] motion-safe:xl:duration-200">
         <ContextSidebar
           role={role}
           profileName={userResult.data?.profile_name}
@@ -152,12 +146,7 @@ export default async function ThesisDetails({
             </h2>
             <div className="mt-3 flex flex-wrap gap-2">
               {researchAreas.map((area) => (
-                <span
-                  key={area}
-                  className="inline-flex items-center rounded-full border border-[var(--color-chip-cyan-bd)] bg-[var(--color-chip-cyan-bg)] px-3 py-1 text-xs text-[var(--color-chip-cyan-text)]"
-                >
-                  {getResearchAreaLabel(area)}
-                </span>
+                <ResearchAreaChip key={area} area={area} />
               ))}
               {thesis.tags.map((tag) => (
                 <span
