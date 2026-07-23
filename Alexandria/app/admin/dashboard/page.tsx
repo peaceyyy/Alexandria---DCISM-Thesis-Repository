@@ -1,6 +1,7 @@
 import { AdminDashboardView } from "@/app/admin/_components/admin-dashboard-view";
 import { AdminDataState } from "@/app/admin/_components/admin-data-state";
 import { DASHBOARD_QUEUE_PAGE_SIZE } from "@/app/admin/_components/dashboard-constants";
+import { redirect } from "next/navigation";
 import { getAdminDashboardSnapshot } from "@/lib/services/admin-dashboard-service";
 import { getCurrentUser } from "@/lib/services/auth-service";
 import { isDepartment, type Department } from "@/lib/domain/departments";
